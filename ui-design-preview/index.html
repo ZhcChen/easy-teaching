@@ -3,73 +3,78 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>easy teaching UI Design Preview</title>
+    <title>easy teaching PC UI Design Preview</title>
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%232F7BFF'/%3E%3Cpath d='M32 18v28M32 22c-4.2-3.6-9.2-5.5-14-5.5-3.3 0-6 2.7-6 6V40c0 3.3 2.7 6 6 6h10M32 22c4.2-3.6 9.2-5.5 14-5.5 3.3 0 6 2.7 6 6V40c0 3.3-2.7 6-6 6H36' stroke='white' stroke-width='4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='32' cy='12' r='4' fill='white'/%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%231a73ff'/%3E%3Cpath d='M32 18v28M32 22c-4.2-3.6-9.2-5.5-14-5.5-3.3 0-6 2.7-6 6V40c0 3.3 2.7 6 6 6h10M32 22c4.2-3.6 9.2-5.5 14-5.5 3.3 0 6 2.7 6 6V40c0 3.3-2.7 6-6 6H36' stroke='white' stroke-width='4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='32' cy='12' r='4' fill='white'/%3E%3C/svg%3E"
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body data-theme="bright">
+  <body>
     <div class="workspace">
       <aside class="control-panel">
-        <div class="panel-card control-card">
-          <p class="panel-eyebrow">左侧控制区</p>
-          <h1 class="panel-title">UI 设计预览控制台</h1>
+        <section class="panel-card hero-card">
+          <p class="panel-eyebrow">PC First / Web App</p>
+          <h1 class="panel-title">可视化教学 PC 工作台预览</h1>
           <p class="panel-copy">
-            左侧负责切换视觉方向和页面，右侧固定使用 iPhone 12 Pro Max 尺寸进行 UI 预览。
+            当前预览不再沿用小程序式底部 tab，而是改成桌面工作台：顶栏导航、左侧课程结构、中间主画布、右侧上下文面板。
           </p>
-        </div>
+        </section>
 
         <section class="panel-card">
           <div class="toolbar-block">
-            <span class="toolbar-label">设计方向</span>
-            <div class="switch-row" id="theme-switches">
-              <button class="switch-chip is-active" data-theme="bright">明亮教育卡片风</button>
-              <button class="switch-chip" data-theme="path">学习路径风</button>
-              <button class="switch-chip" data-theme="lab">轻科技实验室风</button>
-            </div>
+            <span class="toolbar-label">一级导航</span>
+            <div class="switch-row" id="view-switches"></div>
           </div>
         </section>
 
         <section class="panel-card">
           <div class="toolbar-block">
-            <span class="toolbar-label">预览页面</span>
-            <div class="switch-row" id="page-switches">
-              <button class="switch-chip is-active" data-page="home">首页</button>
-              <button class="switch-chip" data-page="content">内容</button>
-              <button class="switch-chip" data-page="study">学习</button>
-              <button class="switch-chip" data-page="mine">我的</button>
-            </div>
+            <span class="toolbar-label">学段焦点</span>
+            <div class="switch-row" id="stage-switches"></div>
           </div>
         </section>
 
         <section class="panel-card">
-          <p class="note-eyebrow">当前方向</p>
-          <p class="panel-copy" id="theme-description">
-            当前方向以高可读性和教育卡片感为主，适合作为首页、内容页和我的页的基础风格。
-          </p>
+          <div class="toolbar-block">
+            <span class="toolbar-label">当前学科</span>
+            <div class="subject-control-list" id="subject-switches"></div>
+          </div>
         </section>
 
         <section class="panel-card">
-          <p class="note-eyebrow">交互说明</p>
+          <p class="note-eyebrow">当前方案说明</p>
+          <p class="panel-copy" id="view-description"></p>
+        </section>
+
+        <section class="panel-card">
+          <p class="note-eyebrow">当前聚焦</p>
+          <div class="summary-grid" id="selection-summary"></div>
+        </section>
+
+        <section class="panel-card">
+          <p class="note-eyebrow">H5 适配原则</p>
           <ul class="note-list">
-            <li>左侧按钮切换 3 套视觉方向</li>
-            <li>右侧手机底部 tab 切换页面</li>
-            <li>页面内部支持学段、学科、筛选和同步模拟</li>
+            <li>保留顶部导航入口，不再使用底部一级 tab。</li>
+            <li>左侧课程结构折叠为抽屉，右侧上下文面板下沉到正文下方。</li>
+            <li>PC 先把内容工作台做稳，H5 再做折叠与信息优先级收缩。</li>
           </ul>
         </section>
 
         <section class="panel-card">
-          <p class="note-eyebrow">预览设备</p>
+          <p class="note-eyebrow">预览基准</p>
           <div class="device-spec">
             <div class="device-spec-item">
-              <span class="device-spec-label">机型</span>
-              <strong>iPhone 12 Pro Max</strong>
+              <span class="device-spec-label">设计画布</span>
+              <strong>1440 × 960</strong>
             </div>
             <div class="device-spec-item">
-              <span class="device-spec-label">画布</span>
-              <strong>428 × 926</strong>
+              <span class="device-spec-label">结构模型</span>
+              <strong>顶栏 + 左导航 + 主画布 + 右面板</strong>
+            </div>
+            <div class="device-spec-item">
+              <span class="device-spec-label">数据策略</span>
+              <strong>本地优先，后续同步</strong>
             </div>
           </div>
         </section>
@@ -78,29 +83,25 @@
       <main class="preview-stage">
         <section class="preview-header">
           <div>
-            <p class="note-eyebrow">右侧预览区</p>
-            <h2 class="preview-title">固定机型交互预览</h2>
-            <p class="preview-copy">
-              右侧预览区域固定使用 iPhone 12 Pro Max 设计尺寸，方便后续统一 UI 设计与切图基准。
-            </p>
+            <p class="panel-eyebrow">右侧预览区</p>
+            <h2 class="preview-title" id="preview-title"></h2>
+            <p class="preview-copy" id="preview-copy"></p>
           </div>
-          <span class="badge-pill">428 × 926</span>
+          <div class="preview-badges" id="preview-badges"></div>
         </section>
 
         <section class="preview-canvas">
-          <section class="phone-shell">
-            <div class="phone-frame">
-              <div class="phone-camera"></div>
-              <div class="phone-screen">
-                <div class="status-bar">
-                  <span>9:41</span>
-                  <span>5G</span>
-                </div>
-                <div class="screen-content" id="screen-content"></div>
-                <nav class="tab-bar" id="tab-bar"></nav>
+          <div class="desktop-shell">
+            <div class="desktop-chrome">
+              <div class="traffic-lights">
+                <span class="traffic-light is-red"></span>
+                <span class="traffic-light is-yellow"></span>
+                <span class="traffic-light is-green"></span>
               </div>
+              <div class="chrome-title">easy-teaching / ui-design-preview / pc-workbench</div>
             </div>
-          </section>
+            <div class="desktop-window" id="desktop-window"></div>
+          </div>
         </section>
       </main>
     </div>
