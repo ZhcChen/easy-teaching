@@ -12,11 +12,5 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-  return (
-    <StageSelectionView
-      eyebrow="可视化教学 Web App"
-      title="先选学段，再逐页进入学科和知识点"
-      description="当前先以 PC 为核心完成主流程，H5 同步适配。首页只承担学段选择，不再把全部层级堆在同一个页面。"
-    />
-  );
+  return <StageSelectionView />;
 }
