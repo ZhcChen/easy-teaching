@@ -40,43 +40,40 @@ export function Layout({ children }: { children: ReactNode }) {
       </head>
       <body className="app-body antialiased">
         <div className="app-shell">
-          <header className="app-header">
-            <div className="app-header-main">
-              <div className="app-brand">
-                <span className="brand-pill">Easy Teaching</span>
-                <div className="app-brand-copy">
-                  <h1 className="app-title">可视化教学</h1>
-                  <p className="app-description">
-                    以 PC 为核心的简约科技风教学入口，先从学段、学科和知识点卡片开始，再进入具体可视化页面。
-                  </p>
-                </div>
-              </div>
-              <div className="app-header-tools">
-                <nav className="app-nav" aria-label="主导航">
-                  {navItems.map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      end={item.end}
-                      className={({ isActive }) =>
-                        isActive ? "app-nav-link is-active" : "app-nav-link"
-                      }
-                    >
-                      {item.label}
-                    </NavLink>
-                  ))}
-                </nav>
-                <div className="app-status">
-                  <ThemeToggle />
-                  <div className="status-note">
-                    <p>默认亮色</p>
-                    <p>支持亮 / 暗主题</p>
-                  </div>
-                </div>
+          <header className="topbar">
+            <div className="topbar-inner">
+              <NavLink to="/" end className="brand-link" aria-label="打开首页">
+                <span className="brand-mark">ET</span>
+                <span className="brand-copy">
+                  <strong className="brand-title">可视化教学</strong>
+                  <span className="brand-subtitle">WEB APP</span>
+                </span>
+              </NavLink>
+
+              <nav className="topbar-nav" aria-label="主导航">
+                {navItems.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.end}
+                    className={({ isActive }) =>
+                      isActive ? "topbar-link is-active" : "topbar-link"
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+              </nav>
+
+              <div className="topbar-actions">
+                <span className="topbar-caption">默认亮色</span>
+                <ThemeToggle />
               </div>
             </div>
           </header>
-          <main className="app-main">{children}</main>
+          <main className="app-main">
+            <div className="page-shell">{children}</div>
+          </main>
         </div>
         <ScrollRestoration />
         <Scripts />
@@ -106,14 +103,17 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="surface-panel border-danger p-6">
-      <h1 className="text-2xl font-semibold text-[var(--danger-text)]">{message}</h1>
-      <p className="mt-3 text-sm leading-6 text-[var(--danger-copy)]">{details}</p>
-      {stack && (
-        <pre className="mt-4 w-full overflow-x-auto rounded-2xl border border-[var(--line)] bg-[var(--surface-soft)] p-4 text-xs text-[var(--text-secondary)]">
-          <code>{stack}</code>
-        </pre>
-      )}
+    <main className="page-shell">
+      <section className="status-panel is-danger">
+        <p className="status-kicker">页面异常</p>
+        <h1 className="status-title">{message}</h1>
+        <p className="status-copy">{details}</p>
+        {stack && (
+          <pre className="status-stack">
+            <code>{stack}</code>
+          </pre>
+        )}
+      </section>
     </main>
   );
 }

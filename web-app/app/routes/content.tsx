@@ -1,4 +1,4 @@
-import { CatalogWorkbench } from "../components/catalog-workbench";
+import { StageSelectionView } from "../components/stage-selection-view";
 import type { Route } from "./+types/content";
 
 export function meta({}: Route.MetaArgs) {
@@ -13,10 +13,10 @@ export function meta({}: Route.MetaArgs) {
 
 export default function ContentPage() {
   return (
-    <CatalogWorkbench
-      eyebrow="知识库"
-      title="知识点入口直接汇总到这里"
-      description="知识库页延续同一套卡片入口结构，但更偏向整理全部可视化知识点。当前先和首页保持同一个交互模型，减少认知切换。"
+    <StageSelectionView
+      eyebrow="知识库入口"
+      title="先进入学段，再继续定位到具体知识点"
+      description="知识库页与首页共用同一条选择路径，但这里更强调按内容目录进入。学段之后进入学科页，再进入知识点页。"
     />
   );
 }

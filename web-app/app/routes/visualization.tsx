@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 
+import { StatusPanel } from "../components/status-panel";
 import { getTopicById } from "../data/teaching-catalog";
 import type { Route } from "./+types/visualization";
 
@@ -32,9 +33,21 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
       setIsFullscreen(document.fullscreenElement === fullscreenRef.current);
     }
 
+    async function handleKeydown(event: KeyboardEvent) {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      if (document.fullscreenElement === fullscreenRef.current) {
+        await document.exitFullscreen();
+      }
+    }
+
     document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("keydown", handleKeydown);
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("keydown", handleKeydown);
     };
   }, []);
 
@@ -54,58 +67,66 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
 
   if (!topicData) {
     return (
-      <div className="surface-panel border-danger p-8">
-        <p className="surface-eyebrow text-[var(--danger-text)]">无法找到对应知识点</p>
-        <h2 className="mt-4 text-2xl font-semibold text-[var(--danger-text)]">
-          这个可视化页面还没有准备好
-        </h2>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--danger-copy)]">
-          当前路由没有匹配到知识点数据。你可以先返回首页或知识库重新选择。
-        </p>
-        <div className="mt-6 flex gap-3">
-          <Link
-            to="/"
-            className="action-link is-primary"
-          >
-            返回首页
-          </Link>
-          <Link
-            to="/content"
-            className="action-link"
-          >
-            打开知识库
-          </Link>
-        </div>
-      </div>
+      <StatusPanel
+        eyebrow="未找到知识点"
+        title="这个可视化页面还没有准备好"
+        description="当前路由没有匹配到知识点数据。你可以先返回首页或知识库重新选择。"
+        tone="danger"
+        actions={
+          <>
+            <Link to="/" className="action-link is-primary">
+              返回首页
+            </Link>
+            <Link to="/content" className="action-link">
+              打开知识库
+            </Link>
+          </>
+        }
+      />
     );
   }
 
   const { stage, subject, topic } = topicData;
 
   return (
-    <div className="page-stack">
-      <section className="surface-panel visual-info-panel">
-        <div>
-          <p className="surface-eyebrow">
-            {stage.label} / {subject.label} / 可视化页面
-          </p>
-          <h2 className="surface-title visual-page-title">{topic.title}</h2>
-          <p className="surface-copy visual-page-copy">{topic.summary}</p>
+    <div className="page-stack visual-page">
+      <section className="page-hero page-hero-compact">
+        <div className="page-hero-copy">
+          <nav className="breadcrumb" aria-label="面包屑">
+            <Link to="/" className="breadcrumb-link">
+              首页
+            </Link>
+            <span className="breadcrumb-separator">/</span>
+            <Link to="/content" className="breadcrumb-link">
+              知识库
+            </Link>
+            <span className="breadcrumb-separator">/</span>
+            <Link to={`/content/${stage.id}`} className="breadcrumb-link">
+              {stage.label}
+            </Link>
+            <span className="breadcrumb-separator">/</span>
+            <Link to={`/content/${stage.id}/${subject.id}`} className="breadcrumb-link">
+              {subject.label}
+            </Link>
+            <span className="breadcrumb-separator">/</span>
+            <span className="breadcrumb-current">{topic.title}</span>
+          </nav>
+          <p className="page-kicker">Step 04</p>
+          <h1 className="page-title">{topic.title}</h1>
+          <p className="page-copy">{topic.summary}</p>
         </div>
-        <div className="action-row">
-          <Link to="/" className="action-link">
-            返回首页
-          </Link>
-          <Link to="/content" className="action-link">
-            返回知识库
-          </Link>
-        </div>
+
+        <aside className="page-stat-card">
+          <p className="page-stat-label">当前模式</p>
+          <p className="page-stat-value">{topic.mode}</p>
+          <p className="page-stat-copy">{topic.status}</p>
+        </aside>
       </section>
 
       <section className="visual-overview-grid">
         <article className="surface-panel accent-panel">
           <p className="surface-eyebrow accent-copy">页面说明</p>
-          <h3 className="surface-title section-title-sm">当前先用更克制的科技简约风承接页面</h3>
+          <h2 className="surface-title section-title-sm">当前先用简约科技风承接可视化场景</h2>
           <ul className="visual-bullet-list">
             {topic.highlights.map((item) => (
               <li key={item} className="visual-bullet-item">
@@ -121,7 +142,7 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
           <div className="info-stack">
             <p>点击右上角全屏图标即可进入全屏查看。</p>
             <p>进入全屏后，右上角会保留退出全屏按钮。</p>
-            <p>按键盘 `Esc` 也可以直接退出全屏。</p>
+            <p>按键盘 Esc 也可以直接退出全屏。</p>
           </div>
           <div className="topic-tag-row">
             {topic.tags.map((tag) => (
@@ -200,6 +221,15 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
           </div>
         </div>
       </section>
+
+      <div className="action-row">
+        <Link to={`/content/${stage.id}/${subject.id}`} className="action-link is-primary">
+          返回知识点页
+        </Link>
+        <Link to={`/content/${stage.id}`} className="action-link">
+          返回学科页
+        </Link>
+      </div>
     </div>
   );
 }

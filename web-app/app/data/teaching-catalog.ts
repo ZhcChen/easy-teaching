@@ -254,8 +254,25 @@ export const teachingStages: TeachingStage[] = [
   },
 ];
 
-export function getStageById(stageId: StageId) {
+export function getStageById(stageId: string) {
   return teachingStages.find((stage) => stage.id === stageId);
+}
+
+export function getSubjectByStageAndId(stageId: string, subjectId: string) {
+  const stage = getStageById(stageId);
+  if (!stage) {
+    return null;
+  }
+
+  const subject = stage.subjects.find((item) => item.id === subjectId);
+  if (!subject) {
+    return null;
+  }
+
+  return {
+    stage,
+    subject,
+  };
 }
 
 export function getTopicById(topicId: string) {
