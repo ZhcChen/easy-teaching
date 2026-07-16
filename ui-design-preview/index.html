@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>easy teaching UI Design Preview</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%232F7BFF'/%3E%3Cpath d='M32 18v28M32 22c-4.2-3.6-9.2-5.5-14-5.5-3.3 0-6 2.7-6 6V40c0 3.3 2.7 6 6 6h10M32 22c4.2-3.6 9.2-5.5 14-5.5 3.3 0 6 2.7 6 6V40c0 3.3-2.7 6-6 6H36' stroke='white' stroke-width='4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='32' cy='12' r='4' fill='white'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-theme="bright">
+    <div class="workspace">
+      <header class="toolbar">
+        <div class="toolbar-block">
+          <span class="toolbar-label">设计方向</span>
+          <div class="switch-row" id="theme-switches">
+            <button class="switch-chip is-active" data-theme="bright">明亮教育卡片风</button>
+            <button class="switch-chip" data-theme="path">学习路径风</button>
+            <button class="switch-chip" data-theme="lab">轻科技实验室风</button>
+          </div>
+        </div>
+        <div class="toolbar-block">
+          <span class="toolbar-label">预览页面</span>
+          <div class="switch-row" id="page-switches">
+            <button class="switch-chip is-active" data-page="home">首页</button>
+            <button class="switch-chip" data-page="content">内容</button>
+            <button class="switch-chip" data-page="study">学习</button>
+            <button class="switch-chip" data-page="mine">我的</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="preview-stage">
+        <section class="preview-notes">
+          <div class="note-card">
+            <p class="note-eyebrow">UI 设计模块</p>
+            <h1>4 tab 可交互小程序视觉预览</h1>
+            <p id="theme-description">
+              当前方向以高可读性和教育卡片感为主，适合作为首页、内容页和我的页的基础风格。
+            </p>
+          </div>
+          <div class="note-card">
+            <p class="note-eyebrow">交互说明</p>
+            <ul class="note-list">
+              <li>顶部可切换 3 套视觉方向</li>
+              <li>手机底部 tab 可切换页面</li>
+              <li>页面内部支持学段、学科、筛选和同步模拟</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="phone-shell">
+          <div class="phone-frame">
+            <div class="phone-camera"></div>
+            <div class="phone-screen">
+              <div class="status-bar">
+                <span>9:41</span>
+                <span>5G</span>
+              </div>
+              <div class="screen-content" id="screen-content"></div>
+              <nav class="tab-bar" id="tab-bar"></nav>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
