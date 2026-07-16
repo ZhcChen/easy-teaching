@@ -26,48 +26,50 @@ export function Layout({ children }: { children: ReactNode }) {
         <Links />
       </head>
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
-        <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-4 sm:px-6 lg:px-8">
-          <header className="rounded-[28px] border border-white/10 bg-white/5 px-5 py-5 shadow-2xl shadow-slate-950/25 backdrop-blur md:px-7">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="space-y-2">
-                <span className="inline-flex items-center rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-medium tracking-[0.18em] text-cyan-200 uppercase">
-                  Easy Teaching Web App
+        <div className="mx-auto flex min-h-screen w-full max-w-[1440px] flex-col px-5 py-5 sm:px-8 lg:px-10">
+          <header className="sticky top-5 z-30 rounded-[30px] border border-cyan-400/15 bg-slate-950/78 px-6 py-5 shadow-[0_24px_64px_rgba(2,6,23,0.42)] backdrop-blur-xl">
+            <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+              <div>
+                <span className="inline-flex items-center rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-medium tracking-[0.18em] text-cyan-200 uppercase">
+                  Easy Teaching
                 </span>
-                <div>
+                <div className="mt-3">
                   <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
                     可视化教学
                   </h1>
-                  <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-                    面向 PC 与 H5 的可视化教学前端基座，当前优先承接物理场景，后续扩展到数学、化学与记忆教学。
+                  <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
+                    PC 优先的科技简约风教学入口，先从学段、学科和知识点卡片开始，再进入具体可视化页面。
                   </p>
                 </div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-slate-300">
-                <p>技术基座：React Router 8 + React 19</p>
-                <p>规划能力：本地优先数据、2D / 3D 可视化、PC / H5 自适配</p>
+              <div className="flex flex-col gap-4 xl:items-end">
+                <nav className="flex flex-wrap items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1.5">
+                  {navItems.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      end={item.end}
+                      className={({ isActive }) =>
+                        [
+                          "rounded-full px-4 py-2 text-sm font-medium transition",
+                          isActive
+                            ? "bg-cyan-400 text-slate-950"
+                            : "text-slate-300 hover:bg-white/7 hover:text-white",
+                        ].join(" ")
+                      }
+                    >
+                      {item.label}
+                    </NavLink>
+                  ))}
+                </nav>
+                <div className="rounded-2xl border border-cyan-400/15 bg-cyan-400/8 px-4 py-3 text-sm text-slate-300">
+                  <p>技术基座：React Router 8 + React 19</p>
+                  <p>当前目标：PC 首页与可视化页面主体验证</p>
+                </div>
               </div>
             </div>
           </header>
-          <nav className="fixed inset-x-4 bottom-4 z-30 mx-auto grid max-w-md grid-cols-4 gap-2 rounded-2xl border border-white/10 bg-slate-900/90 p-2 shadow-2xl shadow-slate-950/40 backdrop-blur md:static md:mt-6 md:max-w-none md:grid-cols-4 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                className={({ isActive }) =>
-                  [
-                    "flex min-h-12 items-center justify-center rounded-xl px-3 text-sm font-medium transition",
-                    isActive
-                      ? "bg-cyan-400 text-slate-950"
-                      : "text-slate-300 hover:bg-white/8 hover:text-white",
-                  ].join(" ")
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
-          <main className="flex-1 pb-24 pt-6 md:pb-0">{children}</main>
+          <main className="flex-1 py-8">{children}</main>
         </div>
         <ScrollRestoration />
         <Scripts />
@@ -111,7 +113,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 
 const navItems = [
   { to: "/", label: "首页", end: true },
-  { to: "/content", label: "内容" },
+  { to: "/content", label: "知识库" },
   { to: "/study", label: "学习" },
   { to: "/me", label: "我的" },
 ];

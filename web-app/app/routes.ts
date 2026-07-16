@@ -5,4 +5,5 @@ export default [
   route("content", "routes/content.tsx"),
   route("study", "routes/study.tsx"),
   route("me", "routes/me.tsx"),
+  route("visual/:topicId", "routes/visualization.tsx"),
 ] satisfies RouteConfig;
