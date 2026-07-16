@@ -133,7 +133,7 @@ a:focus-visible {
 .topbar-inner {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
   width: min(1280px, calc(100% - 48px));
   min-height: 64px;
   margin: 0 auto;
@@ -142,7 +142,7 @@ a:focus-visible {
 .brand-link {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-shrink: 0;
 }
 
@@ -150,44 +150,73 @@ a:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
 }
 
 .brand-mark-image {
   display: block;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
+  filter: drop-shadow(0 8px 18px rgba(23, 105, 255, 0.18));
 }
 
 .brand-copy {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
 .brand-title {
   font-size: 15px;
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .brand-subtitle {
   font-size: 10px;
   line-height: 1;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
 
 .topbar-nav {
-  display: flex;
-  flex: 1;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--nav-item-count), minmax(0, 1fr));
+  flex: 0 1 328px;
   align-items: center;
-  justify-content: center;
-  gap: 4px;
+  width: min(100%, 328px);
+  margin-inline: auto;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-soft) 88%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32);
   min-width: 0;
+}
+
+.topbar-nav-indicator {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc((100% - 4px) / var(--nav-item-count));
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-strong) 100%);
+  box-shadow:
+    0 10px 22px rgba(23, 105, 255, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  transform: translateX(calc(var(--nav-active-index) * 100%));
+  transition:
+    transform 0.26s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+  will-change: transform;
+  pointer-events: none;
 }
 
 .topbar-link {
@@ -195,22 +224,13 @@ a:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 14px 16px;
+  z-index: 1;
+  min-height: 34px;
+  padding: 0 14px;
   color: var(--text-secondary);
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
-}
-
-.topbar-link::after {
-  content: "";
-  position: absolute;
-  right: 14px;
-  bottom: 8px;
-  left: 14px;
-  height: 2px;
-  border-radius: 999px;
-  background: transparent;
 }
 
 .topbar-link:hover {
@@ -218,11 +238,7 @@ a:focus-visible {
 }
 
 .topbar-link.is-active {
-  color: var(--text-primary);
-}
-
-.topbar-link.is-active::after {
-  background: var(--brand);
+  color: #ffffff;
 }
 
 .topbar-actions {
@@ -1126,9 +1142,8 @@ a:focus-visible {
 
   .topbar-nav {
     order: 3;
-    justify-content: flex-start;
     width: 100%;
-    overflow-x: auto;
+    flex-basis: 100%;
   }
 
   .app-main {

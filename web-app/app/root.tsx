@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   isRouteErrorResponse,
   Links,
@@ -7,6 +7,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
 } from "react-router";
 
 import { ThemeToggle } from "./components/theme-toggle";
@@ -20,6 +21,13 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
+  const location = useLocation();
+  const activeNavIndex = getActiveNavIndex(location.pathname);
+  const navStyle = {
+    "--nav-active-index": activeNavIndex,
+    "--nav-item-count": navItems.length,
+  } as CSSProperties;
+
   return (
     <html lang="zh-CN" data-theme="light" suppressHydrationWarning>
       <head>
@@ -54,7 +62,8 @@ export function Layout({ children }: { children: ReactNode }) {
                 </span>
               </NavLink>
 
-              <nav className="topbar-nav" aria-label="主导航">
+              <nav className="topbar-nav" aria-label="主导航" style={navStyle}>
+                <span aria-hidden="true" className="topbar-nav-indicator" />
                 {navItems.map((item) => (
                   <NavLink
                     key={item.to}
@@ -127,3 +136,23 @@ const navItems = [
   { to: "/study", label: "学习" },
   { to: "/me", label: "我的" },
 ];
+
+function getActiveNavIndex(pathname: string) {
+  if (pathname === "/") {
+    return 0;
+  }
+
+  if (pathname.startsWith("/content") || pathname.startsWith("/visual")) {
+    return 1;
+  }
+
+  if (pathname.startsWith("/study")) {
+    return 2;
+  }
+
+  if (pathname.startsWith("/me")) {
+    return 3;
+  }
+
+  return 0;
+}
