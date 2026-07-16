@@ -14,7 +14,9 @@ import type { Route } from "./+types/root";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
-  { rel: "icon", href: "/favicon.ico" },
+  { rel: "icon", type: "image/svg+xml", href: "/brand/logo-mark.svg" },
+  { rel: "icon", type: "image/png", sizes: "144x144", href: "/brand/logo-mark-144.png" },
+  { rel: "apple-touch-icon", href: "/brand/logo-mark-144.png" },
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -43,10 +45,12 @@ export function Layout({ children }: { children: ReactNode }) {
           <header className="topbar">
             <div className="topbar-inner">
               <NavLink to="/" end className="brand-link" aria-label="打开首页">
-                <span className="brand-mark">ET</span>
+                <span className="brand-mark" aria-hidden="true">
+                  <img src="/brand/logo-mark.svg" alt="" className="brand-mark-image" />
+                </span>
                 <span className="brand-copy">
                   <strong className="brand-title">可视化教学</strong>
-                  <span className="brand-subtitle">WEB APP</span>
+                  <span className="brand-subtitle">EASY TEACHING</span>
                 </span>
               </NavLink>
 
