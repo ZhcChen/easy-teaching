@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+html,
+body {
+  @apply min-h-screen bg-slate-950;
+  color-scheme: dark;
+}
+
+body {
+  background-image:
+    radial-gradient(circle at top, rgba(34, 211, 238, 0.14), transparent 34%),
+    radial-gradient(circle at right top, rgba(99, 102, 241, 0.12), transparent 28%);
+}

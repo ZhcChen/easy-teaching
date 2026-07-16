@@ -1,44 +1,78 @@
-# Web App 模块
+# web-app
 
-当前模块定位：
+可视化教学当前主 Web 前端模块。
 
-- 面向 `PC + H5` 的主 Web 前端模块
-- 技术栈采用 `React + PixiJS + Three.js`
-- 当前阶段先保留模块骨架
-- 后续确定具体技术栈后，再用最新官方脚手架初始化正式工程
+## 模块定位
 
-## 当前目录
+- 当前主路线：Web App
+- 覆盖终端：PC + H5
+- 技术基座：React Router 8、React 19、TypeScript、Tailwind CSS 4
+- 本地开发端口：`57001`
+
+## 当前范围
+
+这一轮先完成正式工程初始化与一级路由基座：
+
+- 首页
+- 内容
+- 学习
+- 我的
+
+可视化引擎能力已经确定为：
+
+- `PixiJS`：后续承接 2D 可视化
+- `Three.js`：后续承接 3D 可视化
+
+当前尚未在本模块内正式接入这两个引擎，等具体场景页面进入开发时再落地。
+
+## 启动方式
+
+先安装依赖：
+
+```bash
+npm install
+```
+
+启动开发环境：
+
+```bash
+npm run dev
+```
+
+默认访问：
+
+```text
+http://127.0.0.1:57001
+```
+
+## 常用命令
+
+```bash
+npm run dev
+npm run build
+npm run typecheck
+```
+
+## 目录说明
 
 ```text
 web-app/
+├─app/
+│ ├─root.tsx
+│ ├─routes.ts
+│ └─routes/
 ├─public/
-└─src/
-  ├─assets/
-  ├─components/
-  ├─engines/
-  │ ├─pixi/
-  │ └─three/
-  ├─layouts/
-  ├─pages/
-  ├─store/
-  ├─styles/
-  └─utils/
+├─package.json
+└─vite.config.ts
 ```
 
-## 当前约定
+说明：
 
-- 本地开发端口预留为 `57001`
-- 第三方库不使用 CDN，引入方式统一走项目本地依赖
-- 先不手工伪造具体框架模板
-- UI 与交互方案先在 `ui-design-preview/` 中推进
-- 正式实现前，优先复用：
-  - `docs/plans/Web-App-模块规划.md`
-  - `docs/plans/小程序信息架构与本地优先同步方案.md`
-  - `shared-assets/`
+- `app/root.tsx`：应用壳子与全局导航
+- `app/routes.ts`：一级路由注册
+- `app/routes/`：页面路由模块
 
-## 后续动作
+## 相关文档
 
-1. 确认 Web 技术栈
-2. 使用 React 最新官方方式初始化工程
-3. 接入本地依赖版 `PixiJS` 和 `Three.js`
-4. 按已确认的 UI 和信息架构落正式页面
+- `docs/plans/Web-App-模块规划.md`
+- `docs/plans/小程序信息架构与本地优先同步方案.md`
