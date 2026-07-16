@@ -52,6 +52,15 @@
   3. CE 工作流约定
   4. 全局默认行为
 
+## Git 协作简则
+- 任何代码、文档、配置调整，只要已经形成稳定结果，都应及时提交并推送。
+- 小调整、小功能、小 bug 修复，默认直接提交并推送，不额外确认。
+- 大改动按阶段及时提交并推送，保证每次提交都对应明确的调整内容，便于回溯、分析和复盘。
+- 提交尽量保持一事一提交，只包含当前任务相关改动。
+- 提交信息默认采用 Conventional Commits 简化格式：`type(scope): summary`
+- 常用类型：`feat`、`fix`、`docs`、`refactor`、`chore`
+- 推送后只做简要反馈：调整了什么、提交信息、已推送到哪个分支。
+
 <!-- BEGIN COMPOUND CODEX TOOL MAP -->
 ## Compound Codex Tool Mapping (Claude Compatibility)
 
