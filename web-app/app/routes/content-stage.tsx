@@ -88,24 +88,69 @@ export default function ContentStagePage({ params }: Route.ComponentProps) {
         </div>
 
         <div className="entry-grid entry-grid-subject">
-          {stage.subjects.map((subject) => (
-            <Link
-              key={subject.id}
-              to={`/content/${stage.id}/${subject.id}`}
-              className="entry-card entry-card-subject"
-            >
-              <div className="entry-card-top">
-                <span className="entry-badge">{subject.topics.length} 个知识点</span>
-                <span className="entry-card-arrow">进入知识点页</span>
-              </div>
-              <div className="entry-card-body">
-                <h3 className="entry-card-title">{subject.label}</h3>
-                <p className="entry-card-copy">{subject.summary}</p>
-              </div>
-            </Link>
-          ))}
+          {stage.subjects.map((subject) => {
+            const accentClass = getSubjectAccentClass(subject.id);
+            const previewTopics = subject.topics.slice(0, 2).map((topic) => topic.title);
+
+            return (
+              <Link
+                key={subject.id}
+                to={`/content/${stage.id}/${subject.id}`}
+                className={`entry-card entry-card-subject subject-card ${accentClass}`}
+              >
+                <div className="subject-card-grid" aria-hidden="true" />
+                <div className="subject-card-glow" aria-hidden="true" />
+
+                <div className="entry-card-top subject-card-top">
+                  <div className="subject-card-kicker-row">
+                    <span className="entry-badge">{subject.topics.length} 个知识点</span>
+                    <span className="subject-card-channel">学科工作台</span>
+                  </div>
+                  <span className="entry-card-arrow">进入知识点页</span>
+                </div>
+
+                <div className="entry-card-body subject-card-body">
+                  <h3 className="entry-card-title">{subject.label}</h3>
+                  <p className="entry-card-copy">{subject.summary}</p>
+                </div>
+
+                <div className="subject-card-preview">
+                  {previewTopics.map((topic) => (
+                    <article key={topic} className="subject-card-preview-item">
+                      <span className="subject-card-preview-dot" aria-hidden="true" />
+                      <span>{topic}</span>
+                    </article>
+                  ))}
+                </div>
+
+                <div className="subject-card-footer">
+                  <span className="subject-card-track">{getSubjectTrack(subject.id)}</span>
+                  <span className="subject-card-footer-line" aria-hidden="true" />
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </section>
     </div>
   );
+}
+
+function getSubjectAccentClass(subjectId: string) {
+  return `is-${subjectId}`;
+}
+
+function getSubjectTrack(subjectId: string) {
+  switch (subjectId) {
+    case "physics":
+      return "运动 / 力学 / 电学";
+    case "math":
+      return "函数 / 几何 / 空间";
+    case "chemistry":
+      return "结构 / 实验 / 现象";
+    case "memory":
+      return "框架 / 时间线 / 记忆";
+    default:
+      return "知识内容";
+  }
 }

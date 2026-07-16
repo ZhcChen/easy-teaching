@@ -91,37 +91,84 @@ export default function ContentSubjectPage({ params }: Route.ComponentProps) {
         </div>
 
         <div className="entry-grid entry-grid-topic">
-          {subject.topics.map((topic) => (
-            <Link
-              key={topic.id}
-              to={`/visual/${topic.id}`}
-              className="entry-card entry-card-topic"
-            >
-              <div className="entry-card-top">
-                <div className="entry-card-badges">
-                  <span className="entry-badge">{topic.mode}</span>
-                  <span className="entry-badge is-soft">{topic.status}</span>
+          {subject.topics.map((topic) => {
+            const modeClass = getTopicModeClass(topic.mode);
+
+            return (
+              <Link
+                key={topic.id}
+                to={`/visual/${topic.id}`}
+                className={`entry-card entry-card-topic topic-tech-card ${modeClass}`}
+              >
+                <div className="topic-tech-grid" aria-hidden="true" />
+                <div className="topic-tech-orbits" aria-hidden="true">
+                  <span className="topic-tech-orbit topic-tech-orbit-lg" />
+                  <span className="topic-tech-orbit topic-tech-orbit-md" />
+                  <span className="topic-tech-core" />
                 </div>
-                <span className="entry-card-arrow">进入页面</span>
-              </div>
 
-              <div className="entry-card-body">
-                <h3 className="entry-card-title">{topic.title}</h3>
-                <p className="entry-card-copy">{topic.summary}</p>
-              </div>
+                <div className="entry-card-top topic-tech-top">
+                  <div className="entry-card-badges">
+                    <span className="entry-badge">{topic.mode}</span>
+                    <span className="entry-badge is-soft">{topic.status}</span>
+                  </div>
+                  <span className="entry-card-arrow">进入页面</span>
+                </div>
 
-              <ul className="entry-highlight-list">
-                {topic.highlights.slice(0, 2).map((item) => (
-                  <li key={item} className="entry-highlight-item">
-                    <span className="entry-highlight-dot" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </Link>
-          ))}
+                <div className="entry-card-body topic-tech-body">
+                  <h3 className="entry-card-title">{topic.title}</h3>
+                  <p className="entry-card-copy">{topic.summary}</p>
+                  <div className="topic-tech-tags">
+                    {topic.tags.slice(0, 3).map((tag) => (
+                      <span key={tag} className="topic-tech-tag">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <ul className="entry-highlight-list topic-tech-highlights">
+                  {topic.highlights.slice(0, 2).map((item) => (
+                    <li key={item} className="entry-highlight-item">
+                      <span className="entry-highlight-dot" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="topic-tech-footer">
+                  <span className="topic-tech-track">{getTopicTrack(topic.mode)}</span>
+                  <span className="topic-tech-footer-line" aria-hidden="true" />
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </section>
     </div>
   );
+}
+
+function getTopicModeClass(mode: string) {
+  if (mode === "3D") {
+    return "is-3d";
+  }
+
+  if (mode === "2D / 3D") {
+    return "is-hybrid";
+  }
+
+  return "is-2d";
+}
+
+function getTopicTrack(mode: string) {
+  if (mode === "3D") {
+    return "空间演示 / 旋转观察 / 沉浸查看";
+  }
+
+  if (mode === "2D / 3D") {
+    return "图层演示 / 参数联动 / 引擎扩展";
+  }
+
+  return "图解联动 / 参数观察 / 逐步讲解";
 }
