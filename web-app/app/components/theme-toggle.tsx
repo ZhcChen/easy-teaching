@@ -21,6 +21,10 @@ export function ThemeToggle() {
 
   return (
     <div className="theme-switch" role="group" aria-label="主题切换">
+      <span
+        aria-hidden="true"
+        className={theme === "dark" ? "theme-switch-indicator is-dark" : "theme-switch-indicator"}
+      />
       <button
         type="button"
         className={theme === "light" ? "theme-switch-option is-active" : "theme-switch-option"}

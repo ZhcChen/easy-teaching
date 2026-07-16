@@ -228,34 +228,60 @@ a:focus-visible {
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
-.topbar-caption {
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
 .theme-switch {
-  display: inline-flex;
-  padding: 3px;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  width: 118px;
+  padding: 2px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--surface-strong);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 8px 20px rgba(15, 31, 56, 0.06);
+}
+
+.theme-switch-indicator {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc(50% - 2px);
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-strong) 100%);
+  box-shadow:
+    0 8px 18px rgba(23, 105, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition:
+    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.theme-switch-indicator.is-dark {
+  transform: translateX(100%);
 }
 
 .theme-switch-option {
-  min-width: 60px;
-  height: 32px;
-  padding: 0 12px;
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  height: 30px;
+  padding: 0 10px;
   border: 0;
   border-radius: 999px;
   background: transparent;
   color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -264,9 +290,7 @@ a:focus-visible {
 }
 
 .theme-switch-option.is-active {
-  background: var(--brand);
   color: #ffffff;
-  box-shadow: 0 10px 22px rgba(23, 105, 255, 0.22);
 }
 
 .app-main {
@@ -1186,8 +1210,7 @@ a:focus-visible {
   }
 
   .theme-switch-option {
-    min-width: 56px;
-    padding: 0 10px;
+    padding: 0 9px;
   }
 
   .flow-step {

@@ -70,7 +70,6 @@ export function Layout({ children }: { children: ReactNode }) {
               </nav>
 
               <div className="topbar-actions">
-                <span className="topbar-caption">默认亮色</span>
                 <ThemeToggle />
               </div>
             </div>
