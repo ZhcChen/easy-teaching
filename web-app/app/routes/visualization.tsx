@@ -54,26 +54,24 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
 
   if (!topicData) {
     return (
-      <div className="rounded-[30px] border border-rose-500/20 bg-rose-500/10 p-8">
-        <p className="text-sm tracking-[0.18em] text-rose-200 uppercase">
-          无法找到对应知识点
-        </p>
-        <h2 className="mt-4 text-2xl font-semibold text-white">
+      <div className="surface-panel border-danger p-8">
+        <p className="surface-eyebrow text-[var(--danger-text)]">无法找到对应知识点</p>
+        <h2 className="mt-4 text-2xl font-semibold text-[var(--danger-text)]">
           这个可视化页面还没有准备好
         </h2>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-rose-100/80">
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--danger-copy)]">
           当前路由没有匹配到知识点数据。你可以先返回首页或知识库重新选择。
         </p>
         <div className="mt-6 flex gap-3">
           <Link
             to="/"
-            className="rounded-full bg-cyan-400 px-4 py-2 text-sm font-medium text-slate-950 transition hover:bg-cyan-300"
+            className="action-link is-primary"
           >
             返回首页
           </Link>
           <Link
             to="/content"
-            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+            className="action-link"
           >
             打开知识库
           </Link>
@@ -85,68 +83,49 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
   const { stage, subject, topic } = topicData;
 
   return (
-    <div className="space-y-6">
-      <section className="flex flex-wrap items-center justify-between gap-4 rounded-[30px] border border-white/10 bg-slate-950/55 p-6">
+    <div className="page-stack">
+      <section className="surface-panel visual-info-panel">
         <div>
-          <p className="text-xs font-medium tracking-[0.2em] text-slate-500 uppercase">
+          <p className="surface-eyebrow">
             {stage.label} / {subject.label} / 可视化页面
           </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">
-            {topic.title}
-          </h2>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400">
-            {topic.summary}
-          </p>
+          <h2 className="surface-title visual-page-title">{topic.title}</h2>
+          <p className="surface-copy visual-page-copy">{topic.summary}</p>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            to="/"
-            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
-          >
+        <div className="action-row">
+          <Link to="/" className="action-link">
             返回首页
           </Link>
-          <Link
-            to="/content"
-            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
-          >
+          <Link to="/content" className="action-link">
             返回知识库
           </Link>
         </div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.15fr,0.85fr]">
-        <article className="rounded-[30px] border border-cyan-400/15 bg-cyan-400/8 p-6">
-          <p className="text-xs font-medium tracking-[0.2em] text-cyan-200 uppercase">
-            页面说明
-          </p>
-          <h3 className="mt-4 text-2xl font-semibold text-white">
-            当前先用科技简约风承接可视化页面
-          </h3>
-          <ul className="mt-5 space-y-3 text-sm leading-7 text-slate-300">
+      <section className="visual-overview-grid">
+        <article className="surface-panel accent-panel">
+          <p className="surface-eyebrow accent-copy">页面说明</p>
+          <h3 className="surface-title section-title-sm">当前先用更克制的科技简约风承接页面</h3>
+          <ul className="visual-bullet-list">
             {topic.highlights.map((item) => (
-              <li key={item} className="flex items-start gap-3">
-                <span className="mt-2 h-1.5 w-1.5 rounded-full bg-cyan-300" />
+              <li key={item} className="visual-bullet-item">
+                <span className="visual-bullet-dot" />
                 <span>{item}</span>
               </li>
             ))}
           </ul>
         </article>
 
-        <aside className="rounded-[30px] border border-white/10 bg-slate-950/55 p-6">
-          <p className="text-xs font-medium tracking-[0.2em] text-slate-500 uppercase">
-            全屏说明
-          </p>
-          <div className="mt-4 space-y-4 text-sm leading-7 text-slate-400">
+        <aside className="surface-panel">
+          <p className="surface-eyebrow">全屏说明</p>
+          <div className="info-stack">
             <p>点击右上角全屏图标即可进入全屏查看。</p>
             <p>进入全屏后，右上角会保留退出全屏按钮。</p>
             <p>按键盘 `Esc` 也可以直接退出全屏。</p>
           </div>
-          <div className="mt-5 flex flex-wrap gap-2">
+          <div className="topic-tag-row">
             {topic.tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300"
-              >
+              <span key={tag} className="topic-tag">
                 {tag}
               </span>
             ))}
@@ -156,21 +135,17 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
 
       <section
         ref={fullscreenRef}
-        className="visual-fullscreen-shell rounded-[34px] border border-cyan-400/15 bg-slate-950/70 p-6 shadow-[0_32px_90px_rgba(2,6,23,0.48)]"
+        className="visual-shell"
       >
-        <div className="flex items-center justify-between gap-4">
+        <div className="visual-shell-head">
           <div>
-            <p className="text-xs font-medium tracking-[0.2em] text-slate-500 uppercase">
-              可视化画布
-            </p>
-            <h3 className="mt-2 text-2xl font-semibold text-white">
-              {topic.title}
-            </h3>
+            <p className="surface-eyebrow">可视化画布</p>
+            <h3 className="surface-title section-title-sm">{topic.title}</h3>
           </div>
           <button
             type="button"
             onClick={toggleFullscreen}
-            className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-200 transition hover:border-cyan-400/20 hover:bg-cyan-400/10 hover:text-white"
+            className="fullscreen-button"
             aria-label={isFullscreen ? "退出全屏" : "进入全屏"}
             title={isFullscreen ? "退出全屏" : "进入全屏"}
           >
@@ -178,59 +153,47 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
           </button>
         </div>
 
-        <div className="visual-canvas relative mt-6 overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(7,15,28,0.98),rgba(5,10,20,1))] p-6">
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:28px_28px] opacity-25" />
-          <div className="absolute left-[10%] top-[14%] h-28 w-28 rounded-full border border-cyan-400/20 bg-cyan-400/8 blur-[2px]" />
-          <div className="absolute right-[12%] top-[18%] h-24 w-24 rounded-full border border-blue-400/20 bg-blue-400/8 blur-[2px]" />
-          <div className="absolute left-[20%] top-1/2 h-px w-[52%] -rotate-12 bg-gradient-to-r from-transparent via-cyan-300 to-transparent opacity-80" />
-          <div className="absolute left-[28%] top-[58%] h-px w-[44%] rotate-12 bg-gradient-to-r from-transparent via-blue-300 to-transparent opacity-70" />
+        <div className="visual-canvas">
+          <div className="visual-grid-layer" />
+          <div className="visual-glow visual-glow-a" />
+          <div className="visual-glow visual-glow-b" />
+          <div className="visual-line visual-line-a" />
+          <div className="visual-line visual-line-b" />
 
-          <div className="relative flex h-full min-h-[580px] flex-col justify-between">
-            <div className="grid gap-4 md:grid-cols-3">
+          <div className="visual-canvas-inner">
+            <div className="visual-metric-grid">
               {sceneMetrics.map((metric) => (
-                <article
-                  key={metric.label}
-                  className="rounded-[24px] border border-white/8 bg-white/5 p-4 backdrop-blur"
-                >
-                  <p className="text-xs tracking-[0.18em] text-slate-500 uppercase">
-                    {metric.label}
-                  </p>
-                  <p className="mt-3 text-2xl font-semibold text-white">
-                    {metric.value}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-slate-400">
-                    {metric.detail}
-                  </p>
+                <article key={metric.label} className="visual-metric-card">
+                  <p className="surface-eyebrow">{metric.label}</p>
+                  <p className="visual-metric-value">{metric.value}</p>
+                  <p className="visual-metric-copy">{metric.detail}</p>
                 </article>
               ))}
             </div>
 
-            <div className="relative mx-auto grid w-full max-w-3xl place-items-center">
-              <div className="absolute h-[340px] w-[340px] rounded-full border border-cyan-400/15" />
-              <div className="absolute h-[240px] w-[240px] rounded-full border border-white/10" />
-              <div className="absolute h-[96px] w-[96px] rounded-[28px] border border-cyan-400/30 bg-cyan-400/10 shadow-[0_0_40px_rgba(34,211,238,0.22)]" />
-              <div className="absolute left-[14%] top-[18%] rounded-2xl border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-slate-200">
+            <div className="visual-centerpiece">
+              <div className="visual-orbit visual-orbit-lg" />
+              <div className="visual-orbit visual-orbit-md" />
+              <div className="visual-core" />
+              <div className="floating-note floating-note-a">
                 参数层
               </div>
-              <div className="absolute right-[12%] top-[20%] rounded-2xl border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-slate-200">
+              <div className="floating-note floating-note-b">
                 结论层
               </div>
-              <div className="absolute bottom-[16%] left-[20%] rounded-2xl border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-slate-200">
+              <div className="floating-note floating-note-c">
                 图形层
               </div>
-              <div className="absolute bottom-[14%] right-[18%] rounded-2xl border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-slate-200">
+              <div className="floating-note floating-note-d">
                 状态层
               </div>
-              <div className="h-[340px]" />
+              <div className="visual-centerpiece-spacer" />
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-3">
+            <div className="visual-detail-grid">
               {topic.highlights.map((item) => (
-                <article
-                  key={item}
-                  className="rounded-[24px] border border-white/8 bg-white/5 p-4"
-                >
-                  <p className="text-sm leading-7 text-slate-300">{item}</p>
+                <article key={item} className="visual-detail-card">
+                  <p>{item}</p>
                 </article>
               ))}
             </div>

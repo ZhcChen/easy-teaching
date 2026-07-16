@@ -19,7 +19,7 @@ export function CatalogWorkbench({
   title,
   description,
 }: CatalogWorkbenchProps) {
-  const defaultStage = teachingStages[1]?.id ?? teachingStages[0]?.id ?? "junior";
+  const defaultStage = teachingStages[0]?.id ?? "junior";
   const initialStage = getStageById(defaultStage)!;
 
   const [selectedStageId, setSelectedStageId] = useState<StageId>(initialStage.id);
@@ -47,66 +47,46 @@ export function CatalogWorkbench({
   }
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-[32px] border border-cyan-400/15 bg-[linear-gradient(135deg,rgba(14,165,233,0.18),rgba(15,23,42,0.92)_42%,rgba(59,130,246,0.08))] p-8 shadow-[0_30px_80px_rgba(2,6,23,0.45)]">
-        <span className="inline-flex items-center rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-medium tracking-[0.18em] text-cyan-200 uppercase">
-          {eyebrow}
-        </span>
-        <div className="mt-4 max-w-4xl space-y-3">
-          <h2 className="text-4xl font-semibold tracking-tight text-white">
-            {title}
-          </h2>
-          <p className="max-w-3xl text-base leading-8 text-slate-300">
-            {description}
-          </p>
+    <div className="page-stack">
+      <section className="hero-surface">
+        <span className="eyebrow-chip">{eyebrow}</span>
+        <div className="hero-copy-block">
+          <h2 className="hero-heading">{title}</h2>
+          <p className="hero-paragraph">{description}</p>
         </div>
-        <div className="mt-6 flex flex-wrap gap-3 text-sm text-slate-200">
-          <span className="rounded-full border border-white/10 bg-white/6 px-3 py-2">
-            入口顺序：学段 → 学科 → 知识点
-          </span>
-          <span className="rounded-full border border-white/10 bg-white/6 px-3 py-2">
-            设计风格：科技风格 · 简约
-          </span>
-          <span className="rounded-full border border-white/10 bg-white/6 px-3 py-2">
-            点击知识点直接进入可视化页面
-          </span>
+        <div className="hero-meta-row">
+          <span className="meta-pill">学段 → 学科 → 知识点</span>
+          <span className="meta-pill">默认亮色主题</span>
+          <span className="meta-pill">点击知识点直接进入页面</span>
         </div>
       </section>
 
-      <section className="rounded-[30px] border border-white/10 bg-slate-950/55 p-6">
-        <div className="flex items-center justify-between gap-4">
+      <section className="path-surface">
+        <div className="surface-head">
           <div>
-            <p className="text-xs font-medium tracking-[0.2em] text-slate-500 uppercase">
-              当前路径
-            </p>
-            <h3 className="mt-3 text-xl font-semibold text-white">
+            <p className="surface-eyebrow">当前路径</p>
+            <h3 className="surface-title">
               {selectedStage.label} / {selectedSubject.label}
             </h3>
           </div>
-          <div className="rounded-2xl border border-cyan-400/15 bg-cyan-400/8 px-4 py-3 text-right">
-            <p className="text-xs tracking-[0.18em] text-cyan-200 uppercase">
-              当前知识点
-            </p>
-            <p className="mt-1 text-lg font-semibold text-white">
+          <div className="count-chip">
+            <p className="count-chip-label">当前知识点</p>
+            <p className="count-chip-value">
               {selectedSubject.topics.length} 个入口
             </p>
           </div>
         </div>
       </section>
 
-      <section className="space-y-4">
-        <div className="flex items-end justify-between gap-4">
+      <section className="step-section">
+        <div className="section-heading">
           <div>
-            <p className="text-xs font-medium tracking-[0.2em] text-slate-500 uppercase">
-              Step 01
-            </p>
-            <h3 className="mt-2 text-2xl font-semibold text-white">先选学段</h3>
+            <p className="section-step">Step 01</p>
+            <h3 className="section-title">选择学段</h3>
           </div>
-          <p className="max-w-xl text-sm leading-7 text-slate-400">
-            入口先以学段切分，后面再细分到学科和知识点，结构更稳定。
-          </p>
+          <p className="section-copy">入口先按学段切分，后面再细分到学科和知识点。</p>
         </div>
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="choice-grid">
           {teachingStages.map((stage) => {
             const active = stage.id === selectedStage.id;
             return (
@@ -114,32 +94,14 @@ export function CatalogWorkbench({
                 key={stage.id}
                 type="button"
                 onClick={() => handleStageChange(stage.id)}
-                className={[
-                  "group rounded-[28px] border p-6 text-left transition",
-                  active
-                    ? "border-cyan-400/30 bg-cyan-400/10 shadow-[0_18px_48px_rgba(8,145,178,0.16)]"
-                    : "border-white/10 bg-slate-950/45 hover:border-cyan-400/20 hover:bg-white/5",
-                ].join(" ")}
+                className={active ? "choice-card is-active" : "choice-card"}
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="choice-card-top">
                   <div>
-                    <p className="text-sm font-medium text-cyan-200">
-                      {stage.label}
-                    </p>
-                    <p className="mt-3 text-sm leading-7 text-slate-300">
-                      {stage.description}
-                    </p>
+                    <p className="choice-card-title">{stage.label}</p>
+                    <p className="choice-card-copy">{stage.description}</p>
                   </div>
-                  <span
-                    className={[
-                      "rounded-full px-3 py-1 text-xs",
-                      active
-                        ? "bg-cyan-400 text-slate-950"
-                        : "border border-white/10 text-slate-400",
-                    ].join(" ")}
-                  >
-                    {stage.subjects.length} 学科
-                  </span>
+                  <span className="choice-card-count">{stage.subjects.length} 学科</span>
                 </div>
               </button>
             );
@@ -147,19 +109,15 @@ export function CatalogWorkbench({
         </div>
       </section>
 
-      <section className="space-y-4">
-        <div className="flex items-end justify-between gap-4">
+      <section className="step-section">
+        <div className="section-heading">
           <div>
-            <p className="text-xs font-medium tracking-[0.2em] text-slate-500 uppercase">
-              Step 02
-            </p>
-            <h3 className="mt-2 text-2xl font-semibold text-white">再选学科</h3>
+            <p className="section-step">Step 02</p>
+            <h3 className="section-title">选择学科</h3>
           </div>
-          <p className="max-w-xl text-sm leading-7 text-slate-400">
-            当前先做卡片式入口，不做复杂筛选器，保持直达感。
-          </p>
+          <p className="section-copy">保持直接，不上复杂筛选器，先让学科入口足够清楚。</p>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="subject-grid">
           {selectedStage.subjects.map((subject) => {
             const active = subject.id === selectedSubject.id;
             return (
@@ -167,76 +125,53 @@ export function CatalogWorkbench({
                 key={subject.id}
                 type="button"
                 onClick={() => setSelectedSubjectId(subject.id)}
-                className={[
-                  "rounded-[28px] border p-5 text-left transition",
-                  active
-                    ? "border-cyan-400/30 bg-white/8 shadow-[0_18px_48px_rgba(8,145,178,0.12)]"
-                    : "border-white/10 bg-slate-950/45 hover:border-cyan-400/20 hover:bg-white/5",
-                ].join(" ")}
+                className={active ? "subject-card is-active" : "subject-card"}
               >
-                <p className="text-lg font-semibold text-white">{subject.label}</p>
-                <p className="mt-3 text-sm leading-7 text-slate-400">
-                  {subject.summary}
-                </p>
+                <p className="subject-card-title">{subject.label}</p>
+                <p className="subject-card-copy">{subject.summary}</p>
               </button>
             );
           })}
         </div>
       </section>
 
-      <section className="space-y-4">
-        <div className="flex items-end justify-between gap-4">
+      <section className="step-section">
+        <div className="section-heading">
           <div>
-            <p className="text-xs font-medium tracking-[0.2em] text-slate-500 uppercase">
-              Step 03
-            </p>
-            <h3 className="mt-2 text-2xl font-semibold text-white">
-              最后选知识点
-            </h3>
+            <p className="section-step">Step 03</p>
+            <h3 className="section-title">选择知识点</h3>
           </div>
-          <p className="max-w-xl text-sm leading-7 text-slate-400">
-            点击卡片直接进入对应可视化页面，后面再逐步替换为真实 2D / 3D
-            引擎内容。
-          </p>
+          <p className="section-copy">点击卡片直接进入对应可视化页面，后续再替换为真实引擎内容。</p>
         </div>
-        <div className="grid gap-4 xl:grid-cols-3">
+        <div className="topic-grid">
           {selectedSubject.topics.map((topic) => (
             <Link
               key={topic.id}
               to={`/visual/${topic.id}`}
-              className="group flex h-full flex-col rounded-[28px] border border-white/10 bg-slate-950/55 p-6 transition hover:border-cyan-400/25 hover:bg-white/5 hover:shadow-[0_20px_56px_rgba(8,145,178,0.12)]"
+              className="topic-card"
             >
-              <div className="flex items-center justify-between gap-4">
-                <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-200">
-                  {topic.mode}
-                </span>
-                <span className="text-xs text-slate-500">{topic.status}</span>
+              <div className="topic-card-top">
+                <span className="topic-mode-pill">{topic.mode}</span>
+                <span className="topic-status">{topic.status}</span>
               </div>
-              <h4 className="mt-5 text-2xl font-semibold text-white transition group-hover:text-cyan-100">
-                {topic.title}
-              </h4>
-              <p className="mt-3 text-sm leading-7 text-slate-400">
-                {topic.summary}
-              </p>
-              <div className="mt-5 flex flex-wrap gap-2">
+              <h4 className="topic-card-title">{topic.title}</h4>
+              <p className="topic-card-copy">{topic.summary}</p>
+              <div className="topic-tag-row">
                 {topic.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full border border-white/8 bg-white/5 px-3 py-1 text-xs text-slate-300"
-                  >
+                  <span key={tag} className="topic-tag">
                     {tag}
                   </span>
                 ))}
               </div>
-              <ul className="mt-5 space-y-2 text-sm text-slate-400">
+              <ul className="topic-highlight-list">
                 {topic.highlights.map((item) => (
-                  <li key={item} className="flex items-start gap-2">
-                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-cyan-300" />
+                  <li key={item} className="topic-highlight-item">
+                    <span className="topic-highlight-dot" />
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
-              <div className="mt-auto pt-6 text-sm font-medium text-cyan-200">
+              <div className="topic-link-copy">
                 进入可视化页面 →
               </div>
             </Link>

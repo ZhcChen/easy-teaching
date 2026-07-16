@@ -12,28 +12,35 @@ export function meta({}: Route.MetaArgs) {
 
 export default function MePage() {
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="page-stack">
+      <section className="hero-surface">
+        <span className="eyebrow-chip">我的</span>
+        <div className="hero-copy-block">
+          <h2 className="hero-heading">偏好、本地数据与同步入口集中管理</h2>
+          <p className="hero-paragraph">
+            当前“我的”先保持克制，重点说明后续会承接的偏好、本地数据和同步能力。
+          </p>
+        </div>
+      </section>
+
+      <section className="simple-grid">
       {sections.map((section) => (
-        <section
-          key={section.title}
-          className="rounded-[28px] border border-white/10 bg-white/5 p-6"
-        >
-          <div className="space-y-2">
-            <h2 className="text-xl font-semibold text-white">{section.title}</h2>
-            <p className="text-sm leading-6 text-slate-300">{section.description}</p>
+        <section key={section.title} className="surface-panel">
+          <div>
+            <p className="surface-eyebrow">模块说明</p>
+            <h2 className="surface-title">{section.title}</h2>
+            <p className="surface-copy">{section.description}</p>
           </div>
-          <ul className="mt-5 space-y-3">
+          <ul className="list-stack">
             {section.items.map((item) => (
-              <li
-                key={item}
-                className="rounded-2xl border border-white/8 bg-slate-950/50 px-4 py-3 text-sm text-slate-300"
-              >
-                {item}
+              <li key={item} className="list-card">
+                <p className="list-card-title">{item}</p>
               </li>
             ))}
           </ul>
         </section>
       ))}
+      </section>
     </div>
   );
 }
