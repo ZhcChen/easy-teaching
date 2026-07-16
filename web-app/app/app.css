@@ -327,7 +327,6 @@ a:focus-visible {
 
 .page-hero,
 .hero-surface,
-.content-section,
 .surface-panel,
 .visual-shell,
 .status-panel {
@@ -493,51 +492,20 @@ a:focus-visible {
   color: var(--text-muted);
 }
 
-.content-section,
 .surface-panel,
 .status-panel,
 .visual-shell {
   padding: 24px;
 }
 
-.content-section {
+.content-flow-section {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.stage-selection-shell {
+.stage-selection-flow {
   position: relative;
-  overflow: hidden;
-  padding: 28px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-strong) 94%, transparent) 0%, color-mix(in srgb, var(--surface-soft) 86%, transparent) 100%);
-}
-
-.stage-selection-shell::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(rgba(120, 155, 210, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(120, 155, 210, 0.08) 1px, transparent 1px);
-  background-size: 28px 28px;
-  opacity: 0.48;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.58) 0%, transparent 88%);
-  pointer-events: none;
-}
-
-.stage-selection-shell::after {
-  content: "";
-  position: absolute;
-  top: -120px;
-  right: -80px;
-  width: 320px;
-  height: 320px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(23, 105, 255, 0.16) 0%, transparent 70%);
-  filter: blur(8px);
-  pointer-events: none;
 }
 
 .section-header {
@@ -2188,7 +2156,6 @@ a:focus-visible {
 
   .page-hero,
   .hero-surface,
-  .content-section,
   .surface-panel,
   .status-panel,
   .visual-shell {

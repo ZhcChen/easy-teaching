@@ -81,7 +81,7 @@ export default function ContentSubjectPage({ params }: Route.ComponentProps) {
         </aside>
       </section>
 
-      <section className="content-section">
+      <section className="content-flow-section">
         <div className="section-header">
           <div>
             <p className="section-kicker">Step 03</p>

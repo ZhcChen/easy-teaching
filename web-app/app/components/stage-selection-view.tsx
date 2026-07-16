@@ -5,7 +5,7 @@ import { teachingStages } from "../data/teaching-catalog";
 export function StageSelectionView() {
   return (
     <div className="page-stack">
-      <section className="content-section stage-selection-shell">
+      <section className="content-flow-section stage-selection-flow">
         <div className="section-header stage-selection-header">
           <div className="stage-selection-title-block">
             <p className="section-kicker">Step 01</p>
