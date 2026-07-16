@@ -1,0 +1,35 @@
+<svg width="960" height="280" viewBox="0 0 960 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="easyTeachingGradientHorizontal" x1="36" y1="212" x2="220" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#16C79A" />
+      <stop offset="0.55" stop-color="#2F7BFF" />
+      <stop offset="1" stop-color="#775CFF" />
+    </linearGradient>
+    <filter id="softShadowHorizontal" x="8" y="12" width="240" height="240" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+      <feOffset dy="8" />
+      <feGaussianBlur stdDeviation="8" />
+      <feComposite in2="hardAlpha" operator="out" />
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0902 0 0 0 0 0.1922 0 0 0 0 0.3608 0 0 0 0.18 0" />
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_1" />
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_1" result="shape" />
+    </filter>
+  </defs>
+  <g filter="url(#softShadowHorizontal)">
+    <rect x="16" y="16" width="224" height="224" rx="56" fill="url(#easyTeachingGradientHorizontal)" />
+  </g>
+  <circle cx="128" cy="64" r="12" fill="white" />
+  <path d="M128 84V184" stroke="white" stroke-width="12" stroke-linecap="round" />
+  <path d="M128 98C111 84 92 78 72 78C58.7452 78 48 88.7452 48 102V168C48 181.255 58.7452 192 72 192H116" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M128 98C145 84 164 78 184 78C197.255 78 208 88.7452 208 102V168C208 181.255 197.255 192 184 192H140" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+  <text x="292" y="118" fill="#0F172A" font-family="Avenir Next, Inter, PingFang SC, Helvetica Neue, Arial, sans-serif" font-size="72" font-weight="700" letter-spacing="-1.5">
+    easy
+  </text>
+  <text x="292" y="188" fill="#334155" font-family="Avenir Next, Inter, PingFang SC, Helvetica Neue, Arial, sans-serif" font-size="72" font-weight="500" letter-spacing="-1.5">
+    teaching
+  </text>
+  <text x="296" y="226" fill="#64748B" font-family="Avenir Next, Inter, PingFang SC, Helvetica Neue, Arial, sans-serif" font-size="24" font-weight="500" letter-spacing="4">
+    VISUAL LEARNING SYSTEM
+  </text>
+</svg>

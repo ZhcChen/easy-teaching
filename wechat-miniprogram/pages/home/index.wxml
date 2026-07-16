@@ -1,0 +1,16 @@
+<view class="page">
+  <view class="hero">
+    <view class="title">{{title}}</view>
+    <view class="subtitle">{{subtitle}}</view>
+  </view>
+
+  <view class="card">
+    <view class="label">当前模块</view>
+    <view class="value">{{moduleName}}</view>
+  </view>
+
+  <view class="card">
+    <view class="label">当前路线</view>
+    <view class="value">原生微信小程序</view>
+  </view>
+</view>

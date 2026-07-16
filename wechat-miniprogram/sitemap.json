@@ -1,0 +1,9 @@
+{
+  "desc": "Easy Teaching sitemap",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
+}

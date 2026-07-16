@@ -2,6 +2,8 @@
 **/.DS_Store
 **/.hbuilderx/
 **/unpackage/
+**/miniprogram_npm/
 **/node_modules/
 **/dist/
 **/coverage/
+**/project.private.config.json
