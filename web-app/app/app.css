@@ -578,6 +578,31 @@ a:focus-visible {
   border-radius: 22px;
   background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
   box-shadow: var(--shadow);
+  transition:
+    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.2s ease,
+    box-shadow 0.24s ease,
+    background 0.2s ease;
+}
+
+.entry-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    transparent 34%,
+    rgba(255, 255, 255, 0.34) 48%,
+    transparent 62%,
+    transparent 100%
+  );
+  opacity: 0;
+  transform: translateX(-120%);
+  transition:
+    transform 0.56s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.2s ease;
+  pointer-events: none;
 }
 
 .entry-card::after {
@@ -590,17 +615,28 @@ a:focus-visible {
   border-radius: 50%;
   background: radial-gradient(circle, var(--brand-soft) 0%, transparent 72%);
   opacity: 0;
+  transform: translate3d(0, 0, 0) scale(0.92);
+  transition:
+    opacity 0.22s ease,
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
 }
 
 .entry-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-5px);
   border-color: var(--line-strong);
-  box-shadow: 0 24px 44px rgba(15, 31, 56, 0.12);
+  background: color-mix(in srgb, var(--surface-strong) 96%, var(--brand-soft));
+  box-shadow: 0 28px 52px rgba(15, 31, 56, 0.12);
+}
+
+.entry-card:hover::before {
+  opacity: 1;
+  transform: translateX(42%);
 }
 
 .entry-card:hover::after {
   opacity: 1;
+  transform: translate3d(-8px, -10px, 0) scale(1.05);
 }
 
 .entry-card-stage {
@@ -629,6 +665,14 @@ a:focus-visible {
   align-items: flex-start;
 }
 
+.entry-card-top,
+.entry-card-body,
+.entry-card-meta,
+.entry-highlight-list {
+  position: relative;
+  z-index: 1;
+}
+
 .entry-card-index {
   color: var(--brand-strong);
   font-size: 12px;
@@ -638,14 +682,20 @@ a:focus-visible {
 }
 
 .entry-card-arrow {
+  display: inline-flex;
+  align-items: center;
   color: var(--text-secondary);
   font-size: 14px;
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.18s ease;
 }
 
 .entry-card-body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .entry-card-title {
@@ -653,12 +703,16 @@ a:focus-visible {
   font-size: 1.85rem;
   line-height: 1.1;
   letter-spacing: -0.03em;
+  transition:
+    color 0.18s ease,
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .entry-card-copy {
   margin: 0;
   color: var(--text-secondary);
   line-height: 1.75;
+  transition: color 0.18s ease;
 }
 
 .entry-card-meta-item,
@@ -686,6 +740,16 @@ a:focus-visible {
   border-color: var(--line);
   background: var(--surface-soft);
   color: var(--text-secondary);
+}
+
+.entry-card-meta-item,
+.entry-badge,
+.entry-highlight-item {
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
 }
 
 .entry-highlight-list,
@@ -719,6 +783,41 @@ a:focus-visible {
   border-radius: 999px;
   background: var(--brand);
   box-shadow: 0 0 0 4px var(--brand-soft);
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.18s ease;
+}
+
+.entry-card:hover .entry-card-body {
+  transform: translateY(-2px);
+}
+
+.entry-card:hover .entry-card-title {
+  color: var(--brand-strong);
+  transform: translateX(2px);
+}
+
+.entry-card:hover .entry-card-copy {
+  color: var(--text-primary);
+}
+
+.entry-card:hover .entry-card-arrow {
+  transform: translateX(6px);
+  color: var(--brand-strong);
+}
+
+.entry-card:hover .entry-card-meta-item,
+.entry-card:hover .entry-badge {
+  transform: translateY(-2px);
+}
+
+.entry-card:hover .entry-highlight-item {
+  transform: translateX(4px);
+}
+
+.entry-card:hover .entry-highlight-dot {
+  transform: scale(1.14);
+  box-shadow: 0 0 0 5px var(--brand-soft);
 }
 
 .status-panel {
