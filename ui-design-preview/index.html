@@ -12,57 +12,95 @@
   </head>
   <body data-theme="bright">
     <div class="workspace">
-      <header class="toolbar">
-        <div class="toolbar-block">
-          <span class="toolbar-label">设计方向</span>
-          <div class="switch-row" id="theme-switches">
-            <button class="switch-chip is-active" data-theme="bright">明亮教育卡片风</button>
-            <button class="switch-chip" data-theme="path">学习路径风</button>
-            <button class="switch-chip" data-theme="lab">轻科技实验室风</button>
-          </div>
+      <aside class="control-panel">
+        <div class="panel-card control-card">
+          <p class="panel-eyebrow">左侧控制区</p>
+          <h1 class="panel-title">UI 设计预览控制台</h1>
+          <p class="panel-copy">
+            左侧负责切换视觉方向和页面，右侧固定使用 iPhone 12 Pro Max 尺寸进行 UI 预览。
+          </p>
         </div>
-        <div class="toolbar-block">
-          <span class="toolbar-label">预览页面</span>
-          <div class="switch-row" id="page-switches">
-            <button class="switch-chip is-active" data-page="home">首页</button>
-            <button class="switch-chip" data-page="content">内容</button>
-            <button class="switch-chip" data-page="study">学习</button>
-            <button class="switch-chip" data-page="mine">我的</button>
-          </div>
-        </div>
-      </header>
 
-      <main class="preview-stage">
-        <section class="preview-notes">
-          <div class="note-card">
-            <p class="note-eyebrow">UI 设计模块</p>
-            <h1>4 tab 可交互小程序视觉预览</h1>
-            <p id="theme-description">
-              当前方向以高可读性和教育卡片感为主，适合作为首页、内容页和我的页的基础风格。
-            </p>
-          </div>
-          <div class="note-card">
-            <p class="note-eyebrow">交互说明</p>
-            <ul class="note-list">
-              <li>顶部可切换 3 套视觉方向</li>
-              <li>手机底部 tab 可切换页面</li>
-              <li>页面内部支持学段、学科、筛选和同步模拟</li>
-            </ul>
+        <section class="panel-card">
+          <div class="toolbar-block">
+            <span class="toolbar-label">设计方向</span>
+            <div class="switch-row" id="theme-switches">
+              <button class="switch-chip is-active" data-theme="bright">明亮教育卡片风</button>
+              <button class="switch-chip" data-theme="path">学习路径风</button>
+              <button class="switch-chip" data-theme="lab">轻科技实验室风</button>
+            </div>
           </div>
         </section>
 
-        <section class="phone-shell">
-          <div class="phone-frame">
-            <div class="phone-camera"></div>
-            <div class="phone-screen">
-              <div class="status-bar">
-                <span>9:41</span>
-                <span>5G</span>
-              </div>
-              <div class="screen-content" id="screen-content"></div>
-              <nav class="tab-bar" id="tab-bar"></nav>
+        <section class="panel-card">
+          <div class="toolbar-block">
+            <span class="toolbar-label">预览页面</span>
+            <div class="switch-row" id="page-switches">
+              <button class="switch-chip is-active" data-page="home">首页</button>
+              <button class="switch-chip" data-page="content">内容</button>
+              <button class="switch-chip" data-page="study">学习</button>
+              <button class="switch-chip" data-page="mine">我的</button>
             </div>
           </div>
+        </section>
+
+        <section class="panel-card">
+          <p class="note-eyebrow">当前方向</p>
+          <p class="panel-copy" id="theme-description">
+            当前方向以高可读性和教育卡片感为主，适合作为首页、内容页和我的页的基础风格。
+          </p>
+        </section>
+
+        <section class="panel-card">
+          <p class="note-eyebrow">交互说明</p>
+          <ul class="note-list">
+            <li>左侧按钮切换 3 套视觉方向</li>
+            <li>右侧手机底部 tab 切换页面</li>
+            <li>页面内部支持学段、学科、筛选和同步模拟</li>
+          </ul>
+        </section>
+
+        <section class="panel-card">
+          <p class="note-eyebrow">预览设备</p>
+          <div class="device-spec">
+            <div class="device-spec-item">
+              <span class="device-spec-label">机型</span>
+              <strong>iPhone 12 Pro Max</strong>
+            </div>
+            <div class="device-spec-item">
+              <span class="device-spec-label">画布</span>
+              <strong>428 × 926</strong>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <main class="preview-stage">
+        <section class="preview-header">
+          <div>
+            <p class="note-eyebrow">右侧预览区</p>
+            <h2 class="preview-title">固定机型交互预览</h2>
+            <p class="preview-copy">
+              右侧预览区域固定使用 iPhone 12 Pro Max 设计尺寸，方便后续统一 UI 设计与切图基准。
+            </p>
+          </div>
+          <span class="badge-pill">428 × 926</span>
+        </section>
+
+        <section class="preview-canvas">
+          <section class="phone-shell">
+            <div class="phone-frame">
+              <div class="phone-camera"></div>
+              <div class="phone-screen">
+                <div class="status-bar">
+                  <span>9:41</span>
+                  <span>5G</span>
+                </div>
+                <div class="screen-content" id="screen-content"></div>
+                <nav class="tab-bar" id="tab-bar"></nav>
+              </div>
+            </div>
+          </section>
         </section>
       </main>
     </div>

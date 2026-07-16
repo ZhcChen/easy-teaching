@@ -19,6 +19,8 @@
   --radius-lg: 22px;
   --radius-md: 16px;
   --radius-sm: 12px;
+  --phone-screen-width: 428px;
+  --phone-screen-height: 926px;
 }
 
 body[data-theme="path"] {
@@ -76,21 +78,56 @@ button {
 .workspace {
   min-height: 100vh;
   padding: 28px;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
   gap: 28px;
 }
 
-.toolbar {
+.control-panel {
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+
+.panel-card {
   padding: 20px 24px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
+}
+
+.control-card {
+  padding-top: 24px;
+}
+
+.panel-eyebrow,
+.preview-title,
+.panel-title,
+.preview-copy,
+.panel-copy {
+  margin: 0;
+}
+
+.panel-eyebrow {
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.panel-title {
+  margin-top: 12px;
+  font-size: 34px;
+  line-height: 1.08;
+}
+
+.panel-copy {
+  margin-top: 12px;
+  color: var(--text-secondary);
+  line-height: 1.8;
 }
 
 .toolbar-block {
@@ -138,40 +175,68 @@ button {
 }
 
 .preview-stage {
-  display: grid;
-  grid-template-columns: minmax(280px, 340px) minmax(340px, 1fr);
-  gap: 28px;
-  align-items: start;
-}
-
-.preview-notes {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
 }
 
-.note-card {
+.preview-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 28px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow);
-  padding: 22px;
 }
 
-.note-card h1 {
-  margin: 10px 0 12px;
+.preview-title {
+  margin-top: 10px;
   font-size: 30px;
   line-height: 1.1;
 }
 
-.note-card p {
-  margin: 0;
+.preview-copy {
+  margin-top: 12px;
   color: var(--text-secondary);
   line-height: 1.7;
 }
 
+.device-spec {
+  display: grid;
+  gap: 12px;
+}
+
+.device-spec-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.device-spec-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.preview-canvas {
+  min-height: calc(var(--phone-screen-height) + 96px);
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--border);
+  border-radius: 36px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(18px);
+}
+
 .note-list {
-  margin: 12px 0 0;
+  margin: 0;
   padding-left: 18px;
   color: var(--text-secondary);
   line-height: 1.8;
@@ -180,12 +245,13 @@ button {
 .phone-shell {
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 
 .phone-frame {
-  width: 390px;
+  width: calc(var(--phone-screen-width) + 32px);
   padding: 16px;
-  border-radius: 40px;
+  border-radius: 48px;
   background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
   box-shadow: var(--phone-shadow);
   position: relative;
@@ -203,8 +269,9 @@ button {
 }
 
 .phone-screen {
-  min-height: 812px;
-  border-radius: 30px;
+  width: var(--phone-screen-width);
+  height: var(--phone-screen-height);
+  border-radius: 34px;
   overflow: hidden;
   background: var(--bg-accent);
   display: flex;
@@ -224,7 +291,7 @@ button {
 .screen-content {
   flex: 1;
   padding: 14px 18px 0;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .tab-bar {
@@ -592,16 +659,16 @@ body[data-theme="lab"] .note-card {
 }
 
 @media (max-width: 1100px) {
-  .preview-stage {
+  .workspace {
     grid-template-columns: 1fr;
   }
 
-  .preview-notes {
-    order: 2;
+  .preview-header {
+    flex-direction: column;
   }
 
-  .phone-shell {
-    order: 1;
+  .preview-canvas {
+    padding: 20px;
   }
 }
 
@@ -610,8 +677,19 @@ body[data-theme="lab"] .note-card {
     padding: 16px;
   }
 
+  .panel-card,
+  .preview-header {
+    padding: 18px;
+  }
+
   .phone-frame {
     width: 100%;
-    max-width: 390px;
+    max-width: calc(var(--phone-screen-width) + 32px);
+  }
+
+  .phone-screen {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 428 / 926;
   }
 }
