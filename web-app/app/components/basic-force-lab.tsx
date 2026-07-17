@@ -391,6 +391,7 @@ export function BasicForceLab({
   ];
 
   const currentForce = forceRows.find((item) => item.key === activeForce) ?? forceRows[0];
+  const latestRecord = runRecords[0] ?? null;
 
   const visibleForces = {
     gravity: true,
@@ -866,119 +867,72 @@ export function BasicForceLab({
               ) : null}
             </svg>
             <div className="force-stage-overlay is-top-left">
-              <section className="force-stage-panel is-overlay">
-                <div className="force-stage-panel-head">
-                  <div>
-                    <p className="surface-eyebrow">实验过程</p>
-                    <h4 className="force-stage-panel-title">{experimentStatus.label}</h4>
-                  </div>
+              <div className="force-stage-hud-card">
+                <div className="force-stage-hud-head">
+                  <span className="force-stage-hud-title">{experimentStatus.label}</span>
                   <span className={`force-state-pill is-${displayedScene.stateTone}`}>
                     {experimentStatus.badge}
                   </span>
                 </div>
-
-                <div className="force-stage-progress">
-                  <div className="force-stage-progress-bar">
-                    <span style={{ width: `${experimentStatus.progress * 100}%` }} />
-                  </div>
-                  <div className="force-stage-progress-copy">
-                    <span>增大拉力</span>
-                    <span>突破静摩擦</span>
-                    <span>匀速测量</span>
-                  </div>
+                <div className="force-stage-progress-inline">
+                  <span style={{ width: `${experimentStatus.progress * 100}%` }} />
                 </div>
-
-                <div className="force-stage-reading-row">
-                  <span className="force-quick-pill">{surfacePresetMeta.label}</span>
-                  <span className="force-quick-pill">{contactAreaMeta.label}</span>
-                  <span className="force-quick-pill">压力 {formatNumber(pressure, 1)} N</span>
+                <div className="force-stage-chip-row">
+                  <span className="force-stage-chip">{surfacePresetMeta.label}</span>
+                  <span className="force-stage-chip">{contactAreaMeta.label}</span>
+                  <span className="force-stage-chip">压力 {formatNumber(pressure, 1)} N</span>
                 </div>
-
-                <p className="force-stage-panel-copy is-overlay-copy">{displayedScene.motionHint}</p>
-                <p className="force-stage-formula">{experimentStatus.formula}</p>
-              </section>
+              </div>
             </div>
 
             <div className="force-stage-overlay is-bottom-left">
-              <section className="force-stage-panel is-overlay is-compact">
-                <div className="force-stage-panel-head">
-                  <div>
-                    <p className="surface-eyebrow">实时受力</p>
-                    <h4 className="force-stage-panel-title">点击卡片高亮箭头</h4>
-                  </div>
-                </div>
-
-                <div className="force-stage-metric-grid is-overlay">
-                  {forceRows.map((item) => (
-                    <button
-                      key={item.key}
-                      type="button"
-                      className={item.key === activeForce ? "force-stage-metric-card is-active" : "force-stage-metric-card"}
-                      onClick={() => setActiveForce(item.key)}
-                    >
-                      <span className="force-stage-metric-head">
-                        <span
-                          className="force-legend-swatch"
-                          style={{ backgroundColor: item.color }}
-                          aria-hidden="true"
-                        />
-                        <span>{item.label}</span>
-                      </span>
-                      <strong>{formatNumber(item.value, 1)} N</strong>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="force-stage-reading-row">
-                  <span className="force-quick-pill">最大静摩擦 {formatNumber(metrics.staticLimit, 1)} N</span>
-                  <span className="force-quick-pill">稳定读数 {formatNumber(metrics.kineticFriction, 1)} N</span>
-                  <span className="force-quick-pill">合力 {formatNumber(displayedScene.netForce, 2)} N</span>
-                </div>
-
-                <p className="force-stage-panel-copy is-overlay-copy">
-                  当前聚焦：{currentForce.label} {formatNumber(currentForce.value, 1)} N
-                </p>
-              </section>
+              <div className="force-stage-chip-grid">
+                {forceRows.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    className={item.key === activeForce ? "force-stage-force-pill is-active" : "force-stage-force-pill"}
+                    onClick={() => setActiveForce(item.key)}
+                  >
+                    <span className="force-stage-force-pill-head">
+                      <span
+                        className="force-legend-swatch"
+                        style={{ backgroundColor: item.color }}
+                        aria-hidden="true"
+                      />
+                      <span>{item.label}</span>
+                    </span>
+                    <strong>{formatNumber(item.value, 1)} N</strong>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="force-stage-overlay is-bottom-right">
-              <section className="force-stage-panel is-overlay is-compact">
-                <div className="force-stage-records-head">
-                  <p className="surface-eyebrow">实验记录</p>
-                  {runRecords.length ? (
-                    <button type="button" className="force-text-button" onClick={clearRecords}>
-                      清空
-                    </button>
-                  ) : null}
+              <div className="force-stage-hud-card is-tight">
+                <div className="force-stage-chip-row">
+                  <span className="force-stage-chip">μs {formatNumber(surfacePresetMeta.muStatic, 2)}</span>
+                  <span className="force-stage-chip">μk {formatNumber(surfacePresetMeta.muKinetic, 2)}</span>
+                  <span className="force-stage-chip">{displayedScene.frictionModeLabel}</span>
                 </div>
-
-                <div className="force-stage-reading-row">
-                  <span className="force-quick-pill">μs = {formatNumber(surfacePresetMeta.muStatic, 2)}</span>
-                  <span className="force-quick-pill">μk = {formatNumber(surfacePresetMeta.muKinetic, 2)}</span>
-                  <span className="force-quick-pill">{displayedScene.frictionModeLabel}</span>
+                <div className="force-stage-chip-row">
+                  <span className="force-stage-chip">f静,max {formatNumber(metrics.staticLimit, 1)} N</span>
+                  <span className="force-stage-chip">稳定读数 {formatNumber(metrics.kineticFriction, 1)} N</span>
                 </div>
-
-                {runRecords.length ? (
-                  <div className="force-stage-record-list is-overlay">
-                    {runRecords.slice(0, 2).map((record) => (
-                      <article key={record.id} className="force-stage-record-card is-overlay">
-                        <div className="force-stage-record-head">
-                          <strong>{formatNumber(record.kineticFriction, 1)} N</strong>
-                          <span className="force-quick-pill">{record.surfaceLabel}</span>
-                        </div>
-                        <div className="force-stage-record-meta">
-                          <span>压力 {formatNumber(record.pressure, 1)} N</span>
-                          <span>{record.contactAreaLabel}</span>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="force-stage-empty">
-                    完成实验后，这里会保留最近结果。
-                  </p>
-                )}
-              </section>
+                <div className="force-stage-result-pill">
+                  <strong>{latestRecord ? `${formatNumber(latestRecord.kineticFriction, 1)} N` : "等待实验"}</strong>
+                  <span>
+                    {latestRecord
+                      ? `${latestRecord.surfaceLabel} · 压力 ${formatNumber(latestRecord.pressure, 1)} N · ${latestRecord.contactAreaLabel}`
+                      : "完成一次实验后记录结果"}
+                  </span>
+                </div>
+                {runRecords.length > 1 ? (
+                  <button type="button" className="force-text-button" onClick={clearRecords}>
+                    清空记录
+                  </button>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
