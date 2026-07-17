@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type RefObject } from "react";
+import { Link } from "react-router";
 
 import type { TeachingTopic } from "../data/teaching-catalog";
 
@@ -10,6 +11,8 @@ type Tone = "balanced" | "warning" | "active";
 
 type BasicForceLabProps = {
   topic: TeachingTopic;
+  backToStagePath: string;
+  backToTopicPath: string;
   isFullscreen: boolean;
   onToggleFullscreen: () => void | Promise<void>;
   fullscreenRef: RefObject<HTMLDivElement | null>;
@@ -75,6 +78,8 @@ const DEFAULT_VALUES = {
 
 export function BasicForceLab({
   topic,
+  backToStagePath,
+  backToTopicPath,
   isFullscreen,
   onToggleFullscreen,
   fullscreenRef,
@@ -631,6 +636,22 @@ export function BasicForceLab({
                     checked={showNetForce}
                     onChange={setShowNetForce}
                   />
+                </div>
+              </section>
+
+              <section className="force-control-section">
+                <div className="force-control-section-head">
+                  <h5 className="force-control-section-title">页面导航</h5>
+                  <span className="force-section-hint">快速返回上一级内容</span>
+                </div>
+
+                <div className="force-nav-grid">
+                  <Link to={backToTopicPath} className="action-link is-primary">
+                    返回知识点页
+                  </Link>
+                  <Link to={backToStagePath} className="action-link">
+                    返回学科页
+                  </Link>
                 </div>
               </section>
             </>

@@ -2176,6 +2176,15 @@ a:focus-visible {
   gap: 10px;
 }
 
+.force-nav-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.force-nav-grid .action-link {
+  width: 100%;
+}
+
 .force-lab-main {
   display: flex;
   flex-direction: column;

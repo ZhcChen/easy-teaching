@@ -94,6 +94,8 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
       {topic.id === "basic-force" ? (
         <BasicForceLab
           topic={topic}
+          backToTopicPath={`/content/${stage.id}/${subject.id}`}
+          backToStagePath={`/content/${stage.id}`}
           isFullscreen={isFullscreen}
           onToggleFullscreen={toggleFullscreen}
           fullscreenRef={fullscreenRef}
@@ -107,14 +109,16 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
         />
       )}
 
-      <div className="action-row">
-        <Link to={`/content/${stage.id}/${subject.id}`} className="action-link is-primary">
-          返回知识点页
-        </Link>
-        <Link to={`/content/${stage.id}`} className="action-link">
-          返回学科页
-        </Link>
-      </div>
+      {topic.id === "basic-force" ? null : (
+        <div className="action-row">
+          <Link to={`/content/${stage.id}/${subject.id}`} className="action-link is-primary">
+            返回知识点页
+          </Link>
+          <Link to={`/content/${stage.id}`} className="action-link">
+            返回学科页
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
