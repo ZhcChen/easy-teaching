@@ -123,37 +123,6 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
         </aside>
       </section>
 
-      <section className="visual-overview-grid">
-        <article className="surface-panel accent-panel">
-          <p className="surface-eyebrow accent-copy">页面说明</p>
-          <h2 className="surface-title section-title-sm">当前先用简约科技风承接可视化场景</h2>
-          <ul className="visual-bullet-list">
-            {topic.highlights.map((item) => (
-              <li key={item} className="visual-bullet-item">
-                <span className="visual-bullet-dot" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </article>
-
-        <aside className="surface-panel">
-          <p className="surface-eyebrow">全屏说明</p>
-          <div className="info-stack">
-            <p>点击右上角全屏图标即可进入全屏查看。</p>
-            <p>进入全屏后，右上角会保留退出全屏按钮。</p>
-            <p>按键盘 Esc 也可以直接退出全屏。</p>
-          </div>
-          <div className="topic-tag-row">
-            {topic.tags.map((tag) => (
-              <span key={tag} className="topic-tag">
-                {tag}
-              </span>
-            ))}
-          </div>
-        </aside>
-      </section>
-
       <section
         ref={fullscreenRef}
         className="visual-shell"

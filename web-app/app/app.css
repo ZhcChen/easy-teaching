@@ -571,8 +571,7 @@ a:focus-visible {
 }
 
 .entry-grid,
-.simple-grid,
-.visual-overview-grid {
+.simple-grid {
   display: grid;
   gap: 18px;
 }
@@ -748,7 +747,6 @@ a:focus-visible {
 .entry-card-top,
 .entry-card-meta,
 .entry-card-badges,
-.topic-tag-row,
 .action-row,
 .app-status,
 .hero-meta-row {
@@ -938,7 +936,6 @@ a:focus-visible {
 
 .entry-card-meta-item,
 .entry-badge,
-.topic-tag,
 .meta-pill {
   display: inline-flex;
   align-items: center;
@@ -974,7 +971,6 @@ a:focus-visible {
 }
 
 .entry-highlight-list,
-.visual-bullet-list,
 .list-stack,
 .step-list {
   display: flex;
@@ -985,8 +981,7 @@ a:focus-visible {
   list-style: none;
 }
 
-.entry-highlight-item,
-.visual-bullet-item {
+.entry-highlight-item {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -995,7 +990,6 @@ a:focus-visible {
 }
 
 .entry-highlight-dot,
-.visual-bullet-dot,
 .topic-highlight-dot {
   width: 8px;
   height: 8px;
@@ -1604,32 +1598,6 @@ a:focus-visible {
   font-weight: 700;
 }
 
-.visual-overview-grid {
-  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
-}
-
-.accent-panel {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 70%, transparent) 0%, transparent 100%),
-    color-mix(in srgb, var(--surface-strong) 94%, transparent);
-}
-
-.accent-copy {
-  color: var(--brand-strong);
-}
-
-.info-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.info-stack p {
-  margin: 0;
-  color: var(--text-secondary);
-  line-height: 1.7;
-}
-
 .visual-shell {
   display: flex;
   flex-direction: column;
@@ -2081,8 +2049,7 @@ a:focus-visible {
   .entry-grid-stage,
   .entry-grid-subject,
   .entry-grid-topic,
-  .simple-grid,
-  .visual-overview-grid {
+  .simple-grid {
     grid-template-columns: 1fr;
   }
 
