@@ -424,6 +424,194 @@ export function BasicForceLab({
 
               <section className="force-control-section">
                 <div className="force-control-section-head">
+                  <h5 className="force-control-section-title">场景状态</h5>
+                  <span className="force-section-hint">当前判断与结论</span>
+                </div>
+
+                <span className={`force-state-pill is-${scene.stateTone}`}>
+                  {scene.stateLabel}
+                </span>
+
+                <div className="force-insight-grid">
+                  <article className="force-insight-card">
+                    <span className="force-insight-label">合力</span>
+                    <strong className="force-insight-value">
+                      {formatNumber(scene.netForce, 1)} N
+                    </strong>
+                  </article>
+                  <article className="force-insight-card">
+                    <span className="force-insight-label">加速度</span>
+                    <strong className="force-insight-value">
+                      {formatNumber(scene.acceleration, 2)} m/s²
+                    </strong>
+                  </article>
+                  <article className="force-insight-card">
+                    <span className="force-insight-label">摩擦模式</span>
+                    <strong className="force-insight-value">{scene.frictionModeLabel}</strong>
+                  </article>
+                  <article className="force-insight-card">
+                    <span className="force-insight-label">公式速览</span>
+                    <strong className="force-insight-value">R = F - f</strong>
+                  </article>
+                </div>
+
+                <div className="force-note-stack">
+                  <p className="force-inline-copy">{scene.summary}</p>
+                  <p className="force-inline-copy">{scene.motionHint}</p>
+                </div>
+              </section>
+
+              <section className="force-control-section">
+                <div className="force-control-section-head">
+                  <h5 className="force-control-section-title">演示控制</h5>
+                  <span className="force-section-hint">操作与学习提示</span>
+                </div>
+
+                <div className="force-action-grid">
+                  <button
+                    type="button"
+                    className={walkthroughActive ? "force-ghost-button is-active" : "force-ghost-button"}
+                    onClick={walkthroughActive ? stopWalkthrough : startWalkthrough}
+                  >
+                    {walkthroughActive ? "退出讲解" : "逐步讲解"}
+                  </button>
+                  <button
+                    type="button"
+                    className="force-ghost-button"
+                    onClick={() => setIsPlaying((current) => !current)}
+                  >
+                    {isPlaying ? "暂停动画" : "播放动画"}
+                  </button>
+                  <button type="button" className="force-ghost-button" onClick={resetDefaults}>
+                    恢复默认
+                  </button>
+                </div>
+
+                <div className="force-highlight-row is-panel">
+                  {topic.highlights.map((item) => (
+                    <span key={item} className="force-highlight-chip">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </section>
+
+              <section
+                className={
+                  walkthroughActive
+                    ? "force-control-section force-control-section-accent"
+                    : "force-control-section"
+                }
+              >
+                <div className="force-control-section-head">
+                  <h5 className="force-control-section-title">逐步讲解</h5>
+                  <span className="force-section-hint">按步骤理解受力关系</span>
+                </div>
+
+                <div className="force-walkthrough-panel-head">
+                  <div className="force-walkthrough-copy">
+                    <h4 className="force-walkthrough-title">
+                      {walkthroughActive ? currentWalkthroughStep.title : "按步骤理解受力关系"}
+                    </h4>
+                    <p className="force-summary-copy">
+                      {walkthroughActive
+                        ? currentWalkthroughStep.description
+                        : "建议按“研究对象 → 重力 → 支持力 → 外力 → 摩擦力 → 合力”的顺序看，逻辑最清晰。"}
+                    </p>
+                  </div>
+
+                  <div className="force-walkthrough-badge">
+                    <span>Step</span>
+                    <strong>{walkthroughStepIndex + 1}</strong>
+                    <span>/ {walkthroughSteps.length}</span>
+                  </div>
+                </div>
+
+                <div
+                  className="force-walkthrough-steps is-panel"
+                  role="tablist"
+                  aria-label="逐步讲解步骤"
+                >
+                  {walkthroughSteps.map((step, index) => (
+                    <button
+                      key={step.id}
+                      type="button"
+                      className={index === walkthroughStepIndex ? "force-step-chip is-active" : "force-step-chip"}
+                      onClick={() => {
+                        if (!walkthroughActive) {
+                          startWalkthrough();
+                        }
+                        setWalkthroughStepIndex(index);
+                      }}
+                    >
+                      <span className="force-step-chip-index">{index + 1}</span>
+                      <span>{step.shortLabel}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="force-walkthrough-actions">
+                  <button
+                    type="button"
+                    className="force-ghost-button"
+                    onClick={() => moveWalkthrough(-1)}
+                    disabled={walkthroughStepIndex === 0}
+                  >
+                    上一步
+                  </button>
+                  <button
+                    type="button"
+                    className="force-ghost-button"
+                    onClick={() => moveWalkthrough(1)}
+                    disabled={walkthroughStepIndex === walkthroughSteps.length - 1}
+                  >
+                    下一步
+                  </button>
+                </div>
+              </section>
+
+              <section className="force-control-section">
+                <div className="force-control-section-head">
+                  <h5 className="force-control-section-title">力明细</h5>
+                  <span className="force-section-hint">逐项查看当前受力</span>
+                </div>
+
+                <div className="force-legend-list">
+                  {forceRows.map((item) => (
+                    <button
+                      key={item.key}
+                      type="button"
+                      className={item.key === activeForce ? "force-legend-item is-active" : "force-legend-item"}
+                      onMouseEnter={() => setActiveForce(item.key)}
+                      onFocus={() => setActiveForce(item.key)}
+                      onClick={() => setActiveForce(item.key)}
+                    >
+                      <span className="force-legend-main">
+                        <span
+                          className="force-legend-swatch"
+                          style={{ backgroundColor: item.color }}
+                          aria-hidden="true"
+                        />
+                        <span className="force-legend-label">{item.label}</span>
+                      </span>
+                      <span className="force-legend-value">
+                        {formatNumber(item.value, 1)} N
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                <p className="force-summary-copy force-detail-copy">{currentForce.description}</p>
+                <div className="force-note-stack">
+                  <p className="force-inline-copy">
+                    最大静摩擦 {formatNumber(scene.staticLimit, 1)} N，当前摩擦
+                    {formatNumber(Math.abs(scene.frictionSigned), 1)} N。
+                  </p>
+                </div>
+              </section>
+
+              <section className="force-control-section">
+                <div className="force-control-section-head">
                   <h5 className="force-control-section-title">显示与演示</h5>
                   <span className="force-section-hint">图层显示与动画</span>
                 </div>
@@ -451,120 +639,18 @@ export function BasicForceLab({
         </aside>
 
         <div className="force-lab-main">
-          <div className="force-toolbar">
-            <div className="force-toolbar-status">
-              <span className={`force-state-pill is-${scene.stateTone}`}>
-                {scene.stateLabel}
-              </span>
-              <span className="force-quick-pill">
-                合力 {formatNumber(scene.netForce, 1)} N
-              </span>
-              <span className="force-quick-pill">
-                a {formatNumber(scene.acceleration, 2)} m/s²
-              </span>
-            </div>
-
-            <div className="force-toolbar-actions">
-              <button
-                type="button"
-                className={walkthroughActive ? "force-ghost-button is-active" : "force-ghost-button"}
-                onClick={walkthroughActive ? stopWalkthrough : startWalkthrough}
-              >
-                {walkthroughActive ? "退出讲解" : "逐步讲解"}
-              </button>
-              <button
-                type="button"
-                className="force-ghost-button"
-                onClick={() => setIsPlaying((current) => !current)}
-              >
-                {isPlaying ? "暂停动画" : "播放动画"}
-              </button>
-              <button type="button" className="force-ghost-button" onClick={resetDefaults}>
-                恢复默认
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  void onToggleFullscreen();
-                }}
-                className="fullscreen-button is-compact"
-                aria-label={isFullscreen ? "退出全屏" : "进入全屏"}
-                title={isFullscreen ? "退出全屏" : "进入全屏"}
-              >
-                {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
-              </button>
-            </div>
-          </div>
-
-          <div className="force-highlight-row">
-            {topic.highlights.map((item) => (
-              <span key={item} className="force-highlight-chip">
-                {item}
-              </span>
-            ))}
-          </div>
-
-          <section className={walkthroughActive ? "force-walkthrough-card is-active" : "force-walkthrough-card"}>
-            <div className="force-walkthrough-head">
-              <div className="force-walkthrough-copy">
-                <p className="force-summary-kicker">逐步讲解</p>
-                <h4 className="force-walkthrough-title">
-                  {walkthroughActive ? currentWalkthroughStep.title : "按步骤理解受力关系"}
-                </h4>
-                <p className="force-summary-copy">
-                  {walkthroughActive
-                    ? currentWalkthroughStep.description
-                    : "建议按“研究对象 → 重力 → 支持力 → 外力 → 摩擦力 → 合力”的顺序看，逻辑最清晰。"}
-                </p>
-              </div>
-
-              <div className="force-walkthrough-badge">
-                <span>Step</span>
-                <strong>{walkthroughStepIndex + 1}</strong>
-                <span>/ {walkthroughSteps.length}</span>
-              </div>
-            </div>
-
-            <div className="force-walkthrough-steps" role="tablist" aria-label="逐步讲解步骤">
-              {walkthroughSteps.map((step, index) => (
-                <button
-                  key={step.id}
-                  type="button"
-                  className={index === walkthroughStepIndex ? "force-step-chip is-active" : "force-step-chip"}
-                  onClick={() => {
-                    if (!walkthroughActive) {
-                      startWalkthrough();
-                    }
-                    setWalkthroughStepIndex(index);
-                  }}
-                >
-                  <span className="force-step-chip-index">{index + 1}</span>
-                  <span>{step.shortLabel}</span>
-                </button>
-              ))}
-            </div>
-
-            <div className="force-walkthrough-actions">
-              <button
-                type="button"
-                className="force-ghost-button"
-                onClick={() => moveWalkthrough(-1)}
-                disabled={walkthroughStepIndex === 0}
-              >
-                上一步
-              </button>
-              <button
-                type="button"
-                className="force-ghost-button"
-                onClick={() => moveWalkthrough(1)}
-                disabled={walkthroughStepIndex === walkthroughSteps.length - 1}
-              >
-                下一步
-              </button>
-            </div>
-          </section>
-
           <div className="visual-canvas force-stage-canvas">
+            <button
+              type="button"
+              onClick={() => {
+                void onToggleFullscreen();
+              }}
+              className="fullscreen-button is-floating"
+              aria-label={isFullscreen ? "退出全屏" : "进入全屏"}
+              title={isFullscreen ? "退出全屏" : "进入全屏"}
+            >
+              {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
+            </button>
             <div className="visual-grid-layer" />
             <div className="visual-glow visual-glow-a" />
             <div className="visual-glow visual-glow-b" />
@@ -755,70 +841,6 @@ export function BasicForceLab({
                 )
               ) : null}
             </svg>
-          </div>
-
-          <div className="force-summary-grid">
-            <article className="force-summary-card">
-              <p className="force-summary-kicker">状态判断</p>
-              <h4 className="force-summary-value">{scene.stateLabel}</h4>
-              <p className="force-summary-copy">{scene.summary}</p>
-            </article>
-
-            <article className="force-summary-card">
-              <p className="force-summary-kicker">摩擦判断</p>
-              <h4 className="force-summary-value">
-                {scene.frictionModeLabel}
-              </h4>
-              <p className="force-summary-copy">
-                最大静摩擦 {formatNumber(scene.staticLimit, 1)} N，当前摩擦
-                {formatNumber(Math.abs(scene.frictionSigned), 1)} N。
-              </p>
-            </article>
-
-            <article className="force-summary-card">
-              <p className="force-summary-kicker">合力结论</p>
-              <h4 className="force-summary-value">
-                {formatNumber(scene.netForce, 1)} N
-              </h4>
-              <p className="force-summary-copy">{scene.motionHint}</p>
-            </article>
-
-            <article className="force-summary-card">
-              <p className="force-summary-kicker">公式速览</p>
-              <h4 className="force-summary-value">R = F - f</h4>
-              <p className="force-summary-copy">
-                当前 a = R / m = {formatNumber(scene.acceleration, 2)} m/s²。
-              </p>
-            </article>
-
-            <article className="force-summary-card is-wide">
-              <p className="force-summary-kicker">力明细</p>
-              <div className="force-legend-grid">
-                {forceRows.map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    className={item.key === activeForce ? "force-legend-item is-active" : "force-legend-item"}
-                    onMouseEnter={() => setActiveForce(item.key)}
-                    onFocus={() => setActiveForce(item.key)}
-                    onClick={() => setActiveForce(item.key)}
-                  >
-                    <span
-                      className="force-legend-swatch"
-                      style={{ backgroundColor: item.color }}
-                      aria-hidden="true"
-                    />
-                    <span className="force-legend-label">{item.label}</span>
-                    <span className="force-legend-value">
-                      {formatNumber(item.value, 1)} N
-                    </span>
-                  </button>
-                ))}
-              </div>
-              <p className="force-summary-copy force-detail-copy">
-                {currentForce.description}
-              </p>
-            </article>
           </div>
         </div>
       </div>

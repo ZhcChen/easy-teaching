@@ -1990,6 +1990,13 @@ a:focus-visible {
   background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
 }
 
+.force-control-section-accent {
+  border-color: var(--line-strong);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 20%, transparent) 0%, transparent 100%),
+    color-mix(in srgb, var(--surface-strong) 94%, transparent);
+}
+
 .force-control-section-head {
   display: flex;
   flex-direction: column;
@@ -2097,10 +2104,63 @@ a:focus-visible {
   accent-color: var(--brand);
 }
 
+.force-insight-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.force-insight-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-strong) 90%, transparent);
+}
+
+.force-insight-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.force-insight-value {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+.force-note-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.force-inline-copy {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-strong) 88%, transparent);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.force-action-grid {
+  display: grid;
+  gap: 10px;
+}
+
 .force-lab-main {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 0;
   min-width: 0;
 }
 
@@ -2184,6 +2244,10 @@ html[data-theme="dark"] .force-state-pill.is-active {
   color: var(--brand-strong);
 }
 
+.force-highlight-row.is-panel {
+  gap: 8px;
+}
+
 .force-ghost-button {
   display: inline-flex;
   align-items: center;
@@ -2243,6 +2307,12 @@ html[data-theme="dark"] .force-state-pill.is-active {
   min-width: 0;
 }
 
+.force-walkthrough-panel-head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .force-walkthrough-title {
   margin: 0;
   font-size: 1.15rem;
@@ -2274,6 +2344,11 @@ html[data-theme="dark"] .force-state-pill.is-active {
   gap: 10px;
   overflow-x: auto;
   padding-bottom: 2px;
+}
+
+.force-walkthrough-steps.is-panel {
+  flex-wrap: wrap;
+  overflow: visible;
 }
 
 .force-step-chip {
@@ -2489,6 +2564,25 @@ html[data-theme="dark"] .force-state-pill.is-active {
   font-weight: 600;
 }
 
+.force-legend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.force-legend-list .force-legend-item {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.force-legend-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
 .force-detail-copy {
   margin-top: 14px;
 }
@@ -2506,12 +2600,12 @@ html[data-theme="dark"] .force-state-pill.is-active {
 }
 
 .visual-shell:fullscreen .force-stage-canvas {
-  min-height: calc(100vh - 320px);
+  min-height: calc(100vh - 120px);
 }
 
 .visual-shell:fullscreen .force-stage-svg {
-  min-height: calc(100vh - 320px);
-  height: calc(100vh - 320px);
+  min-height: calc(100vh - 120px);
+  height: calc(100vh - 120px);
 }
 
 @keyframes stage-grid-float {
