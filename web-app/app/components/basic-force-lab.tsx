@@ -4,6 +4,7 @@ import type { TeachingTopic } from "../data/teaching-catalog";
 
 type Direction = "left" | "right";
 type ForceKey = "gravity" | "normal" | "applied" | "friction" | "net";
+type WalkthroughStepId = "object" | ForceKey;
 type MotionState = "rest" | "threshold" | "sliding";
 type Tone = "balanced" | "warning" | "active";
 
@@ -20,6 +21,14 @@ type ForceRow = {
   value: number;
   color: string;
   description: string;
+};
+
+type WalkthroughStep = {
+  id: WalkthroughStepId;
+  shortLabel: string;
+  title: string;
+  description: string;
+  focusForce?: ForceKey;
 };
 
 type ForceScene = {
@@ -84,6 +93,8 @@ export function BasicForceLab({
   const [isPlaying, setIsPlaying] = useState(DEFAULT_VALUES.isPlaying);
   const [activeForce, setActiveForce] = useState<ForceKey>("applied");
   const [animationTick, setAnimationTick] = useState(0);
+  const [walkthroughActive, setWalkthroughActive] = useState(false);
+  const [walkthroughStepIndex, setWalkthroughStepIndex] = useState(0);
 
   const scene = useMemo(
     () =>
@@ -187,6 +198,40 @@ export function BasicForceLab({
   const currentForce =
     forceRows.find((item) => item.key === activeForce) ?? forceRows[0];
 
+  const walkthroughSteps = useMemo(
+    () =>
+      buildWalkthroughSteps({
+        scene,
+        mass,
+        gravity,
+      }),
+    [gravity, mass, scene],
+  );
+
+  const currentWalkthroughStep = walkthroughSteps[walkthroughStepIndex] ?? walkthroughSteps[0];
+
+  const visibleForces = useMemo(() => {
+    if (!walkthroughActive) {
+      return {
+        gravity: true,
+        normal: true,
+        applied: true,
+        friction: true,
+        net: showNetForce,
+      };
+    }
+
+    return getVisibleForcesByStep(currentWalkthroughStep.id);
+  }, [currentWalkthroughStep.id, showNetForce, walkthroughActive]);
+
+  useEffect(() => {
+    if (!walkthroughActive || !currentWalkthroughStep.focusForce) {
+      return;
+    }
+
+    setActiveForce(currentWalkthroughStep.focusForce);
+  }, [currentWalkthroughStep, walkthroughActive]);
+
   function resetDefaults() {
     setMass(DEFAULT_VALUES.mass);
     setGravity(DEFAULT_VALUES.gravity);
@@ -201,6 +246,8 @@ export function BasicForceLab({
     setIsPlaying(DEFAULT_VALUES.isPlaying);
     setAnimationTick(0);
     setActiveForce("applied");
+    setWalkthroughActive(false);
+    setWalkthroughStepIndex(0);
   }
 
   function updateStaticFriction(nextValue: number) {
@@ -210,6 +257,23 @@ export function BasicForceLab({
 
   function updateKineticFriction(nextValue: number) {
     setMuKinetic(Math.min(nextValue, muStatic));
+  }
+
+  function startWalkthrough() {
+    setWalkthroughActive(true);
+    setWalkthroughStepIndex(0);
+    setIsPlaying(false);
+  }
+
+  function stopWalkthrough() {
+    setWalkthroughActive(false);
+  }
+
+  function moveWalkthrough(offset: number) {
+    setWalkthroughStepIndex((current) => {
+      const nextIndex = current + offset;
+      return Math.max(0, Math.min(walkthroughSteps.length - 1, nextIndex));
+    });
   }
 
   const horizontalMax = Math.max(
@@ -421,7 +485,14 @@ export function BasicForceLab({
               </span>
             </div>
 
-            <div className="force-toolbar-actions">
+          <div className="force-toolbar-actions">
+              <button
+                type="button"
+                className={walkthroughActive ? "force-ghost-button is-active" : "force-ghost-button"}
+                onClick={walkthroughActive ? stopWalkthrough : startWalkthrough}
+              >
+                {walkthroughActive ? "退出讲解" : "逐步讲解"}
+              </button>
               <button
                 type="button"
                 className="force-ghost-button"
@@ -442,6 +513,66 @@ export function BasicForceLab({
               </span>
             ))}
           </div>
+
+          <section className={walkthroughActive ? "force-walkthrough-card is-active" : "force-walkthrough-card"}>
+            <div className="force-walkthrough-head">
+              <div className="force-walkthrough-copy">
+                <p className="force-summary-kicker">逐步讲解</p>
+                <h4 className="force-walkthrough-title">
+                  {walkthroughActive ? currentWalkthroughStep.title : "按步骤理解受力关系"}
+                </h4>
+                <p className="force-summary-copy">
+                  {walkthroughActive
+                    ? currentWalkthroughStep.description
+                    : "建议按“研究对象 → 重力 → 支持力 → 外力 → 摩擦力 → 合力”的顺序看，逻辑最清晰。"}
+                </p>
+              </div>
+
+              <div className="force-walkthrough-badge">
+                <span>Step</span>
+                <strong>{walkthroughStepIndex + 1}</strong>
+                <span>/ {walkthroughSteps.length}</span>
+              </div>
+            </div>
+
+            <div className="force-walkthrough-steps" role="tablist" aria-label="逐步讲解步骤">
+              {walkthroughSteps.map((step, index) => (
+                <button
+                  key={step.id}
+                  type="button"
+                  className={index === walkthroughStepIndex ? "force-step-chip is-active" : "force-step-chip"}
+                  onClick={() => {
+                    if (!walkthroughActive) {
+                      startWalkthrough();
+                    }
+                    setWalkthroughStepIndex(index);
+                  }}
+                >
+                  <span className="force-step-chip-index">{index + 1}</span>
+                  <span>{step.shortLabel}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="force-walkthrough-actions">
+              <button
+                type="button"
+                className="force-ghost-button"
+                onClick={() => moveWalkthrough(-1)}
+                disabled={walkthroughStepIndex === 0}
+              >
+                上一步
+              </button>
+              <button
+                type="button"
+                className="force-ghost-button"
+                onClick={() => moveWalkthrough(1)}
+                disabled={walkthroughStepIndex === walkthroughSteps.length - 1}
+              >
+                下一步
+              </button>
+            </div>
+          </section>
 
           <div className="visual-canvas force-stage-canvas">
             <div className="visual-grid-layer" />
@@ -496,7 +627,7 @@ export function BasicForceLab({
                   width={stage.blockWidth}
                   height={stage.blockHeight}
                   rx="22"
-                  className="force-stage-block"
+                  className={walkthroughActive && currentWalkthroughStep.id === "object" ? "force-stage-block is-focused" : "force-stage-block"}
                 />
                 <rect
                   x="16"
@@ -504,7 +635,7 @@ export function BasicForceLab({
                   width={stage.blockWidth - 32}
                   height={stage.blockHeight - 32}
                   rx="16"
-                  className="force-stage-block-inner"
+                  className={walkthroughActive && currentWalkthroughStep.id === "object" ? "force-stage-block-inner is-focused" : "force-stage-block-inner"}
                 />
                 <text
                   x={stage.blockWidth / 2}
@@ -524,71 +655,79 @@ export function BasicForceLab({
                 </text>
               </g>
 
-              <ForceVector
-                id="force-arrow-gravity"
-                color={FORCE_COLORS.gravity}
-                label="G"
-                magnitude={scene.weight}
-                direction="down"
-                anchorX={stage.centerX}
-                anchorY={stage.centerY + 18}
-                length={scaleArrow(scene.weight, verticalMax)}
-                showLabels={showLabels}
-                showValues={showValues}
-                isActive={activeForce === "gravity"}
-                onActivate={() => setActiveForce("gravity")}
-                onDeactivate={() => setActiveForce("gravity")}
-              />
+              {visibleForces.gravity ? (
+                <ForceVector
+                  id="force-arrow-gravity"
+                  color={FORCE_COLORS.gravity}
+                  label="G"
+                  magnitude={scene.weight}
+                  direction="down"
+                  anchorX={stage.centerX}
+                  anchorY={stage.centerY + 18}
+                  length={scaleArrow(scene.weight, verticalMax)}
+                  showLabels={showLabels}
+                  showValues={showValues}
+                  isActive={activeForce === "gravity"}
+                  onActivate={() => setActiveForce("gravity")}
+                  onDeactivate={() => setActiveForce("gravity")}
+                />
+              ) : null}
 
-              <ForceVector
-                id="force-arrow-normal"
-                color={FORCE_COLORS.normal}
-                label="N"
-                magnitude={scene.normal}
-                direction="up"
-                anchorX={stage.centerX}
-                anchorY={stage.centerY - 18}
-                length={scaleArrow(scene.normal, verticalMax)}
-                showLabels={showLabels}
-                showValues={showValues}
-                isActive={activeForce === "normal"}
-                onActivate={() => setActiveForce("normal")}
-                onDeactivate={() => setActiveForce("normal")}
-              />
+              {visibleForces.normal ? (
+                <ForceVector
+                  id="force-arrow-normal"
+                  color={FORCE_COLORS.normal}
+                  label="N"
+                  magnitude={scene.normal}
+                  direction="up"
+                  anchorX={stage.centerX}
+                  anchorY={stage.centerY - 18}
+                  length={scaleArrow(scene.normal, verticalMax)}
+                  showLabels={showLabels}
+                  showValues={showValues}
+                  isActive={activeForce === "normal"}
+                  onActivate={() => setActiveForce("normal")}
+                  onDeactivate={() => setActiveForce("normal")}
+                />
+              ) : null}
 
-              <ForceVector
-                id="force-arrow-applied"
-                color={FORCE_COLORS.applied}
-                label="F"
-                magnitude={Math.abs(scene.appliedSigned)}
-                direction={scene.appliedSigned >= 0 ? "right" : "left"}
-                anchorX={scene.appliedSigned >= 0 ? stage.blockX + stage.blockWidth : stage.blockX}
-                anchorY={stage.centerY}
-                length={scaleArrow(Math.abs(scene.appliedSigned), horizontalMax)}
-                showLabels={showLabels}
-                showValues={showValues}
-                isActive={activeForce === "applied"}
-                onActivate={() => setActiveForce("applied")}
-                onDeactivate={() => setActiveForce("applied")}
-              />
+              {visibleForces.applied ? (
+                <ForceVector
+                  id="force-arrow-applied"
+                  color={FORCE_COLORS.applied}
+                  label="F"
+                  magnitude={Math.abs(scene.appliedSigned)}
+                  direction={scene.appliedSigned >= 0 ? "right" : "left"}
+                  anchorX={scene.appliedSigned >= 0 ? stage.blockX + stage.blockWidth : stage.blockX}
+                  anchorY={stage.centerY}
+                  length={scaleArrow(Math.abs(scene.appliedSigned), horizontalMax)}
+                  showLabels={showLabels}
+                  showValues={showValues}
+                  isActive={activeForce === "applied"}
+                  onActivate={() => setActiveForce("applied")}
+                  onDeactivate={() => setActiveForce("applied")}
+                />
+              ) : null}
 
-              <ForceVector
-                id="force-arrow-friction"
-                color={FORCE_COLORS.friction}
-                label="f"
-                magnitude={Math.abs(scene.frictionSigned)}
-                direction={scene.frictionSigned >= 0 ? "right" : "left"}
-                anchorX={scene.frictionSigned >= 0 ? stage.blockX + stage.blockWidth : stage.blockX}
-                anchorY={stage.centerY + 48}
-                length={scaleArrow(Math.abs(scene.frictionSigned), horizontalMax)}
-                showLabels={showLabels}
-                showValues={showValues}
-                isActive={activeForce === "friction"}
-                onActivate={() => setActiveForce("friction")}
-                onDeactivate={() => setActiveForce("friction")}
-              />
+              {visibleForces.friction ? (
+                <ForceVector
+                  id="force-arrow-friction"
+                  color={FORCE_COLORS.friction}
+                  label="f"
+                  magnitude={Math.abs(scene.frictionSigned)}
+                  direction={scene.frictionSigned >= 0 ? "right" : "left"}
+                  anchorX={scene.frictionSigned >= 0 ? stage.blockX + stage.blockWidth : stage.blockX}
+                  anchorY={stage.centerY + 48}
+                  length={scaleArrow(Math.abs(scene.frictionSigned), horizontalMax)}
+                  showLabels={showLabels}
+                  showValues={showValues}
+                  isActive={activeForce === "friction"}
+                  onActivate={() => setActiveForce("friction")}
+                  onDeactivate={() => setActiveForce("friction")}
+                />
+              ) : null}
 
-              {showNetForce ? (
+              {visibleForces.net ? (
                 Math.abs(scene.netForce) < 0.01 ? (
                   <g className="force-balance-badge">
                     <rect
@@ -947,6 +1086,127 @@ function CollapseIcon() {
       <path d="M20 15l-5 5" strokeLinecap="round" />
     </svg>
   );
+}
+
+function buildWalkthroughSteps({
+  scene,
+  mass,
+  gravity,
+}: {
+  scene: ForceScene;
+  mass: number;
+  gravity: number;
+}): WalkthroughStep[] {
+  return [
+    {
+      id: "object",
+      shortLabel: "研究对象",
+      title: "第一步：先找研究对象",
+      description: `先只关注这个质量为 ${formatNumber(mass, 1)} kg 的方块，后面的所有受力箭头都只作用在它身上。`,
+    },
+    {
+      id: "gravity",
+      shortLabel: "重力",
+      title: "第二步：加入重力 G",
+      description: `重力始终竖直向下，大小 G = m × g = ${formatNumber(mass, 1)} × ${formatNumber(gravity, 1)} = ${formatNumber(scene.weight, 1)} N。`,
+      focusForce: "gravity",
+    },
+    {
+      id: "normal",
+      shortLabel: "支持力",
+      title: "第三步：加入支持力 N",
+      description: `水平接触面会向上托住物体。当前竖直方向平衡，所以支持力 N = ${formatNumber(scene.normal, 1)} N。`,
+      focusForce: "normal",
+    },
+    {
+      id: "applied",
+      shortLabel: "外力",
+      title: "第四步：加入外力 F",
+      description: `现在开始施加一个朝${scene.directionLabel}的外力，大小 ${formatNumber(Math.abs(scene.appliedSigned), 1)} N。接下来要判断它会不会推动物体。`,
+      focusForce: "applied",
+    },
+    {
+      id: "friction",
+      shortLabel: "摩擦力",
+      title: "第五步：判断摩擦力 f",
+      description:
+        Math.abs(scene.frictionSigned) < 0.01
+          ? "当前没有摩擦力参与平衡。你可以开启摩擦后，对比观察受力变化。"
+          : `摩擦力方向总是阻碍相对运动趋势。当前是${scene.frictionModeLabel}，大小 ${formatNumber(Math.abs(scene.frictionSigned), 1)} N。`,
+      focusForce: "friction",
+    },
+    {
+      id: "net",
+      shortLabel: "合力",
+      title: "第六步：看合力与结论",
+      description:
+        Math.abs(scene.netForce) < 0.01
+          ? "所有水平力已经互相抵消，所以合力为 0，物体保持静止。"
+          : `把水平力相加后，当前合力为 ${formatNumber(scene.netForce, 1)} N，方向朝${scene.netForce > 0 ? "右" : "左"}，因此物体会继续加速。`,
+      focusForce: "net",
+    },
+  ];
+}
+
+function getVisibleForcesByStep(stepId: WalkthroughStepId) {
+  switch (stepId) {
+    case "object":
+      return {
+        gravity: false,
+        normal: false,
+        applied: false,
+        friction: false,
+        net: false,
+      };
+    case "gravity":
+      return {
+        gravity: true,
+        normal: false,
+        applied: false,
+        friction: false,
+        net: false,
+      };
+    case "normal":
+      return {
+        gravity: true,
+        normal: true,
+        applied: false,
+        friction: false,
+        net: false,
+      };
+    case "applied":
+      return {
+        gravity: true,
+        normal: true,
+        applied: true,
+        friction: false,
+        net: false,
+      };
+    case "friction":
+      return {
+        gravity: true,
+        normal: true,
+        applied: true,
+        friction: true,
+        net: false,
+      };
+    case "net":
+      return {
+        gravity: true,
+        normal: true,
+        applied: true,
+        friction: true,
+        net: true,
+      };
+    default:
+      return {
+        gravity: true,
+        normal: true,
+        applied: true,
+        friction: true,
+        net: true,
+      };
+  }
 }
 
 function computeBasicForceScene({
