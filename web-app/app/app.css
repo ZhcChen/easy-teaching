@@ -127,6 +127,15 @@ a:focus-visible {
   min-height: 100vh;
 }
 
+.app-body.is-visual-route {
+  overflow: hidden;
+}
+
+.app-shell.is-visual-route {
+  height: 100vh;
+  overflow: hidden;
+}
+
 .topbar {
   position: fixed;
   top: 0;
@@ -324,6 +333,9 @@ a:focus-visible {
 
 .app-main.is-visual {
   padding: 76px 4px 8px;
+  box-sizing: border-box;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .page-shell {
@@ -333,7 +345,10 @@ a:focus-visible {
 }
 
 .page-shell.is-visual {
+  display: flex;
+  height: 100%;
   max-width: none;
+  min-height: 0;
 }
 
 .page-stack {
@@ -341,6 +356,12 @@ a:focus-visible {
   flex-direction: column;
   gap: 24px;
   animation: page-rise 0.28s ease;
+}
+
+.visual-page {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .page-hero,
@@ -1836,21 +1857,24 @@ a:focus-visible {
 }
 
 .force-lab-shell {
-  gap: 20px;
-  padding: 8px 16px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
+  flex: 1;
+  gap: 0;
+  min-height: 0;
+  padding: 10px;
+  overflow: hidden;
+  border-radius: 26px;
 }
 
 .force-lab-layout {
-  --force-panel-width: 320px;
+  --force-panel-width: var(--force-panel-width-open, 360px);
+  --force-divider-width: 20px;
   display: grid;
-  grid-template-columns: minmax(0, var(--force-panel-width)) minmax(0, 1fr);
-  align-items: start;
-  gap: 18px;
+  grid-template-columns: minmax(0, var(--force-panel-width)) var(--force-divider-width) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 0;
+  height: 100%;
   min-width: 0;
+  min-height: 0;
   transition:
     grid-template-columns 0.32s cubic-bezier(0.22, 1, 0.36, 1),
     gap 0.24s ease;
@@ -1858,7 +1882,11 @@ a:focus-visible {
 
 .force-lab-layout.is-collapsed {
   --force-panel-width: 64px;
-  gap: 12px;
+  --force-divider-width: 0px;
+}
+
+.force-lab-layout.is-resizing {
+  cursor: col-resize;
 }
 
 .force-control-panel {
@@ -1866,16 +1894,20 @@ a:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  height: 100%;
   min-width: 0;
-  align-self: start;
+  min-height: 0;
+  align-self: stretch;
   padding: 18px;
-  overflow: hidden;
+  overflow: auto;
   border: 0;
   border-radius: 22px;
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--surface-strong) 96%, transparent) 0%, color-mix(in srgb, var(--surface-soft) 92%, transparent) 100%);
   box-shadow: var(--panel-shadow);
   backdrop-filter: blur(16px);
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   transition:
     padding 0.28s cubic-bezier(0.22, 1, 0.36, 1),
     background 0.22s ease,
@@ -1884,6 +1916,7 @@ a:focus-visible {
 
 .force-control-panel.is-collapsed {
   align-items: center;
+  overflow: hidden;
   padding: 10px;
 }
 
@@ -1994,6 +2027,76 @@ a:focus-visible {
   width: 100%;
 }
 
+.force-layout-divider-shell {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  min-height: 0;
+}
+
+.force-layout-divider-shell.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.force-layout-divider {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: col-resize;
+}
+
+.force-layout-divider:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+}
+
+.force-layout-divider-rail {
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 50%;
+  width: 8px;
+  border-radius: 999px;
+  transform: translateX(-50%);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 70%, var(--surface-strong)) 0%, color-mix(in srgb, var(--surface-muted) 92%, transparent) 100%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--line-strong) 68%, transparent),
+    0 8px 24px color-mix(in srgb, var(--brand-soft) 18%, transparent);
+}
+
+.force-layout-divider-grip {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 18px 0;
+}
+
+.force-layout-divider-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--text-muted);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--surface-strong) 72%, transparent);
+}
+
+.force-layout-divider.is-dragging .force-layout-divider-rail,
+.force-layout-divider:hover .force-layout-divider-rail,
+.force-layout-divider:focus-visible .force-layout-divider-rail {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 92%, var(--surface-strong)) 0%, color-mix(in srgb, var(--brand-soft) 42%, var(--surface-muted)) 100%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--line-strong) 88%, transparent),
+    0 12px 28px color-mix(in srgb, var(--brand-soft) 32%, transparent);
+}
+
 .force-panel-toggle.is-collapsed-only {
   width: 44px;
   height: 44px;
@@ -2049,7 +2152,8 @@ a:focus-visible {
 
 .force-control-label-row {
   display: flex;
-  align-items: baseline;
+  flex-wrap: wrap;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
 }
@@ -2062,9 +2166,11 @@ a:focus-visible {
 }
 
 .force-control-value {
+  margin-left: auto;
   color: var(--brand-strong);
   font-size: 13px;
   font-weight: 700;
+  text-align: right;
 }
 
 .force-range-input {
@@ -2126,7 +2232,7 @@ a:focus-visible {
 
 .force-insight-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 10px;
 }
 
@@ -2174,11 +2280,13 @@ a:focus-visible {
 
 .force-action-grid {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   gap: 10px;
 }
 
 .force-nav-grid {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 10px;
 }
 
@@ -2190,7 +2298,12 @@ a:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 0;
+  height: 100%;
   min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 .force-toolbar,
@@ -2339,6 +2452,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
 .force-walkthrough-panel-head {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 12px;
 }
 
@@ -2422,6 +2536,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
 }
 
 .force-stage-canvas {
+  height: 100%;
   min-height: 560px;
 }
 
@@ -2430,7 +2545,8 @@ html[data-theme="dark"] .force-state-pill.is-active {
   z-index: 1;
   display: block;
   width: 100%;
-  height: 560px;
+  height: 100%;
+  min-height: 560px;
 }
 
 .force-stage-ground {
@@ -2859,14 +2975,42 @@ html[data-theme="dark"] .force-state-pill.is-active {
 }
 
 @media (max-width: 900px) {
+  .app-body.is-visual-route {
+    overflow: auto;
+  }
+
+  .app-shell.is-visual-route {
+    height: auto;
+    overflow: visible;
+  }
+
   .app-main {
     padding-right: 16px;
     padding-left: 16px;
   }
 
   .app-main.is-visual {
+    height: auto;
+    overflow: visible;
     padding-right: 6px;
     padding-left: 6px;
+  }
+
+  .page-shell.is-visual,
+  .visual-page,
+  .force-lab-shell,
+  .force-lab-layout,
+  .force-control-panel,
+  .force-lab-main {
+    height: auto;
+    min-height: 0;
+  }
+
+  .visual-page,
+  .force-lab-shell,
+  .force-control-panel,
+  .force-lab-main {
+    overflow: visible;
   }
 
   .entry-grid-stage,
@@ -2894,6 +3038,10 @@ html[data-theme="dark"] .force-state-pill.is-active {
   .force-lab-layout,
   .force-lab-layout.is-collapsed {
     grid-template-columns: 1fr;
+  }
+
+  .force-layout-divider-shell {
+    display: none;
   }
 
   .force-panel-collapsed {
@@ -2926,10 +3074,12 @@ html[data-theme="dark"] .force-state-pill.is-active {
   }
 
   .force-stage-canvas {
+    height: auto;
     min-height: 500px;
   }
 
   .force-stage-svg {
+    min-height: 500px;
     height: 500px;
   }
 
@@ -2987,6 +3137,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
   }
 
   .app-main.is-visual {
+    height: auto;
     padding-top: 108px;
     padding-right: 6px;
     padding-left: 6px;

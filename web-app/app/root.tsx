@@ -24,6 +24,8 @@ export function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const activeNavIndex = getActiveNavIndex(location.pathname);
   const isVisualRoute = location.pathname.startsWith("/visual");
+  const bodyClassName = isVisualRoute ? "app-body is-visual-route antialiased" : "app-body antialiased";
+  const appShellClassName = isVisualRoute ? "app-shell is-visual-route" : "app-shell";
   const appMainClassName = isVisualRoute ? "app-main is-visual" : "app-main";
   const pageShellClassName = isVisualRoute ? "page-shell is-visual" : "page-shell";
   const navStyle = {
@@ -51,8 +53,8 @@ export function Layout({ children }: { children: ReactNode }) {
           }}
         />
       </head>
-      <body className="app-body antialiased">
-        <div className="app-shell">
+      <body className={bodyClassName}>
+        <div className={appShellClassName}>
           <header className="topbar">
             <div className="topbar-inner">
               <NavLink to="/" end className="brand-link" aria-label="打开首页">
