@@ -1837,6 +1837,7 @@ a:focus-visible {
 
 .force-lab-shell {
   gap: 20px;
+  padding: 8px;
   border: 0;
   border-radius: 0;
   background: transparent;
