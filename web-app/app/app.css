@@ -315,6 +315,10 @@ a:focus-visible {
   padding: 92px 24px 48px;
 }
 
+.app-main.is-visual {
+  padding: 78px 10px 18px;
+}
+
 .page-shell {
   width: 100%;
   max-width: 1280px;
@@ -2666,6 +2670,10 @@ html[data-theme="dark"] .force-state-pill.is-active {
     padding-top: 126px;
   }
 
+  .app-main.is-visual {
+    padding-top: 114px;
+  }
+
   .page-hero,
   .page-hero-compact,
   .hero-surface {
@@ -2727,6 +2735,11 @@ html[data-theme="dark"] .force-state-pill.is-active {
   .app-main {
     padding-right: 16px;
     padding-left: 16px;
+  }
+
+  .app-main.is-visual {
+    padding-right: 8px;
+    padding-left: 8px;
   }
 
   .entry-grid-stage,
@@ -2844,6 +2857,11 @@ html[data-theme="dark"] .force-state-pill.is-active {
   .app-main {
     padding-top: 132px;
     padding-bottom: 32px;
+  }
+
+  .app-main.is-visual {
+    padding-top: 120px;
+    padding-bottom: 24px;
   }
 
   .page-hero,

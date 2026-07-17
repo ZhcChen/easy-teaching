@@ -24,6 +24,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const activeNavIndex = getActiveNavIndex(location.pathname);
   const isVisualRoute = location.pathname.startsWith("/visual");
+  const appMainClassName = isVisualRoute ? "app-main is-visual" : "app-main";
   const pageShellClassName = isVisualRoute ? "page-shell is-visual" : "page-shell";
   const navStyle = {
     "--nav-active-index": activeNavIndex,
@@ -84,7 +85,7 @@ export function Layout({ children }: { children: ReactNode }) {
               </div>
             </div>
           </header>
-          <main className="app-main">
+          <main className={appMainClassName}>
             <div className={pageShellClassName}>{children}</div>
           </main>
         </div>
