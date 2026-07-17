@@ -464,18 +464,7 @@ export function BasicForceLab({
               </span>
             </div>
 
-          <div className="force-toolbar-actions">
-              <button
-                type="button"
-                onClick={() => {
-                  void onToggleFullscreen();
-                }}
-                className="fullscreen-button is-compact"
-                aria-label={isFullscreen ? "退出全屏" : "进入全屏"}
-                title={isFullscreen ? "退出全屏" : "进入全屏"}
-              >
-                {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
-              </button>
+            <div className="force-toolbar-actions">
               <button
                 type="button"
                 className={walkthroughActive ? "force-ghost-button is-active" : "force-ghost-button"}
@@ -492,6 +481,17 @@ export function BasicForceLab({
               </button>
               <button type="button" className="force-ghost-button" onClick={resetDefaults}>
                 恢复默认
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  void onToggleFullscreen();
+                }}
+                className="fullscreen-button is-compact"
+                aria-label={isFullscreen ? "退出全屏" : "进入全屏"}
+                title={isFullscreen ? "退出全屏" : "进入全屏"}
+              >
+                {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
               </button>
             </div>
           </div>
