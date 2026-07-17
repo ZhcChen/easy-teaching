@@ -309,11 +309,7 @@ export function BasicForceLab({
             <>
               <div className="force-control-header">
                 <div className="force-control-title-block">
-                  <p className="surface-eyebrow">参数控制面板</p>
-                  <h4 className="force-control-title">基础受力分析</h4>
-                  <p className="force-control-copy">
-                    先看方向，再判断摩擦是否足够抵消外力。
-                  </p>
+                  <h4 className="force-control-title">控制面板</h4>
                 </div>
 
                 <button

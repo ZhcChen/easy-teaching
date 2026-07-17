@@ -1912,7 +1912,7 @@ a:focus-visible {
 
 .force-control-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
@@ -1920,14 +1920,14 @@ a:focus-visible {
 .force-control-title-block {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  justify-content: center;
   min-width: 0;
 }
 
 .force-control-title {
   margin: 0;
-  font-size: 1.25rem;
-  line-height: 1.15;
+  font-size: 1.45rem;
+  line-height: 1;
   letter-spacing: -0.03em;
 }
 
