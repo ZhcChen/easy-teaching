@@ -9,6 +9,10 @@
   --bg: #eef4fb;
   --bg-secondary: #f9fbff;
   --bg-tertiary: #e7eef7;
+  --app-bg-gradient:
+    radial-gradient(circle at top center, rgba(23, 105, 255, 0.12), transparent 26%),
+    radial-gradient(circle at left top, rgba(22, 199, 154, 0.07), transparent 22%),
+    linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg) 44%, var(--bg-tertiary) 100%);
   --surface: rgba(255, 255, 255, 0.82);
   --surface-strong: #ffffff;
   --surface-soft: #f3f7fb;
@@ -23,6 +27,9 @@
   --brand-strong: #0d56de;
   --brand-soft: rgba(23, 105, 255, 0.12);
   --shadow: 0 20px 48px rgba(21, 39, 68, 0.08);
+  --panel-shadow:
+    0 24px 54px rgba(21, 39, 68, 0.12),
+    0 8px 20px rgba(21, 39, 68, 0.06);
   --topbar-shadow: 0 10px 32px rgba(15, 31, 56, 0.08);
   --danger-surface: rgba(239, 68, 68, 0.08);
   --danger-text: #b42318;
@@ -55,6 +62,9 @@ html[data-theme="dark"] {
   --brand-strong: #81bcff;
   --brand-soft: rgba(89, 166, 255, 0.14);
   --shadow: 0 24px 56px rgba(1, 8, 20, 0.36);
+  --panel-shadow:
+    0 26px 56px rgba(0, 0, 0, 0.34),
+    0 10px 24px rgba(0, 0, 0, 0.24);
   --topbar-shadow: 0 12px 36px rgba(0, 0, 0, 0.34);
   --danger-surface: rgba(127, 29, 29, 0.26);
   --danger-text: #fecaca;
@@ -81,10 +91,7 @@ body {
 
 body {
   margin: 0;
-  background:
-    radial-gradient(circle at top center, rgba(23, 105, 255, 0.12), transparent 26%),
-    radial-gradient(circle at left top, rgba(22, 199, 154, 0.07), transparent 22%),
-    linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg) 44%, var(--bg-tertiary) 100%);
+  background: var(--app-bg-gradient);
   color: var(--text-primary);
   font-family: var(--font-sans);
 }
@@ -1837,15 +1844,20 @@ a:focus-visible {
 }
 
 .force-lab-layout {
+  --force-panel-width: 320px;
   display: grid;
-  grid-template-columns: minmax(280px, 320px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, var(--force-panel-width)) minmax(0, 1fr);
   align-items: start;
   gap: 18px;
   min-width: 0;
+  transition:
+    grid-template-columns 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    gap 0.24s ease;
 }
 
 .force-lab-layout.is-collapsed {
-  grid-template-columns: 92px minmax(0, 1fr);
+  --force-panel-width: 64px;
+  gap: 12px;
 }
 
 .force-control-panel {
@@ -1857,11 +1869,25 @@ a:focus-visible {
   align-self: start;
   padding: 18px;
   overflow: hidden;
-  border: 1px solid var(--line);
+  border: 0;
   border-radius: 22px;
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--surface-strong) 96%, transparent) 0%, color-mix(in srgb, var(--surface-soft) 92%, transparent) 100%);
-  box-shadow: var(--shadow);
+  box-shadow: var(--panel-shadow);
+  backdrop-filter: blur(16px);
+  transition:
+    padding 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.force-control-panel.is-collapsed {
+  align-items: center;
+  padding: 10px;
+}
+
+.force-control-panel.is-collapsed::before {
+  opacity: 0.16;
 }
 
 .force-control-panel::before {
@@ -1879,7 +1905,7 @@ a:focus-visible {
 
 .force-control-header,
 .force-control-section,
-.force-panel-collapsed {
+.force-panel-collapsed-shell {
   position: relative;
   z-index: 1;
 }
@@ -1960,24 +1986,17 @@ a:focus-visible {
   height: 18px;
 }
 
-.force-panel-collapsed {
+.force-panel-collapsed-shell {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
 }
 
-.force-mini-stat {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 38px;
-  padding: 0 10px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--surface-strong) 90%, transparent);
-  color: var(--text-primary);
-  font-size: 12px;
-  font-weight: 700;
+.force-panel-toggle.is-collapsed-only {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
 }
 
 .force-control-section {
@@ -2591,7 +2610,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
   padding: 24px;
   border: 0;
   border-radius: 0;
-  background: var(--surface-strong);
+  background: var(--app-bg-gradient);
 }
 
 .visual-shell:fullscreen .visual-canvas,

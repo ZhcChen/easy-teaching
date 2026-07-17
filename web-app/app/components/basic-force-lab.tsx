@@ -287,42 +287,41 @@ export function BasicForceLab({
   return (
     <section ref={fullscreenRef} className="visual-shell force-lab-shell">
       <div className={`force-lab-layout${panelCollapsed ? " is-collapsed" : ""}`}>
-        <aside className="force-control-panel">
-          <div className="force-control-header">
-            {panelCollapsed ? (
-              <div className="force-control-collapsed-title">
-                <span>参数</span>
-              </div>
-            ) : (
-              <div className="force-control-title-block">
-                <p className="surface-eyebrow">参数控制面板</p>
-                <h4 className="force-control-title">基础受力分析</h4>
-                <p className="force-control-copy">
-                  先看方向，再判断摩擦是否足够抵消外力。
-                </p>
-              </div>
-            )}
-
-            <button
-              type="button"
-              className="force-panel-toggle"
-              onClick={() => setPanelCollapsed((current) => !current)}
-              aria-label={panelCollapsed ? "展开参数面板" : "收起参数面板"}
-              title={panelCollapsed ? "展开参数面板" : "收起参数面板"}
-            >
-              <PanelChevronIcon collapsed={panelCollapsed} />
-            </button>
-          </div>
-
+        <aside className={panelCollapsed ? "force-control-panel is-collapsed" : "force-control-panel"}>
           {panelCollapsed ? (
-            <div className="force-panel-collapsed">
-              <span className="force-mini-stat">m {formatNumber(mass, 1)} kg</span>
-              <span className="force-mini-stat">F {formatNumber(appliedForce, 1)} N</span>
-              <span className="force-mini-stat">μs {formatNumber(muStatic, 2)}</span>
-              <span className="force-mini-stat">R {formatNumber(scene.netForce, 1)} N</span>
+            <div className="force-panel-collapsed-shell">
+              <button
+                type="button"
+                className="force-panel-toggle is-collapsed-only"
+                onClick={() => setPanelCollapsed(false)}
+                aria-label="展开参数面板"
+                title="展开参数面板"
+              >
+                <PanelChevronIcon collapsed={panelCollapsed} />
+              </button>
             </div>
           ) : (
             <>
+              <div className="force-control-header">
+                <div className="force-control-title-block">
+                  <p className="surface-eyebrow">参数控制面板</p>
+                  <h4 className="force-control-title">基础受力分析</h4>
+                  <p className="force-control-copy">
+                    先看方向，再判断摩擦是否足够抵消外力。
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="force-panel-toggle"
+                  onClick={() => setPanelCollapsed(true)}
+                  aria-label="收起参数面板"
+                  title="收起参数面板"
+                >
+                  <PanelChevronIcon collapsed={panelCollapsed} />
+                </button>
+              </div>
+
               <section className="force-control-section">
                 <div className="force-control-section-head">
                   <h5 className="force-control-section-title">基础参数</h5>
