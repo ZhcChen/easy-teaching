@@ -1883,8 +1883,8 @@ a:focus-visible {
 }
 
 .force-lab-layout.is-collapsed {
-  --force-panel-width: 64px;
-  gap: 12px;
+  --force-panel-width: 56px;
+  gap: 10px;
 }
 
 .force-control-panel {
@@ -1911,13 +1911,20 @@ a:focus-visible {
 }
 
 .force-control-panel.is-collapsed {
-  align-items: center;
+  height: auto;
+  min-height: 0;
+  align-items: flex-start;
+  align-self: flex-start;
   overflow: hidden;
-  padding: 10px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .force-control-panel.is-collapsed::before {
-  opacity: 0.16;
+  opacity: 0;
 }
 
 .force-control-panel::before {
@@ -2053,8 +2060,8 @@ a:focus-visible {
 .force-panel-collapsed-shell {
   display: flex;
   align-items: flex-start;
-  justify-content: center;
-  width: 100%;
+  justify-content: flex-start;
+  width: auto;
 }
 
 .force-panel-toggle.is-collapsed-only {
