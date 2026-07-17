@@ -94,8 +94,6 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
       {topic.id === "basic-force" ? (
         <BasicForceLab
           topic={topic}
-          backToTopicPath={`/content/${stage.id}/${subject.id}`}
-          backToStagePath={`/content/${stage.id}`}
           isFullscreen={isFullscreen}
           onToggleFullscreen={toggleFullscreen}
           fullscreenRef={fullscreenRef}
