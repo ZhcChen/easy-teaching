@@ -320,8 +320,13 @@ a:focus-visible {
 }
 
 .page-shell {
-  width: min(1280px, 100%);
+  width: 100%;
+  max-width: 1280px;
   margin: 0 auto;
+}
+
+.page-shell.is-visual {
+  max-width: none;
 }
 
 .page-stack {
@@ -1819,6 +1824,10 @@ a:focus-visible {
 
 .force-lab-shell {
   gap: 20px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .force-shell-heading {

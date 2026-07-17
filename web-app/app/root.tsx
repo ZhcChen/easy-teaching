@@ -23,6 +23,8 @@ export const links: Route.LinksFunction = () => [
 export function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const activeNavIndex = getActiveNavIndex(location.pathname);
+  const isVisualRoute = location.pathname.startsWith("/visual");
+  const pageShellClassName = isVisualRoute ? "page-shell is-visual" : "page-shell";
   const navStyle = {
     "--nav-active-index": activeNavIndex,
     "--nav-item-count": navItems.length,
@@ -83,7 +85,7 @@ export function Layout({ children }: { children: ReactNode }) {
             </div>
           </header>
           <main className="app-main">
-            <div className="page-shell">{children}</div>
+            <div className={pageShellClassName}>{children}</div>
           </main>
         </div>
         <ScrollRestoration />
