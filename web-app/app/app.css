@@ -323,7 +323,7 @@ a:focus-visible {
 }
 
 .app-main.is-visual {
-  padding: 68px 2px 8px;
+  padding: 68px 4px 8px;
 }
 
 .page-shell {
@@ -1837,7 +1837,7 @@ a:focus-visible {
 
 .force-lab-shell {
   gap: 20px;
-  padding: 8px;
+  padding: 8px 16px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -2865,8 +2865,8 @@ html[data-theme="dark"] .force-state-pill.is-active {
   }
 
   .app-main.is-visual {
-    padding-right: 4px;
-    padding-left: 4px;
+    padding-right: 6px;
+    padding-left: 6px;
   }
 
   .entry-grid-stage,
@@ -2988,8 +2988,8 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
   .app-main.is-visual {
     padding-top: 108px;
-    padding-right: 4px;
-    padding-left: 4px;
+    padding-right: 6px;
+    padding-left: 6px;
     padding-bottom: 12px;
   }
 
