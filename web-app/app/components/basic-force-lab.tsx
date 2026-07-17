@@ -1,12 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-  type PointerEvent as ReactPointerEvent,
-  type RefObject,
-} from "react";
+import { useEffect, useMemo, useState, type RefObject } from "react";
 import { Link } from "react-router";
 
 import type { TeachingTopic } from "../data/teaching-catalog";
@@ -84,12 +76,6 @@ const DEFAULT_VALUES = {
   isPlaying: true,
 };
 
-const PANEL_WIDTH_STORAGE_KEY = "easy-teaching:basic-force:panel-width";
-const DEFAULT_PANEL_WIDTH = 360;
-const MIN_PANEL_WIDTH = 280;
-const MAX_PANEL_WIDTH = 520;
-const MIN_MAIN_WIDTH = 560;
-
 export function BasicForceLab({
   topic,
   backToStagePath,
@@ -99,9 +85,6 @@ export function BasicForceLab({
   fullscreenRef,
 }: BasicForceLabProps) {
   const [panelCollapsed, setPanelCollapsed] = useState(false);
-  const [panelWidth, setPanelWidth] = useState(DEFAULT_PANEL_WIDTH);
-  const [hasLoadedPanelWidth, setHasLoadedPanelWidth] = useState(false);
-  const [isResizingPanel, setIsResizingPanel] = useState(false);
   const [mass, setMass] = useState(DEFAULT_VALUES.mass);
   const [gravity, setGravity] = useState(DEFAULT_VALUES.gravity);
   const [appliedForce, setAppliedForce] = useState(DEFAULT_VALUES.appliedForce);
@@ -117,81 +100,6 @@ export function BasicForceLab({
   const [animationTick, setAnimationTick] = useState(0);
   const [walkthroughActive, setWalkthroughActive] = useState(false);
   const [walkthroughStepIndex, setWalkthroughStepIndex] = useState(0);
-  const layoutRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      setHasLoadedPanelWidth(true);
-      return;
-    }
-
-    const storedWidth = window.localStorage.getItem(PANEL_WIDTH_STORAGE_KEY);
-    if (storedWidth) {
-      const parsedWidth = Number(storedWidth);
-      if (Number.isFinite(parsedWidth)) {
-        setPanelWidth(clampPanelWidth(parsedWidth));
-      }
-    }
-
-    setHasLoadedPanelWidth(true);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !hasLoadedPanelWidth) {
-      return;
-    }
-
-    window.localStorage.setItem(PANEL_WIDTH_STORAGE_KEY, String(Math.round(panelWidth)));
-  }, [hasLoadedPanelWidth, panelWidth]);
-
-  useEffect(() => {
-    function syncPanelWidthToViewport() {
-      const layoutWidth = layoutRef.current?.getBoundingClientRect().width;
-      setPanelWidth((current) => clampPanelWidth(current, layoutWidth));
-    }
-
-    syncPanelWidthToViewport();
-    window.addEventListener("resize", syncPanelWidthToViewport);
-    return () => {
-      window.removeEventListener("resize", syncPanelWidthToViewport);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isResizingPanel) {
-      return;
-    }
-
-    const previousCursor = document.body.style.cursor;
-    const previousUserSelect = document.body.style.userSelect;
-
-    function handlePointerMove(event: PointerEvent) {
-      const layoutBounds = layoutRef.current?.getBoundingClientRect();
-      if (!layoutBounds) {
-        return;
-      }
-
-      const nextWidth = clampPanelWidth(event.clientX - layoutBounds.left - 10, layoutBounds.width);
-      setPanelWidth(nextWidth);
-    }
-
-    function handlePointerUp() {
-      setIsResizingPanel(false);
-    }
-
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", handlePointerUp);
-
-    return () => {
-      document.body.style.cursor = previousCursor;
-      document.body.style.userSelect = previousUserSelect;
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
-    };
-  }, [isResizingPanel]);
 
   const scene = useMemo(
     () =>
@@ -380,31 +288,10 @@ export function BasicForceLab({
     1,
   );
   const verticalMax = Math.max(scene.weight, scene.normal, 1);
-  const layoutStyle = {
-    "--force-panel-width-open": `${panelWidth}px`,
-  } as CSSProperties;
-
-  function startPanelResize(event: ReactPointerEvent<HTMLButtonElement>) {
-    if (panelCollapsed) {
-      return;
-    }
-
-    event.preventDefault();
-    setIsResizingPanel(true);
-  }
-
-  function nudgePanelWidth(offset: number) {
-    const layoutWidth = layoutRef.current?.getBoundingClientRect().width;
-    setPanelWidth((current) => clampPanelWidth(current + offset, layoutWidth));
-  }
 
   return (
     <section ref={fullscreenRef} className="visual-shell force-lab-shell">
-      <div
-        ref={layoutRef}
-        className={`force-lab-layout${panelCollapsed ? " is-collapsed" : ""}${isResizingPanel ? " is-resizing" : ""}`}
-        style={layoutStyle}
-      >
+      <div className={`force-lab-layout${panelCollapsed ? " is-collapsed" : ""}`}>
         <aside className={panelCollapsed ? "force-control-panel is-collapsed" : "force-control-panel"}>
           {panelCollapsed ? (
             <div className="force-panel-collapsed-shell">
@@ -767,40 +654,6 @@ export function BasicForceLab({
           )}
         </aside>
 
-        <div
-          className={panelCollapsed ? "force-layout-divider-shell is-hidden" : "force-layout-divider-shell"}
-          aria-hidden={panelCollapsed}
-        >
-          <button
-            type="button"
-            className={isResizingPanel ? "force-layout-divider is-dragging" : "force-layout-divider"}
-            onPointerDown={startPanelResize}
-            onKeyDown={(event) => {
-              if (event.key === "ArrowLeft") {
-                event.preventDefault();
-                nudgePanelWidth(-24);
-              }
-
-              if (event.key === "ArrowRight") {
-                event.preventDefault();
-                nudgePanelWidth(24);
-              }
-            }}
-            aria-label="拖动调整控制面板宽度"
-            title="拖动调整控制面板宽度"
-            aria-valuemin={MIN_PANEL_WIDTH}
-            aria-valuemax={MAX_PANEL_WIDTH}
-            aria-valuenow={panelWidth}
-          >
-            <span className="force-layout-divider-rail" aria-hidden="true" />
-            <span className="force-layout-divider-grip" aria-hidden="true">
-              <span className="force-layout-divider-dot" />
-              <span className="force-layout-divider-dot" />
-              <span className="force-layout-divider-dot" />
-            </span>
-          </button>
-        </div>
-
         <div className="force-lab-main">
           <div className="visual-canvas force-stage-canvas">
             <button
@@ -1009,16 +862,6 @@ export function BasicForceLab({
       </div>
     </section>
   );
-}
-
-function clampPanelWidth(nextWidth: number, layoutWidth?: number) {
-  const maxWidthByLayout =
-    typeof layoutWidth === "number" && Number.isFinite(layoutWidth)
-      ? layoutWidth - MIN_MAIN_WIDTH
-      : MAX_PANEL_WIDTH;
-  const resolvedMaxWidth = Math.max(MIN_PANEL_WIDTH, Math.min(MAX_PANEL_WIDTH, Math.floor(maxWidthByLayout)));
-
-  return Math.round(Math.min(resolvedMaxWidth, Math.max(MIN_PANEL_WIDTH, nextWidth)));
 }
 
 type RangeControlProps = {
