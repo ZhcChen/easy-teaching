@@ -91,38 +91,25 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
 
   return (
     <div className="page-stack visual-page">
-      <section className="page-hero page-hero-compact">
-        <div className="page-hero-copy">
-          <nav className="breadcrumb" aria-label="面包屑">
-            <Link to="/" className="breadcrumb-link">
-              首页
-            </Link>
-            <span className="breadcrumb-separator">/</span>
-            <Link to="/content" className="breadcrumb-link">
-              知识库
-            </Link>
-            <span className="breadcrumb-separator">/</span>
-            <Link to={`/content/${stage.id}`} className="breadcrumb-link">
-              {stage.label}
-            </Link>
-            <span className="breadcrumb-separator">/</span>
-            <Link to={`/content/${stage.id}/${subject.id}`} className="breadcrumb-link">
-              {subject.label}
-            </Link>
-            <span className="breadcrumb-separator">/</span>
-            <span className="breadcrumb-current">{topic.title}</span>
-          </nav>
-          <p className="page-kicker">Step 04</p>
-          <h1 className="page-title">{topic.title}</h1>
-          <p className="page-copy">{topic.summary}</p>
-        </div>
-
-        <aside className="page-stat-card">
-          <p className="page-stat-label">当前模式</p>
-          <p className="page-stat-value">{topic.mode}</p>
-          <p className="page-stat-copy">{topic.status}</p>
-        </aside>
-      </section>
+      <nav className="breadcrumb visual-breadcrumb" aria-label="面包屑">
+        <Link to="/" className="breadcrumb-link">
+          首页
+        </Link>
+        <span className="breadcrumb-separator">/</span>
+        <Link to="/content" className="breadcrumb-link">
+          知识库
+        </Link>
+        <span className="breadcrumb-separator">/</span>
+        <Link to={`/content/${stage.id}`} className="breadcrumb-link">
+          {stage.label}
+        </Link>
+        <span className="breadcrumb-separator">/</span>
+        <Link to={`/content/${stage.id}/${subject.id}`} className="breadcrumb-link">
+          {subject.label}
+        </Link>
+        <span className="breadcrumb-separator">/</span>
+        <span className="breadcrumb-current">{topic.title}</span>
+      </nav>
 
       {topic.id === "basic-force" ? (
         <BasicForceLab

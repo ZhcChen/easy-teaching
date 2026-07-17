@@ -237,8 +237,14 @@ a:focus-visible {
   color: var(--text-primary);
 }
 
-.topbar-link.is-active {
+.topbar-link.is-active,
+.topbar-link.is-active:hover,
+.topbar-link.is-active:visited {
   color: #ffffff;
+}
+
+.visual-breadcrumb {
+  margin-top: 4px;
 }
 
 .topbar-actions {

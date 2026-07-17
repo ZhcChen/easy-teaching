@@ -64,14 +64,13 @@ export function Layout({ children }: { children: ReactNode }) {
 
               <nav className="topbar-nav" aria-label="主导航" style={navStyle}>
                 <span aria-hidden="true" className="topbar-nav-indicator" />
-                {navItems.map((item) => (
+                {navItems.map((item, index) => (
                   <NavLink
                     key={item.to}
                     to={item.to}
                     end={item.end}
-                    className={({ isActive }) =>
-                      isActive ? "topbar-link is-active" : "topbar-link"
-                    }
+                    aria-current={index === activeNavIndex ? "page" : undefined}
+                    className={index === activeNavIndex ? "topbar-link is-active" : "topbar-link"}
                   >
                     {item.label}
                   </NavLink>
