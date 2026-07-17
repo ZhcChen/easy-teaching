@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { Link } from "react-router";
 
+import { BasicForceLab } from "../components/basic-force-lab";
 import { StatusPanel } from "../components/status-panel";
-import { getTopicById } from "../data/teaching-catalog";
+import { getTopicById, type TeachingTopic } from "../data/teaching-catalog";
 import type { Route } from "./+types/visualization";
 
 export function meta({ params }: Route.MetaArgs) {
@@ -123,73 +124,21 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
         </aside>
       </section>
 
-      <section
-        ref={fullscreenRef}
-        className="visual-shell"
-      >
-        <div className="visual-shell-head">
-          <div>
-            <p className="surface-eyebrow">可视化画布</p>
-            <h3 className="surface-title section-title-sm">{topic.title}</h3>
-          </div>
-          <button
-            type="button"
-            onClick={toggleFullscreen}
-            className="fullscreen-button"
-            aria-label={isFullscreen ? "退出全屏" : "进入全屏"}
-            title={isFullscreen ? "退出全屏" : "进入全屏"}
-          >
-            {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
-          </button>
-        </div>
-
-        <div className="visual-canvas">
-          <div className="visual-grid-layer" />
-          <div className="visual-glow visual-glow-a" />
-          <div className="visual-glow visual-glow-b" />
-          <div className="visual-line visual-line-a" />
-          <div className="visual-line visual-line-b" />
-
-          <div className="visual-canvas-inner">
-            <div className="visual-metric-grid">
-              {sceneMetrics.map((metric) => (
-                <article key={metric.label} className="visual-metric-card">
-                  <p className="surface-eyebrow">{metric.label}</p>
-                  <p className="visual-metric-value">{metric.value}</p>
-                  <p className="visual-metric-copy">{metric.detail}</p>
-                </article>
-              ))}
-            </div>
-
-            <div className="visual-centerpiece">
-              <div className="visual-orbit visual-orbit-lg" />
-              <div className="visual-orbit visual-orbit-md" />
-              <div className="visual-core" />
-              <div className="floating-note floating-note-a">
-                参数层
-              </div>
-              <div className="floating-note floating-note-b">
-                结论层
-              </div>
-              <div className="floating-note floating-note-c">
-                图形层
-              </div>
-              <div className="floating-note floating-note-d">
-                状态层
-              </div>
-              <div className="visual-centerpiece-spacer" />
-            </div>
-
-            <div className="visual-detail-grid">
-              {topic.highlights.map((item) => (
-                <article key={item} className="visual-detail-card">
-                  <p>{item}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      {topic.id === "basic-force" ? (
+        <BasicForceLab
+          topic={topic}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+          fullscreenRef={fullscreenRef}
+        />
+      ) : (
+        <DefaultVisualizationShell
+          topic={topic}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+          fullscreenRef={fullscreenRef}
+        />
+      )}
 
       <div className="action-row">
         <Link to={`/content/${stage.id}/${subject.id}`} className="action-link is-primary">
@@ -200,6 +149,89 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
         </Link>
       </div>
     </div>
+  );
+}
+
+type DefaultVisualizationShellProps = {
+  topic: TeachingTopic;
+  isFullscreen: boolean;
+  onToggleFullscreen: () => void | Promise<void>;
+  fullscreenRef: RefObject<HTMLDivElement | null>;
+};
+
+function DefaultVisualizationShell({
+  topic,
+  isFullscreen,
+  onToggleFullscreen,
+  fullscreenRef,
+}: DefaultVisualizationShellProps) {
+  return (
+    <section ref={fullscreenRef} className="visual-shell">
+      <div className="visual-shell-head">
+        <div>
+          <p className="surface-eyebrow">可视化画布</p>
+          <h3 className="surface-title section-title-sm">{topic.title}</h3>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            void onToggleFullscreen();
+          }}
+          className="fullscreen-button"
+          aria-label={isFullscreen ? "退出全屏" : "进入全屏"}
+          title={isFullscreen ? "退出全屏" : "进入全屏"}
+        >
+          {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
+        </button>
+      </div>
+
+      <div className="visual-canvas">
+        <div className="visual-grid-layer" />
+        <div className="visual-glow visual-glow-a" />
+        <div className="visual-glow visual-glow-b" />
+        <div className="visual-line visual-line-a" />
+        <div className="visual-line visual-line-b" />
+
+        <div className="visual-canvas-inner">
+          <div className="visual-metric-grid">
+            {sceneMetrics.map((metric) => (
+              <article key={metric.label} className="visual-metric-card">
+                <p className="surface-eyebrow">{metric.label}</p>
+                <p className="visual-metric-value">{metric.value}</p>
+                <p className="visual-metric-copy">{metric.detail}</p>
+              </article>
+            ))}
+          </div>
+
+          <div className="visual-centerpiece">
+            <div className="visual-orbit visual-orbit-lg" />
+            <div className="visual-orbit visual-orbit-md" />
+            <div className="visual-core" />
+            <div className="floating-note floating-note-a">
+              参数层
+            </div>
+            <div className="floating-note floating-note-b">
+              结论层
+            </div>
+            <div className="floating-note floating-note-c">
+              图形层
+            </div>
+            <div className="floating-note floating-note-d">
+              状态层
+            </div>
+            <div className="visual-centerpiece-spacer" />
+          </div>
+
+          <div className="visual-detail-grid">
+            {topic.highlights.map((item) => (
+              <article key={item} className="visual-detail-card">
+                <p>{item}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
