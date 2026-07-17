@@ -52,13 +52,13 @@ export const teachingStages: TeachingStage[] = [
           {
             id: "basic-force",
             title: "基础受力分析",
-            summary: "通过箭头和状态卡展示重力、支持力和摩擦力的方向关系。",
+            summary: "用弹簧测力计拖动木块，观察静摩擦、动摩擦与受力平衡过程。",
             stageId: "junior",
             subjectId: "physics",
             mode: "2D",
             status: "可开始",
-            tags: ["力学", "向量", "拆解"],
-            highlights: ["先看方向", "适合错题复盘", "支持分步讲解"],
+            tags: ["力学", "实验", "摩擦"],
+            highlights: ["支持完整实验播放", "可对比压力与材质", "自动记录测量结果"],
           },
           {
             id: "circuit-observer",
