@@ -91,26 +91,6 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
 
   return (
     <div className="page-stack visual-page">
-      <nav className="breadcrumb visual-breadcrumb" aria-label="面包屑">
-        <Link to="/" className="breadcrumb-link">
-          首页
-        </Link>
-        <span className="breadcrumb-separator">/</span>
-        <Link to="/content" className="breadcrumb-link">
-          知识库
-        </Link>
-        <span className="breadcrumb-separator">/</span>
-        <Link to={`/content/${stage.id}`} className="breadcrumb-link">
-          {stage.label}
-        </Link>
-        <span className="breadcrumb-separator">/</span>
-        <Link to={`/content/${stage.id}/${subject.id}`} className="breadcrumb-link">
-          {subject.label}
-        </Link>
-        <span className="breadcrumb-separator">/</span>
-        <span className="breadcrumb-current">{topic.title}</span>
-      </nav>
-
       {topic.id === "basic-force" ? (
         <BasicForceLab
           topic={topic}
@@ -154,25 +134,18 @@ function DefaultVisualizationShell({
 }: DefaultVisualizationShellProps) {
   return (
     <section ref={fullscreenRef} className="visual-shell">
-      <div className="visual-shell-head">
-        <div>
-          <p className="surface-eyebrow">可视化画布</p>
-          <h3 className="surface-title section-title-sm">{topic.title}</h3>
-        </div>
+      <div className="visual-canvas">
         <button
           type="button"
           onClick={() => {
             void onToggleFullscreen();
           }}
-          className="fullscreen-button"
+          className="fullscreen-button is-floating"
           aria-label={isFullscreen ? "退出全屏" : "进入全屏"}
           title={isFullscreen ? "退出全屏" : "进入全屏"}
         >
           {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
         </button>
-      </div>
-
-      <div className="visual-canvas">
         <div className="visual-grid-layer" />
         <div className="visual-glow visual-glow-a" />
         <div className="visual-glow visual-glow-b" />

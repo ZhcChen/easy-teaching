@@ -286,27 +286,6 @@ export function BasicForceLab({
 
   return (
     <section ref={fullscreenRef} className="visual-shell force-lab-shell">
-      <div className="visual-shell-head">
-        <div className="force-shell-heading">
-          <p className="surface-eyebrow">参数联动演示</p>
-          <h3 className="surface-title section-title-sm">{topic.title}</h3>
-          <p className="force-shell-copy">
-            左侧控制受力参数，右侧实时观察箭头方向、合力变化和运动趋势。
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            void onToggleFullscreen();
-          }}
-          className="fullscreen-button"
-          aria-label={isFullscreen ? "退出全屏" : "进入全屏"}
-          title={isFullscreen ? "退出全屏" : "进入全屏"}
-        >
-          {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
-        </button>
-      </div>
-
       <div className={`force-lab-layout${panelCollapsed ? " is-collapsed" : ""}`}>
         <aside className="force-control-panel">
           <div className="force-control-header">
@@ -486,6 +465,17 @@ export function BasicForceLab({
             </div>
 
           <div className="force-toolbar-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  void onToggleFullscreen();
+                }}
+                className="fullscreen-button is-compact"
+                aria-label={isFullscreen ? "退出全屏" : "进入全屏"}
+                title={isFullscreen ? "退出全屏" : "进入全屏"}
+              >
+                {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
+              </button>
               <button
                 type="button"
                 className={walkthroughActive ? "force-ghost-button is-active" : "force-ghost-button"}
