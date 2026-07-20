@@ -57,8 +57,12 @@
 - 小调整、小功能、小 bug 修复，默认直接提交并推送，不额外确认。
 - 大改动按阶段及时提交并推送，保证每次提交都对应明确的调整内容，便于回溯、分析和复盘。
 - 提交尽量保持一事一提交，只包含当前任务相关改动。
-- 提交信息默认采用 Conventional Commits 简化格式：`type(scope): summary`
+- 每轮任务开始前、提交前都先执行 `git status --short`，识别历史改动和本轮改动边界。
+- 提交时只 stage 本轮相关文件，禁止默认使用 `git add .`；若同一文件混有旧改动和本轮改动，必须逐段检查，无法安全拆分时暂不提交。
+- 提交前最低检查：`git diff --check`、`git diff --cached --check`、`git diff --cached`，并补充与改动范围匹配的构建、测试或页面验证。
+- 提交信息默认沿用仓库当前 Conventional Commits 风格：`type(scope): summary`
 - 常用类型：`feat`、`fix`、`docs`、`refactor`、`chore`
+- 详细规则见：`docs/standards/git-workflow.md`
 - 推送后只做简要反馈：调整了什么、提交信息、已推送到哪个分支。
 
 <!-- BEGIN COMPOUND CODEX TOOL MAP -->
