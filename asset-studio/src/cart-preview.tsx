@@ -11,6 +11,7 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
   const bodyGradientId = `${instanceId}-body`
   const glassGradientId = `${instanceId}-glass`
   const rimGradientId = `${instanceId}-rim`
+  const wheelCenters = [100, 221] as const
 
   return (
     <svg
@@ -40,7 +41,7 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
 
       <g transform="translate(0 2)">
         <g>
-          {[100, 232].map((cx) => (
+          {wheelCenters.map((cx) => (
             <g key={cx}>
               <circle cx={cx} cy="120.5" r="22.5" fill={preset.colors.wheel} stroke="#7f8898" strokeOpacity="0.42" strokeWidth="1.2" />
               <circle cx={cx} cy="120.5" r="18.2" fill="none" stroke="#ffffff" strokeOpacity="0.14" strokeWidth="1.4" />
@@ -104,7 +105,7 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
           strokeLinecap="round"
         />
         <path
-          d="M75 95H250"
+          d="M75 95H194"
           fill="none"
           stroke={preset.colors.trim}
           strokeOpacity="0.9"
@@ -112,7 +113,7 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
           strokeLinecap="round"
         />
         <path
-          d="M78 100H236"
+          d="M78 100H186"
           fill="none"
           stroke={preset.colors.roof}
           strokeOpacity="0.22"
@@ -146,7 +147,7 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
           strokeLinecap="round"
         />
         <path
-          d="M208 104Q220 92 232 92Q244 92 256 104"
+          d="M198 104Q209.5 90 221 90Q232.5 90 244 104"
           fill="none"
           stroke={preset.colors.roof}
           strokeOpacity="0.36"
