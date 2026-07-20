@@ -26,8 +26,8 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
           <stop offset="100%" stopColor="#b61f2f" />
         </linearGradient>
         <linearGradient id={glassGradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={preset.colors.window} stopOpacity="0.96" />
-          <stop offset="100%" stopColor={preset.colors.window} stopOpacity="0.42" />
+          <stop offset="0%" stopColor={preset.colors.window} stopOpacity="1" />
+          <stop offset="100%" stopColor={preset.colors.window} stopOpacity="0.94" />
         </linearGradient>
         <radialGradient id={rimGradientId} cx="50%" cy="38%" r="66%">
           <stop offset="0%" stopColor="#ffffff" stopOpacity="0.92" />
@@ -119,22 +119,16 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
           strokeWidth="2.4"
           strokeLinecap="round"
         />
-        <path
-          d="M186 67V99"
-          fill="none"
-          stroke={preset.colors.outline}
-          strokeOpacity="0.34"
-          strokeWidth="2"
-        />
-        <path
-          d="M154 67V98"
-          fill="none"
-          stroke={preset.colors.outline}
-          strokeOpacity="0.22"
-          strokeWidth="2"
-        />
         <rect x="258" y="76" width="16" height="10" rx="5" fill={preset.colors.lamp} />
         <rect x="58" y="82" width="8" height="8" rx="4" fill={preset.colors.accent} fillOpacity="0.92" />
+        <path
+          d="M190 43V65"
+          fill="none"
+          stroke={preset.colors.roof}
+          strokeOpacity="0.42"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
         <path
           d="M90 78H136"
           fill="none"
