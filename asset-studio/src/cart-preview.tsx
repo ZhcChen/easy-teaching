@@ -11,7 +11,7 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
   const bodyGradientId = `${instanceId}-body`
   const glassGradientId = `${instanceId}-glass`
   const rimGradientId = `${instanceId}-rim`
-  const wheelCenters = [100, 221] as const
+  const wheelCenters = [99, 221] as const
 
   return (
     <svg
@@ -139,7 +139,7 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
           strokeLinecap="round"
         />
         <path
-          d="M76 104Q88 92 100 92Q112 92 124 104"
+          d="M75 104Q87 92 99 92Q111 92 123 104"
           fill="none"
           stroke={preset.colors.roof}
           strokeOpacity="0.36"
