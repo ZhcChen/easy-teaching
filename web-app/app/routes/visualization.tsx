@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import { Link } from "react-router";
 
 import { BasicForceLab } from "../components/basic-force-lab";
+import { MotionTrackLab } from "../components/motion-track-lab";
 import { StatusPanel } from "../components/status-panel";
 import { getTopicById, type TeachingTopic } from "../data/teaching-catalog";
 import type { Route } from "./+types/visualization";
@@ -88,11 +89,19 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
   }
 
   const { stage, subject, topic } = topicData;
+  const isImmersiveLab = topic.id === "basic-force" || topic.id === "motion-track";
 
   return (
     <div className="page-stack visual-page">
       {topic.id === "basic-force" ? (
         <BasicForceLab
+          topic={topic}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+          fullscreenRef={fullscreenRef}
+        />
+      ) : topic.id === "motion-track" ? (
+        <MotionTrackLab
           topic={topic}
           isFullscreen={isFullscreen}
           onToggleFullscreen={toggleFullscreen}
@@ -107,7 +116,7 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
         />
       )}
 
-      {topic.id === "basic-force" ? null : (
+      {isImmersiveLab ? null : (
         <div className="action-row">
           <Link to={`/content/${stage.id}/${subject.id}`} className="action-link is-primary">
             返回知识点页
