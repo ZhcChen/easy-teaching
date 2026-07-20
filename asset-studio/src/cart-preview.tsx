@@ -40,7 +40,7 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
 
       <g transform="translate(0 2)">
         <g>
-          {[108, 244].map((cx) => (
+          {[94, 236].map((cx) => (
             <g key={cx}>
               <circle cx={cx} cy="120.5" r="22.5" fill={preset.colors.wheel} stroke="#7f8898" strokeOpacity="0.42" strokeWidth="1.2" />
               <circle cx={cx} cy="120.5" r="18.2" fill="none" stroke="#ffffff" strokeOpacity="0.14" strokeWidth="1.4" />
@@ -67,21 +67,21 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
         </g>
 
         <path
-          d="M50 104C50 85 64 70 82 70H180C195 70 205 66 215 57L234 42C240 38 247 36 255 36H272C286 36 297 44 303 56L311 77C314 84 315 89 314 96C313 101 307 104 297 104H268Q244 88 220 104H132Q108 88 84 104H50Z"
+          d="M42 106C42 89 52 78 69 73C76 71 85 70 97 70H163C184 70 198 66 210 58L223 49C233 40 245 36 260 36H272C287 36 298 44 304 57L312 76C315 84 316 92 314 98C312 103 306 106 296 106H265C257 106 252 103 248 99C243 92 238 88 230 88C222 88 217 92 212 99C209 103 203 106 194 106H129C120 106 114 103 111 99C106 92 101 88 92 88C83 88 78 92 73 99C69 103 63 106 54 106H46Z"
           fill={`url(#${bodyGradientId})`}
           stroke={preset.colors.outline}
           strokeWidth="4"
           strokeLinejoin="round"
         />
         <path
-          d="M129 69L151 45C157 39 164 36 173 36H215C223 36 230 39 236 45L254 69Z"
+          d="M126 68L145 50C154 42 163 38 175 38H214C225 38 234 42 242 50L259 68Z"
           fill={preset.colors.roof}
           stroke={preset.colors.outline}
           strokeWidth="3"
           strokeLinejoin="round"
         />
         <path
-          d="M141 65L160 47C164 43 169 41 176 41H212C219 41 224 43 229 49L241 65Z"
+          d="M138 66L154 50C160 44 166 42 174 42H192V66Z"
           fill={`url(#${glassGradientId})`}
           stroke={preset.colors.outline}
           strokeOpacity="0.62"
@@ -89,14 +89,22 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
           strokeLinejoin="round"
         />
         <path
-          d="M84 88H205C220 88 232 83 243 74L282 74"
+          d="M195 42H214C223 42 230 45 236 51L248 66H195Z"
+          fill={`url(#${glassGradientId})`}
+          stroke={preset.colors.outline}
+          strokeOpacity="0.62"
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M78 88H208C223 88 234 84 244 78L281 78"
           fill="none"
           stroke={preset.colors.accent}
           strokeWidth="5"
           strokeLinecap="round"
         />
         <path
-          d="M82 95H262"
+          d="M77 95H266"
           fill="none"
           stroke={preset.colors.trim}
           strokeOpacity="0.9"
@@ -104,7 +112,7 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
           strokeLinecap="round"
         />
         <path
-          d="M84 101H253"
+          d="M78 100H255"
           fill="none"
           stroke={preset.colors.roof}
           strokeOpacity="0.22"
@@ -112,23 +120,23 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
           strokeLinecap="round"
         />
         <path
-          d="M186 70V101"
+          d="M186 68V100"
           fill="none"
           stroke={preset.colors.outline}
           strokeOpacity="0.34"
           strokeWidth="2"
         />
         <path
-          d="M153 70V101"
+          d="M154 68V99"
           fill="none"
           stroke={preset.colors.outline}
           strokeOpacity="0.22"
           strokeWidth="2"
         />
-        <rect x="279" y="72" width="18" height="10" rx="5" fill={preset.colors.lamp} />
-        <rect x="68" y="82" width="8" height="8" rx="4" fill={preset.colors.accent} fillOpacity="0.92" />
+        <rect x="279" y="76" width="18" height="10" rx="5" fill={preset.colors.lamp} />
+        <rect x="60" y="82" width="8" height="8" rx="4" fill={preset.colors.accent} fillOpacity="0.92" />
         <path
-          d="M94 77H140"
+          d="M90 78H136"
           fill="none"
           stroke="#ffffff"
           strokeOpacity="0.16"
@@ -136,19 +144,19 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
           strokeLinecap="round"
         />
         <path
-          d="M87 104Q108 92 129 104"
+          d="M70 104Q81 95 92 95Q103 95 114 104"
           fill="none"
           stroke={preset.colors.roof}
-          strokeOpacity="0.34"
-          strokeWidth="2.4"
+          strokeOpacity="0.3"
+          strokeWidth="2.2"
           strokeLinecap="round"
         />
         <path
-          d="M223 104Q244 92 265 104"
+          d="M212 104Q223 95 234 95Q245 95 256 104"
           fill="none"
           stroke={preset.colors.roof}
-          strokeOpacity="0.34"
-          strokeWidth="2.4"
+          strokeOpacity="0.3"
+          strokeWidth="2.2"
           strokeLinecap="round"
         />
       </g>
