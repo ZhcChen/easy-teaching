@@ -153,14 +153,6 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
           strokeWidth="2.5"
           strokeLinecap="round"
         />
-        <path
-          d="M112 71H174"
-          fill="none"
-          stroke="#ffffff"
-          strokeOpacity="0.08"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
       </g>
     </svg>
   )
