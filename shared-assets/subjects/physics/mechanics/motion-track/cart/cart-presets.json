@@ -17,19 +17,19 @@
   "presets": [
     {
       "id": "standard-contrast-orange",
-      "name": "标准橙车",
+      "name": "标准红车",
       "badge": "标准样式",
-      "description": "延续之前更顺眼的流线车身轮廓，改成暖橙主色与石墨灰车顶，主动和深蓝可视化背景拉开对比。",
+      "description": "按更接近现代电动轿车的侧面比例收敛，改成高对比红色车身与石墨灰车顶，避免继续和深蓝可视化背景撞色。",
       "colors": {
-        "body": "#f26b1d",
+        "body": "#d62839",
         "roof": "#2b303b",
         "window": "#e3f4ff",
-        "accent": "#fff3de",
+        "accent": "#ffe8db",
         "lamp": "#ffe89b",
         "wheel": "#2a313d",
         "rim": "#d1d8e2",
-        "trim": "#f9dcc1",
-        "outline": "#ffe8d0",
+        "trim": "#ffd0c7",
+        "outline": "#ffe2d9",
         "shadow": "rgba(6, 8, 12, 0.28)"
       }
     }
