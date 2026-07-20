@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { cartAsset } from './asset-manifest'
 import { CartPreview } from './cart-preview'
 import './App.css'
@@ -13,7 +13,6 @@ const SURFACE_OPTIONS: Array<{ id: PreviewSurface; label: string; note: string }
 ]
 
 const THEME_STORAGE_KEY = 'asset-studio.theme'
-const PRESET_STORAGE_KEY = 'asset-studio.cart-preset'
 const SURFACE_STORAGE_KEY = 'asset-studio.surface'
 
 function readStoredTheme(): StudioTheme {
@@ -22,14 +21,6 @@ function readStoredTheme(): StudioTheme {
   }
 
   return window.localStorage.getItem(THEME_STORAGE_KEY) === 'dark' ? 'dark' : 'light'
-}
-
-function readStoredPresetId(): string {
-  if (typeof window === 'undefined') {
-    return cartAsset.presets[0]?.id ?? ''
-  }
-
-  return window.localStorage.getItem(PRESET_STORAGE_KEY) ?? cartAsset.presets[0]?.id ?? ''
 }
 
 function readStoredSurface(): PreviewSurface {
@@ -43,24 +34,13 @@ function readStoredSurface(): PreviewSurface {
 
 function App() {
   const [theme, setTheme] = useState<StudioTheme>(readStoredTheme)
-  const [selectedPresetId, setSelectedPresetId] = useState<string>(readStoredPresetId)
   const [activeSurface, setActiveSurface] = useState<PreviewSurface>(readStoredSurface)
-
-  const selectedPreset = useMemo(
-    () => cartAsset.presets.find((preset) => preset.id === selectedPresetId) ?? cartAsset.presets[0],
-    [selectedPresetId],
-  )
+  const selectedPreset = cartAsset.presets[0]
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
     window.localStorage.setItem(THEME_STORAGE_KEY, theme)
   }, [theme])
-
-  useEffect(() => {
-    if (selectedPresetId) {
-      window.localStorage.setItem(PRESET_STORAGE_KEY, selectedPresetId)
-    }
-  }, [selectedPresetId])
 
   useEffect(() => {
     window.localStorage.setItem(SURFACE_STORAGE_KEY, activeSurface)
@@ -136,7 +116,7 @@ function App() {
 
           <section className="panel-block">
             <div className="panel-block-head">
-              <span className="panel-label">当前预设</span>
+              <span className="panel-label">标准样式</span>
             </div>
 
             <div className="selected-preset-card">
@@ -205,40 +185,26 @@ function App() {
           <section className="surface-panel">
             <div className="panel-block-head">
               <div>
-                <span className="panel-label">配色方案</span>
-                <h2>挑一版你觉得最顺眼的</h2>
+                <span className="panel-label">样式说明</span>
+                <h2>当前只保留这一版小车</h2>
               </div>
             </div>
 
-            <div className="preset-grid">
-              {cartAsset.presets.map((preset) => (
-                <button
-                  key={preset.id}
-                  type="button"
-                  className={preset.id === selectedPreset.id ? 'preset-card is-active' : 'preset-card'}
-                  onClick={() => setSelectedPresetId(preset.id)}
-                >
-                  <div className="preset-card-preview">
-                    <CartPreview preset={preset} size="compact" />
-                  </div>
-                  <div className="preset-card-copy">
-                    <div className="preset-card-head">
-                      <strong>{preset.name}</strong>
-                      <span className="preset-badge">{preset.badge}</span>
-                    </div>
-                    <p>{preset.description}</p>
-                    <div className="swatch-row">
-                      {Object.entries(preset.colors)
-                        .slice(0, 5)
-                        .map(([colorKey, colorValue]) => (
-                          <span key={colorKey} className="swatch-chip" title={`${colorKey}: ${colorValue}`}>
-                            <i style={{ background: colorValue }} />
-                          </span>
-                        ))}
-                    </div>
-                  </div>
-                </button>
-              ))}
+            <div className="single-style-layout">
+              <div className="single-style-preview">
+                <div className="single-style-scene">
+                  <CartPreview preset={selectedPreset} size="compact" />
+                </div>
+              </div>
+              <div className="single-style-copy">
+                <p>{selectedPreset.description}</p>
+                <ul className="info-list is-tight">
+                  <li>车身改成暖橙主色，避免继续和蓝色可视化背景撞色。</li>
+                  <li>车顶与底盘统一收成石墨灰，层次更稳，也更像真实小车。</li>
+                  <li>轮组缩小轮毂比例，补了更自然的轮胎、轮圈和辐条关系。</li>
+                  <li>当前先固定一个标准样式，后续直接基于这一版继续细调。</li>
+                </ul>
+              </div>
             </div>
           </section>
         </main>
