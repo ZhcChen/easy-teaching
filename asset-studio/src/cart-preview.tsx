@@ -98,14 +98,14 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
           strokeLinejoin="round"
         />
         <path
-          d="M76 88H206C218 88 227 84 235 79L261 79"
+          d="M128 88H206C218 88 227 84 235 79L261 79"
           fill="none"
           stroke={preset.colors.accent}
           strokeWidth="5"
           strokeLinecap="round"
         />
         <path
-          d="M75 95H194"
+          d="M128 95H194"
           fill="none"
           stroke={preset.colors.trim}
           strokeOpacity="0.9"
@@ -113,7 +113,7 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
           strokeLinecap="round"
         />
         <path
-          d="M78 100H186"
+          d="M130 100H186"
           fill="none"
           stroke={preset.colors.roof}
           strokeOpacity="0.22"
