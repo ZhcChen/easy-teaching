@@ -51,6 +51,32 @@ type MotionSummary = {
   displacementFormula: string;
 };
 
+type MotionIntervalComparison = {
+  key: string;
+  startTime: number;
+  endTime: number;
+  distance: number;
+  averageVelocity: number;
+  endVelocity: number;
+  note: string;
+  trendLabel: string;
+  isActive: boolean;
+  isUpcoming: boolean;
+};
+
+type MotionPausedComparison = {
+  baselinePosition: number;
+  baselineVelocity: number;
+  positionDelta: number;
+  velocityDelta: number;
+  isUsingPreset: boolean;
+};
+
+type MotionTeachingCue = {
+  title: string;
+  detail: string;
+};
+
 type RangeControlProps = {
   id: string;
   label: string;
@@ -284,6 +310,39 @@ export function MotionTrackLab({
     initialVelocity,
     acceleration,
   });
+  const intervalComparisons = useMemo(
+    () =>
+      buildIntervalComparisons({
+        duration,
+        currentTime,
+        initialVelocity,
+        acceleration,
+        mode,
+      }),
+    [acceleration, currentTime, duration, initialVelocity, mode],
+  );
+  const activeInterval =
+    intervalComparisons.find((item) => item.isActive) ?? intervalComparisons[0] ?? null;
+  const pausedComparison = useMemo(
+    () =>
+      buildPausedComparison({
+        mode,
+        currentTime,
+        duration,
+        initialVelocity,
+        acceleration,
+      }),
+    [acceleration, currentTime, duration, initialVelocity, mode],
+  );
+  const teachingCues = useMemo(
+    () =>
+      buildTeachingCues({
+        mode,
+        activeInterval,
+        currentMotion,
+      }),
+    [activeInterval, currentMotion, mode],
+  );
 
   const hasEnded = currentTime >= duration;
   const hasProgress = currentTime > 0;
@@ -568,6 +627,81 @@ export function MotionTrackLab({
 
             <section className="force-control-section">
               <div className="force-control-section-head">
+                <h5 className="force-control-section-title">逐秒对比</h5>
+                <span className="force-section-hint">看每一段 1 秒内位移怎么变化</span>
+              </div>
+
+              <div className="motion-interval-list">
+                {intervalComparisons.map((item) => (
+                  <article
+                    key={item.key}
+                    className={item.isActive ? "motion-interval-card is-active" : "motion-interval-card"}
+                  >
+                    <div className="motion-interval-head">
+                      <strong>
+                        {formatNumber(item.startTime, item.startTime % 1 === 0 ? 0 : 1)}s -{" "}
+                        {formatNumber(item.endTime, item.endTime % 1 === 0 ? 0 : 1)}s
+                      </strong>
+                      <span className="motion-interval-badge">
+                        {item.isUpcoming ? "即将观察" : item.isActive ? "当前区间" : item.trendLabel}
+                      </span>
+                    </div>
+                    <div className="motion-interval-meta">
+                      <span>位移 {formatNumber(item.distance, 1)} m</span>
+                      <span>均速 {formatNumber(item.averageVelocity, 1)} m/s</span>
+                      <span>末速 {formatNumber(item.endVelocity, 1)} m/s</span>
+                    </div>
+                    <p>{item.note}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className="force-control-section">
+              <div className="force-control-section-head">
+                <h5 className="force-control-section-title">暂停对照</h5>
+                <span className="force-section-hint">暂停后拖动参数，保留当前时刻即时比较</span>
+              </div>
+
+              {hasProgress ? (
+                <div className="motion-compare-card">
+                  <div className="motion-compare-head">
+                    <strong>当前停在 t = {formatNumber(currentTime, 1)} s</strong>
+                    <span className="motion-view-switch">即时联动</span>
+                  </div>
+                  <p className="motion-compare-copy">
+                    {pausedComparison.isUsingPreset
+                      ? "当前就是这个模式的默认参数。暂停后改动滑块，会立刻看到这一刻的位移和速度差异。"
+                      : `相对当前模式默认值，位移 ${formatSignedNumber(pausedComparison.positionDelta)} m，速度 ${formatSignedNumber(pausedComparison.velocityDelta)} m/s。`}
+                  </p>
+                  <div className="motion-compare-grid">
+                    <article className="motion-compare-metric">
+                      <span>默认位移</span>
+                      <strong>{formatNumber(pausedComparison.baselinePosition, 1)} m</strong>
+                    </article>
+                    <article className="motion-compare-metric">
+                      <span>当前位移</span>
+                      <strong>{formatNumber(currentMotion.position, 1)} m</strong>
+                    </article>
+                    <article className="motion-compare-metric">
+                      <span>默认速度</span>
+                      <strong>{formatNumber(pausedComparison.baselineVelocity, 1)} m/s</strong>
+                    </article>
+                    <article className="motion-compare-metric">
+                      <span>当前速度</span>
+                      <strong>{formatNumber(currentMotion.velocity, 1)} m/s</strong>
+                    </article>
+                  </div>
+                </div>
+              ) : (
+                <p className="force-inline-copy">
+                  先播放或拖动时间轴到某一刻，再暂停。这样你改动参数时，会保留这一个时间点做即时对照。
+                </p>
+              )}
+            </section>
+
+            <section className="force-control-section">
+              <div className="force-control-section-head">
                 <h5 className="force-control-section-title">教学观察</h5>
                 <span className="force-section-hint">这里保留口语化结论，方便直接讲解</span>
               </div>
@@ -584,6 +718,15 @@ export function MotionTrackLab({
               <p className="force-inline-copy">{summary.conclusion}</p>
               <p className="force-inline-copy">{summary.displacementFormula}</p>
               <p className="force-inline-copy">{summary.velocityFormula}</p>
+
+              <div className="motion-teaching-grid">
+                {teachingCues.map((item) => (
+                  <article key={item.title} className="motion-teaching-card">
+                    <strong>{item.title}</strong>
+                    <span>{item.detail}</span>
+                  </article>
+                ))}
+              </div>
             </section>
           </div>
         </aside>
@@ -994,6 +1137,14 @@ export function MotionTrackLab({
                   <span className={`force-state-pill is-${summary.stateTone}`}>{summary.stateLabel}</span>
                 </div>
                 <p className="motion-stage-note">{summary.observation}</p>
+                {activeInterval ? (
+                  <div className="motion-stage-kpi-row">
+                    <span className="motion-stage-kpi-pill">
+                      本段位移 {formatNumber(activeInterval.distance, 1)} m
+                    </span>
+                    <span className="motion-stage-kpi-pill">{activeInterval.trendLabel}</span>
+                  </div>
+                ) : null}
                 <div className="motion-stage-progress-inline">
                   <span style={{ width: `${progress * 100}%` }} />
                 </div>
@@ -1251,6 +1402,203 @@ function buildSecondMarkers({
   return markers;
 }
 
+function buildIntervalComparisons({
+  duration,
+  currentTime,
+  initialVelocity,
+  acceleration,
+  mode,
+}: {
+  duration: number;
+  currentTime: number;
+  initialVelocity: number;
+  acceleration: number;
+  mode: MotionMode;
+}) {
+  const markers = buildSecondMarkers({
+    duration,
+    initialVelocity,
+    acceleration,
+  });
+  const boundaries = [0, ...markers.map((item) => item.time)];
+
+  return boundaries.slice(1).map((endTime, index) => {
+    const startTime = boundaries[index];
+    const startSample = resolveMotionAtTime({
+      time: startTime,
+      duration,
+      initialVelocity,
+      acceleration,
+    });
+    const endSample = resolveMotionAtTime({
+      time: endTime,
+      duration,
+      initialVelocity,
+      acceleration,
+    });
+    const previousEndTime = index > 0 ? boundaries[index] : null;
+    const previousStartTime = index > 0 ? boundaries[index - 1] : null;
+    const previousDistance =
+      previousEndTime !== null && previousStartTime !== null
+        ? resolveMotionAtTime({
+            time: previousEndTime,
+            duration,
+            initialVelocity,
+            acceleration,
+          }).position -
+          resolveMotionAtTime({
+            time: previousStartTime,
+            duration,
+            initialVelocity,
+            acceleration,
+          }).position
+        : null;
+    const deltaTime = endTime - startTime || 1;
+    const distance = endSample.position - startSample.position;
+    const isActive =
+      currentTime > startTime && currentTime <= endTime + 0.0001;
+    const isUpcoming = currentTime === 0 && index === 0;
+
+    return {
+      key: `${startTime}-${endTime}`,
+      startTime,
+      endTime,
+      distance,
+      averageVelocity: distance / deltaTime,
+      endVelocity: endSample.velocity,
+      note: describeIntervalNote({
+        mode,
+        distance,
+        previousDistance,
+        hasStopped: endSample.hasStopped && distance <= 0.02,
+      }),
+      trendLabel: describeIntervalTrend({
+        mode,
+        distance,
+        previousDistance,
+        hasStopped: endSample.hasStopped && distance <= 0.02,
+      }),
+      isActive,
+      isUpcoming,
+    };
+  });
+}
+
+function buildPausedComparison({
+  mode,
+  currentTime,
+  duration,
+  initialVelocity,
+  acceleration,
+}: {
+  mode: MotionMode;
+  currentTime: number;
+  duration: number;
+  initialVelocity: number;
+  acceleration: number;
+}) {
+  const preset = MOTION_PRESETS[mode];
+  const baselineSample = resolveMotionAtTime({
+    time: currentTime,
+    duration: Math.max(duration, currentTime, preset.duration),
+    initialVelocity: preset.initialVelocity,
+    acceleration: preset.acceleration,
+  });
+
+  const currentSample = resolveMotionAtTime({
+    time: currentTime,
+    duration,
+    initialVelocity,
+    acceleration,
+  });
+  const isUsingPreset =
+    Math.abs(initialVelocity - preset.initialVelocity) < 0.001 &&
+    Math.abs(acceleration - preset.acceleration) < 0.001 &&
+    Math.abs(duration - preset.duration) < 0.001;
+
+  return {
+    baselinePosition: baselineSample.position,
+    baselineVelocity: baselineSample.velocity,
+    positionDelta: currentSample.position - baselineSample.position,
+    velocityDelta: currentSample.velocity - baselineSample.velocity,
+    isUsingPreset,
+  };
+}
+
+function buildTeachingCues({
+  mode,
+  activeInterval,
+  currentMotion,
+}: {
+  mode: MotionMode;
+  activeInterval: MotionIntervalComparison | null;
+  currentMotion: MotionSample;
+}): MotionTeachingCue[] {
+  const intervalText = activeInterval
+    ? `${formatNumber(activeInterval.startTime, activeInterval.startTime % 1 === 0 ? 0 : 1)}s 到 ${formatNumber(activeInterval.endTime, activeInterval.endTime % 1 === 0 ? 0 : 1)}s`
+    : "当前区间";
+  const isFirstInterval = !activeInterval || activeInterval.startTime === 0;
+
+  if (mode === "uniform") {
+    return [
+      {
+        title: "先提问",
+        detail: isFirstInterval
+          ? `先把 ${intervalText} 当作基准，再继续往后看，观察相邻采样点间距为什么几乎一致。`
+          : `让学生比较 ${intervalText} 和前一段，观察相邻采样点间距为什么几乎一致。`,
+      },
+      {
+        title: "重点看",
+        detail: "位移 - 时间图像一直保持同样斜率，说明速度没有变化。",
+      },
+      {
+        title: "一句带走",
+        detail: "匀速运动里，每秒增加的位移基本相同，所以 s 和 t 成正比。",
+      },
+    ];
+  }
+
+  if (mode === "accelerating") {
+    return [
+      {
+        title: "先提问",
+        detail: isFirstInterval
+          ? `先把 ${intervalText} 当作基准，再问一句：后面每一秒为什么会走得更远？`
+          : `让学生比较 ${intervalText} 和前一段，问一句：为什么这 1 秒走得更远？`,
+      },
+      {
+        title: "重点看",
+        detail: "相邻秒位移越来越大，v-t 图像是一条向上倾斜的直线。",
+      },
+      {
+        title: "一句带走",
+        detail: "匀加速不是每秒多走同样距离，而是每秒速度增加同样数值。",
+      },
+    ];
+  }
+
+  return [
+    {
+      title: "先提问",
+      detail: currentMotion.hasStopped
+        ? "让学生观察停止点，问一句：为什么后面的时间不再继续前进？"
+        : isFirstInterval
+          ? `先把 ${intervalText} 当作基准，再问一句：后面每一秒为什么会走得更少？`
+          : `让学生比较 ${intervalText} 和前一段，问一句：为什么这 1 秒走得更少？`,
+    },
+    {
+      title: "重点看",
+      detail: currentMotion.hasStopped
+        ? "小车停下后，轨道位置和位移都保持不变。"
+        : "相邻秒位移越来越小，v-t 图像会一直下降直到 0。",
+    },
+    {
+      title: "一句带走",
+      detail: "匀减速时速度每秒减少相同数值，减到 0 后位移不再变化。",
+    },
+  ];
+}
+
 function buildGraphGeometry({
   series,
   playedSeries,
@@ -1384,8 +1732,90 @@ function describeMotion({
   };
 }
 
+function describeIntervalNote({
+  mode,
+  distance,
+  previousDistance,
+  hasStopped,
+}: {
+  mode: MotionMode;
+  distance: number;
+  previousDistance: number | null;
+  hasStopped: boolean;
+}) {
+  if (hasStopped) {
+    return "这一段已经不再前进，说明速度已经减到 0。";
+  }
+
+  if (previousDistance === null) {
+    return "先把这一段当作基准，再和后面的每一段比较。";
+  }
+
+  const delta = distance - previousDistance;
+
+  if (Math.abs(delta) < 0.12) {
+    return "和上一段几乎一样，说明相同时间内位移变化基本不变。";
+  }
+
+  if (mode === "accelerating" && delta > 0) {
+    return `比上一段多走 ${formatNumber(delta, 1)} m，说明速度正在增大。`;
+  }
+
+  if (mode === "braking" && delta < 0) {
+    return `比上一段少走 ${formatNumber(Math.abs(delta), 1)} m，说明速度正在减小。`;
+  }
+
+  return delta > 0
+    ? `比上一段多走 ${formatNumber(delta, 1)} m。`
+    : `比上一段少走 ${formatNumber(Math.abs(delta), 1)} m。`;
+}
+
+function describeIntervalTrend({
+  mode,
+  distance,
+  previousDistance,
+  hasStopped,
+}: {
+  mode: MotionMode;
+  distance: number;
+  previousDistance: number | null;
+  hasStopped: boolean;
+}) {
+  if (hasStopped) {
+    return "已停止";
+  }
+
+  if (previousDistance === null) {
+    return "基准段";
+  }
+
+  const delta = distance - previousDistance;
+
+  if (Math.abs(delta) < 0.12) {
+    return "和上一段接近";
+  }
+
+  if (mode === "accelerating" && delta > 0) {
+    return `+${formatNumber(delta, 1)} m`;
+  }
+
+  if (mode === "braking" && delta < 0) {
+    return `-${formatNumber(Math.abs(delta), 1)} m`;
+  }
+
+  return delta > 0 ? `+${formatNumber(delta, 1)} m` : `-${formatNumber(Math.abs(delta), 1)} m`;
+}
+
 function formatNumber(value: number, digits = 1) {
   return Number(value.toFixed(digits)).toString();
+}
+
+function formatSignedNumber(value: number, digits = 1) {
+  if (Math.abs(value) < 0.05) {
+    return `0`;
+  }
+
+  return `${value > 0 ? "+" : "-"}${formatNumber(Math.abs(value), digits)}`;
 }
 
 function formatTimeLabel(value: number) {
