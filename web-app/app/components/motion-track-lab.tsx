@@ -1130,53 +1130,46 @@ export function MotionTrackLab({
               )}
             </svg>
 
-            <div className="motion-stage-overlay is-top-left">
-              <div className="motion-stage-hud-card is-minimal">
-                <div className="motion-stage-hud-head">
-                  <span className="motion-stage-mode-pill">{preset.badge}</span>
-                  <span className={`force-state-pill is-${summary.stateTone}`}>{summary.stateLabel}</span>
-                </div>
-                {activeInterval ? (
-                  <div className="motion-stage-kpi-row is-compact">
-                    <span className="motion-stage-kpi-pill">
-                      本段位移 {formatNumber(activeInterval.distance, 1)} m
-                    </span>
-                    <span className="motion-stage-kpi-pill">{activeInterval.trendLabel}</span>
+            <div className="motion-stage-overlay is-bottom-bar">
+              <div className="motion-stage-summary-bar">
+                <div className="motion-stage-summary-main">
+                  <div className="motion-stage-hud-head is-compact">
+                    <span className="motion-stage-mode-pill">{preset.badge}</span>
+                    <span className={`force-state-pill is-${summary.stateTone}`}>{summary.stateLabel}</span>
+                    {activeInterval ? (
+                      <span className="motion-stage-kpi-pill">
+                        本段 {formatNumber(activeInterval.distance, 1)} m
+                      </span>
+                    ) : null}
                   </div>
-                ) : null}
-                <div className="motion-stage-progress-inline">
-                  <span style={{ width: `${progress * 100}%` }} />
+                  <div className="motion-stage-summary-progress">
+                    <span style={{ width: `${progress * 100}%` }} />
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="motion-stage-overlay is-bottom-left">
-              <div className="motion-stage-hud-card">
-                <div className="motion-stage-stat-grid">
-                  <article className="motion-stage-stat-card">
+                <div className="motion-stage-stat-strip">
+                  <article className="motion-stage-stat-item">
                     <span>时间</span>
                     <strong>{formatNumber(currentMotion.time, 1)} s</strong>
                   </article>
-                  <article className="motion-stage-stat-card">
+                  <article className="motion-stage-stat-item">
                     <span>速度</span>
                     <strong>{formatNumber(currentMotion.velocity, 1)} m/s</strong>
                   </article>
-                  <article className="motion-stage-stat-card">
+                  <article className="motion-stage-stat-item">
                     <span>位移</span>
                     <strong>{formatNumber(currentMotion.position, 1)} m</strong>
                   </article>
-                  <article className="motion-stage-stat-card">
+                  <article className="motion-stage-stat-item">
                     <span>加速度</span>
                     <strong>{formatNumber(currentMotion.acceleration, 2)} m/s²</strong>
                   </article>
                 </div>
-              </div>
-            </div>
 
-            <div className="motion-stage-overlay is-bottom-right">
-              <div className="motion-stage-hud-card is-compact is-minimal">
-                <p className="surface-eyebrow">结论</p>
-                <strong className="motion-stage-conclusion is-compact">{summary.conclusion}</strong>
+                <div className="motion-stage-summary-conclusion">
+                  <span className="motion-stage-summary-label">结论</span>
+                  <strong className="motion-stage-conclusion is-compact">{summary.conclusion}</strong>
+                </div>
               </div>
             </div>
           </div>
