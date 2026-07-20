@@ -109,27 +109,54 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
           strokeLinecap="round"
         />
 
+        <path
+          d="M81 104Q93 89 108 89Q123 89 135 104"
+          fill="none"
+          stroke={preset.colors.roof}
+          strokeOpacity="0.44"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+        <path
+          d="M217 104Q229 89 244 89Q259 89 271 104"
+          fill="none"
+          stroke={preset.colors.roof}
+          strokeOpacity="0.44"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+        <path
+          d="M84 104Q95 95 108 95Q121 95 132 104L132 107H84Z"
+          fill={preset.colors.roof}
+          fillOpacity="0.12"
+        />
+        <path
+          d="M220 104Q231 95 244 95Q257 95 268 104L268 107H220Z"
+          fill={preset.colors.roof}
+          fillOpacity="0.12"
+        />
+
         <g>
           {[108, 244].map((cx) => (
             <g key={cx}>
-              <circle cx={cx} cy="123.5" r="23.5" fill={preset.colors.wheel} />
-              <circle cx={cx} cy="123.5" r="18.6" fill="none" stroke="#ffffff" strokeOpacity="0.08" strokeWidth="1.4" />
+              <circle cx={cx} cy="120.5" r="22.5" fill={preset.colors.wheel} stroke="#697385" strokeOpacity="0.34" strokeWidth="1.2" />
+              <circle cx={cx} cy="120.5" r="18.2" fill="none" stroke="#ffffff" strokeOpacity="0.12" strokeWidth="1.4" />
               <circle
                 cx={cx}
-                cy="123.5"
-                r="12.4"
+                cy="120.5"
+                r="12.2"
                 fill={`url(#${rimGradientId})`}
                 stroke={preset.colors.wheel}
                 strokeOpacity="0.24"
                 strokeWidth="1.4"
               />
-              <circle cx={cx} cy="123.5" r="4.2" fill={preset.colors.wheel} fillOpacity="0.68" />
+              <circle cx={cx} cy="120.5" r="4.4" fill={preset.colors.wheel} fillOpacity="0.72" />
               <path
-                d={`M${cx} 112.5V134.5 M${cx - 11} 123.5H${cx + 11} M${cx - 7} 116.5L${cx + 7} 130.5 M${cx + 7} 116.5L${cx - 7} 130.5`}
+                d={`M${cx} 109.5V131.5 M${cx - 10} 120.5H${cx + 10} M${cx - 6} 113.5L${cx + 6} 127.5 M${cx + 6} 113.5L${cx - 6} 127.5`}
                 fill="none"
                 stroke={preset.colors.wheel}
-                strokeOpacity="0.28"
-                strokeWidth="1.6"
+                strokeOpacity="0.34"
+                strokeWidth="1.5"
                 strokeLinecap="round"
               />
             </g>
