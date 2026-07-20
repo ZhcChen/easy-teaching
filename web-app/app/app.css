@@ -3842,7 +3842,8 @@ html[data-theme="dark"] .force-state-pill.is-active {
 .motion-stage-overlay.is-top-left {
   top: 16px;
   left: 16px;
-  width: min(320px, calc(100% - 112px));
+  width: fit-content;
+  max-width: min(260px, calc(100% - 112px));
 }
 
 .motion-stage-overlay.is-bottom-left {
@@ -3854,7 +3855,8 @@ html[data-theme="dark"] .force-state-pill.is-active {
 .motion-stage-overlay.is-bottom-right {
   right: 16px;
   bottom: 16px;
-  width: min(280px, calc(100% - 28px));
+  width: fit-content;
+  max-width: min(220px, calc(100% - 28px));
 }
 
 .motion-stage-hud-card {
@@ -3872,6 +3874,11 @@ html[data-theme="dark"] .force-state-pill.is-active {
 .motion-stage-hud-card.is-compact {
   gap: 8px;
   padding: 12px;
+}
+
+.motion-stage-hud-card.is-minimal {
+  gap: 8px;
+  padding: 10px 12px;
 }
 
 .motion-stage-hud-head {
@@ -3902,6 +3909,11 @@ html[data-theme="dark"] .force-state-pill.is-active {
   line-height: 1.55;
 }
 
+.motion-stage-conclusion.is-compact {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .motion-stage-progress-inline {
   position: relative;
   overflow: hidden;
@@ -3923,6 +3935,10 @@ html[data-theme="dark"] .force-state-pill.is-active {
   gap: 8px;
 }
 
+.motion-stage-kpi-row.is-compact {
+  gap: 6px;
+}
+
 .motion-stage-kpi-pill {
   display: inline-flex;
   align-items: center;
@@ -3935,6 +3951,12 @@ html[data-theme="dark"] .force-state-pill.is-active {
   font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.motion-stage-kpi-row.is-compact .motion-stage-kpi-pill {
+  min-height: 26px;
+  padding: 0 8px;
+  font-size: 10px;
 }
 
 .motion-stage-stat-grid {

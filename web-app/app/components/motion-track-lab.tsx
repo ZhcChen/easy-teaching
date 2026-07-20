@@ -1131,14 +1131,13 @@ export function MotionTrackLab({
             </svg>
 
             <div className="motion-stage-overlay is-top-left">
-              <div className="motion-stage-hud-card">
+              <div className="motion-stage-hud-card is-minimal">
                 <div className="motion-stage-hud-head">
                   <span className="motion-stage-mode-pill">{preset.badge}</span>
                   <span className={`force-state-pill is-${summary.stateTone}`}>{summary.stateLabel}</span>
                 </div>
-                <p className="motion-stage-note">{summary.observation}</p>
                 {activeInterval ? (
-                  <div className="motion-stage-kpi-row">
+                  <div className="motion-stage-kpi-row is-compact">
                     <span className="motion-stage-kpi-pill">
                       本段位移 {formatNumber(activeInterval.distance, 1)} m
                     </span>
@@ -1175,10 +1174,9 @@ export function MotionTrackLab({
             </div>
 
             <div className="motion-stage-overlay is-bottom-right">
-              <div className="motion-stage-hud-card is-compact">
-                <p className="surface-eyebrow">当前结论</p>
-                <strong className="motion-stage-conclusion">{summary.conclusion}</strong>
-                <p className="motion-stage-note is-compact">{summary.displacementFormula}</p>
+              <div className="motion-stage-hud-card is-compact is-minimal">
+                <p className="surface-eyebrow">结论</p>
+                <strong className="motion-stage-conclusion is-compact">{summary.conclusion}</strong>
               </div>
             </div>
           </div>
