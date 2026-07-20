@@ -3792,6 +3792,13 @@ html[data-theme="dark"] .force-state-pill.is-active {
   isolation: isolate;
 }
 
+.motion-stage-canvas .visual-grid-layer {
+  background-size: 52px 52px;
+  opacity: 0.28;
+  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.96) 0%, rgba(0, 0, 0, 0.82) 34%, rgba(0, 0, 0, 0.3) 60%, transparent 82%);
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.96) 0%, rgba(0, 0, 0, 0.82) 34%, rgba(0, 0, 0, 0.3) 60%, transparent 82%);
+}
+
 .motion-stage-canvas::after {
   content: "";
   position: absolute;
@@ -3799,7 +3806,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
   background:
     radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--motion-accent-soft) 88%, transparent) 0%, transparent 30%),
     radial-gradient(circle at 78% 72%, rgba(103, 198, 255, 0.16) 0%, transparent 24%);
-  opacity: 0.9;
+  opacity: 0.78;
   pointer-events: none;
 }
 
@@ -3814,9 +3821,16 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
 .motion-stage-panel-shell,
 .motion-stage-graph-shell {
-  fill: rgba(7, 17, 31, 0.34);
   stroke: rgba(138, 190, 255, 0.14);
   stroke-width: 1.5;
+}
+
+.motion-stage-panel-shell {
+  fill: rgba(7, 17, 31, 0.42);
+}
+
+.motion-stage-graph-shell {
+  fill: rgba(5, 14, 25, 0.78);
 }
 
 .motion-stage-panel-title {
@@ -3957,7 +3971,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
 }
 
 .motion-stage-graph-grid {
-  stroke: rgba(138, 190, 255, 0.12);
+  stroke: rgba(138, 190, 255, 0.09);
   stroke-width: 1;
 }
 
