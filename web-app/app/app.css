@@ -3793,10 +3793,22 @@ html[data-theme="dark"] .force-state-pill.is-active {
 }
 
 .motion-stage-canvas .visual-grid-layer {
-  background-size: 52px 52px;
-  opacity: 0.28;
-  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.96) 0%, rgba(0, 0, 0, 0.82) 34%, rgba(0, 0, 0, 0.3) 60%, transparent 82%);
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.96) 0%, rgba(0, 0, 0, 0.82) 34%, rgba(0, 0, 0, 0.3) 60%, transparent 82%);
+  background-size: 56px 56px;
+  opacity: 0.18;
+  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.94) 0%, rgba(0, 0, 0, 0.76) 32%, rgba(0, 0, 0, 0.18) 54%, transparent 68%);
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.94) 0%, rgba(0, 0, 0, 0.76) 32%, rgba(0, 0, 0, 0.18) 54%, transparent 68%);
+}
+
+.motion-stage-canvas .visual-line {
+  display: none;
+}
+
+.motion-stage-canvas .visual-glow-a {
+  opacity: 0.18;
+}
+
+.motion-stage-canvas .visual-glow-b {
+  display: none;
 }
 
 .motion-stage-canvas::after {
@@ -3826,11 +3838,11 @@ html[data-theme="dark"] .force-state-pill.is-active {
 }
 
 .motion-stage-panel-shell {
-  fill: rgba(7, 17, 31, 0.42);
+  fill: rgba(7, 17, 31, 0.5);
 }
 
 .motion-stage-graph-shell {
-  fill: rgba(5, 14, 25, 0.78);
+  fill: rgba(5, 14, 25, 0.9);
 }
 
 .motion-stage-panel-title {
