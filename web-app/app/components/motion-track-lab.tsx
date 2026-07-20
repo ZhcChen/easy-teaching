@@ -64,19 +64,6 @@ type MotionIntervalComparison = {
   isUpcoming: boolean;
 };
 
-type MotionPausedComparison = {
-  baselinePosition: number;
-  baselineVelocity: number;
-  positionDelta: number;
-  velocityDelta: number;
-  isUsingPreset: boolean;
-};
-
-type MotionTeachingCue = {
-  title: string;
-  detail: string;
-};
-
 type RangeControlProps = {
   id: string;
   label: string;
@@ -86,6 +73,7 @@ type RangeControlProps = {
   step: number;
   value: number;
   disabled?: boolean;
+  className?: string;
   onChange: (value: number) => void;
 };
 
@@ -228,7 +216,6 @@ export function MotionTrackLab({
     [acceleration, currentTime, duration, initialVelocity],
   );
 
-  const endMotion = motionSeries[motionSeries.length - 1] ?? currentMotion;
   const peakVelocity = motionSeries.reduce((max, sample) => Math.max(max, sample.velocity), 0);
   const maxDistanceValue = motionSeries.reduce((max, sample) => Math.max(max, sample.position), 0);
   const distanceDomain = Math.max(6, maxDistanceValue * 1.06 || 0);
@@ -323,26 +310,6 @@ export function MotionTrackLab({
   );
   const activeInterval =
     intervalComparisons.find((item) => item.isActive) ?? intervalComparisons[0] ?? null;
-  const pausedComparison = useMemo(
-    () =>
-      buildPausedComparison({
-        mode,
-        currentTime,
-        duration,
-        initialVelocity,
-        acceleration,
-      }),
-    [acceleration, currentTime, duration, initialVelocity, mode],
-  );
-  const teachingCues = useMemo(
-    () =>
-      buildTeachingCues({
-        mode,
-        activeInterval,
-        currentMotion,
-      }),
-    [activeInterval, currentMotion, mode],
-  );
 
   const hasEnded = currentTime >= duration;
   const hasProgress = currentTime > 0;
@@ -428,28 +395,24 @@ export function MotionTrackLab({
         <aside className="force-control-panel motion-control-panel">
           <div className="force-control-header">
             <div className="force-control-title-block">
-              <h4 className="force-control-title">控制面板</h4>
-              <p className="force-control-copy">调参数、播放、看轨道和曲线联动。</p>
+              <h4 className="force-control-title">参数控制</h4>
             </div>
           </div>
 
           <div className="force-control-scroll motion-control-scroll">
-            <section className="force-control-section force-control-section-accent">
-              <div className="force-control-section-head">
-                <h5 className="force-control-section-title">播放控制</h5>
-                <span className="force-section-hint">先看轨道，再对照位移和速度曲线</span>
-              </div>
-
-              <div className="force-toolbar-status">
+            <section className="force-control-section force-control-section-accent motion-panel-section">
+              <div className="motion-panel-toolbar">
+                <div className="force-toolbar-status motion-toolbar-status">
+                  <span className="force-quick-pill">{preset.label}</span>
+                  <span className="force-quick-pill">总时长 {formatNumber(duration, 1)} s</span>
+                </div>
                 <span className={`force-state-pill is-${summary.stateTone}`}>{summary.stateLabel}</span>
-                <span className="force-quick-pill">{preset.label}</span>
-                <span className="force-quick-pill">总时长 {formatNumber(duration, 1)} s</span>
               </div>
 
-              <div className="force-action-grid">
+              <div className="motion-action-row">
                 <button
                   type="button"
-                  className="force-primary-button"
+                  className="motion-primary-button"
                   onClick={() => {
                     if (isPlaying) {
                       pausePlayback();
@@ -461,41 +424,35 @@ export function MotionTrackLab({
                 >
                   {primaryActionLabel}
                 </button>
-                <button type="button" className="force-ghost-button" onClick={restartPlayback}>
-                  从头播放
+                <button type="button" className="motion-ghost-button" onClick={restartPlayback}>
+                  重播
                 </button>
-                <button type="button" className="force-ghost-button" onClick={resetDefaults}>
-                  恢复默认
+                <button type="button" className="motion-ghost-button" onClick={resetDefaults}>
+                  默认
                 </button>
               </div>
 
-              <div className="force-control-stack">
-                <div className="force-control-label-row">
-                  <span className="force-control-label">时间轴</span>
-                  <span className="force-control-value">
-                    {formatNumber(currentTime, 1)} / {formatNumber(duration, 1)} s
-                  </span>
-                </div>
-                <input
-                  className="force-range-input"
-                  type="range"
-                  min={0}
-                  max={duration}
-                  step={0.05}
-                  value={Math.min(currentTime, duration)}
-                  onChange={(event) => {
-                    setCurrentTime(Number(event.target.value));
-                    setIsPlaying(false);
-                  }}
-                />
-              </div>
+              <RangeControl
+                id="motion-track-time"
+                label="时间轴"
+                unit="s"
+                min={0}
+                max={duration}
+                step={0.05}
+                value={Math.min(currentTime, duration)}
+                className="motion-range-stack"
+                onChange={(value) => {
+                  setCurrentTime(value);
+                  setIsPlaying(false);
+                }}
+              />
 
-              <div className="force-segmented motion-rate-grid">
+              <div className="motion-rate-grid">
                 {PLAYBACK_RATES.map((rate) => (
                   <button
                     key={rate}
                     type="button"
-                    className={playbackRate === rate ? "force-segmented-button is-active" : "force-segmented-button"}
+                    className={playbackRate === rate ? "motion-rate-button is-active" : "motion-rate-button"}
                     onClick={() => setPlaybackRate(rate)}
                   >
                     {rate === 1 ? "1x" : `${rate}x`}
@@ -504,32 +461,29 @@ export function MotionTrackLab({
               </div>
             </section>
 
-            <section className="force-control-section">
+            <section className="force-control-section motion-panel-section">
               <div className="force-control-section-head">
                 <h5 className="force-control-section-title">运动模式</h5>
-                <span className="force-section-hint">直接切换三个最常用的教学场景</span>
               </div>
 
-              <div className="motion-mode-grid">
+              <div className="motion-mode-compact-grid">
                 {Object.values(MOTION_PRESETS).map((item) => (
                   <button
                     key={item.mode}
                     type="button"
-                    className={mode === item.mode ? "motion-mode-card is-active" : "motion-mode-card"}
+                    className={mode === item.mode ? "motion-mode-chip is-active" : "motion-mode-chip"}
                     onClick={() => applyPreset(item.mode)}
                   >
                     <span className="motion-mode-badge">{item.badge}</span>
                     <strong>{item.label}</strong>
-                    <span>{item.description}</span>
                   </button>
                 ))}
               </div>
             </section>
 
-            <section className="force-control-section">
+            <section className="force-control-section motion-panel-section">
               <div className="force-control-section-head">
-                <h5 className="force-control-section-title">运动参数</h5>
-                <span className="force-section-hint">参数修改后右侧轨道和曲线会立即联动</span>
+                <h5 className="force-control-section-title">核心参数</h5>
               </div>
 
               <RangeControl
@@ -540,6 +494,7 @@ export function MotionTrackLab({
                 max={6}
                 step={0.1}
                 value={initialVelocity}
+                className="motion-range-stack"
                 onChange={updateVelocity}
               />
 
@@ -552,6 +507,7 @@ export function MotionTrackLab({
                 step={mode === "uniform" ? 1 : 0.05}
                 value={mode === "uniform" ? 0 : acceleration}
                 disabled={mode === "uniform"}
+                className="motion-range-stack"
                 onChange={updateAcceleration}
               />
 
@@ -563,169 +519,38 @@ export function MotionTrackLab({
                 max={12}
                 step={0.5}
                 value={duration}
+                className="motion-range-stack"
                 onChange={updateDuration}
               />
-
-              <div className="force-insight-grid force-insight-grid-compact">
-                <article className="force-insight-card">
-                  <span className="force-insight-label">总位移</span>
-                  <strong className="force-insight-value">{formatNumber(endMotion.position, 1)} m</strong>
-                </article>
-                <article className="force-insight-card">
-                  <span className="force-insight-label">{mode === "braking" ? "刹停时刻" : "峰值速度"}</span>
-                  <strong className="force-insight-value">
-                    {mode === "braking" && currentMotion.stopTime && currentMotion.stopTime < duration
-                      ? `${formatNumber(currentMotion.stopTime, 1)} s`
-                      : `${formatNumber(peakVelocity, 1)} m/s`}
-                  </strong>
-                </article>
-              </div>
             </section>
 
-            <section className="force-control-section">
+            <section className="force-control-section motion-panel-section">
               <div className="force-control-section-head">
-                <h5 className="force-control-section-title">辅助显示</h5>
-                <span className="force-section-hint">按教学需要保留或隐藏辅助信息</span>
+                <h5 className="force-control-section-title">显示项</h5>
               </div>
 
-              <div className="motion-view-grid">
+              <div className="motion-toggle-chip-grid">
                 <button
                   type="button"
-                  className={viewOptions.showTrail ? "motion-view-card is-active" : "motion-view-card"}
+                  className={viewOptions.showTrail ? "motion-toggle-chip is-active" : "motion-toggle-chip"}
                   onClick={() => toggleView("showTrail")}
                 >
-                  <span className="motion-view-copy">
-                    <strong>位移拖尾</strong>
-                    <span>直接看出当前已经移动了多远。</span>
-                  </span>
-                  <span className="motion-view-switch">{viewOptions.showTrail ? "开" : "关"}</span>
+                  位移拖尾
                 </button>
                 <button
                   type="button"
-                  className={viewOptions.showSamples ? "motion-view-card is-active" : "motion-view-card"}
+                  className={viewOptions.showSamples ? "motion-toggle-chip is-active" : "motion-toggle-chip"}
                   onClick={() => toggleView("showSamples")}
                 >
-                  <span className="motion-view-copy">
-                    <strong>秒级采样点</strong>
-                    <span>比较相同时间间隔内的位移变化。</span>
-                  </span>
-                  <span className="motion-view-switch">{viewOptions.showSamples ? "开" : "关"}</span>
+                  秒级采样点
                 </button>
                 <button
                   type="button"
-                  className={viewOptions.showVelocityCurve ? "motion-view-card is-active" : "motion-view-card"}
+                  className={viewOptions.showVelocityCurve ? "motion-toggle-chip is-active" : "motion-toggle-chip"}
                   onClick={() => toggleView("showVelocityCurve")}
                 >
-                  <span className="motion-view-copy">
-                    <strong>速度曲线</strong>
-                    <span>对照轨道上的快慢变化，一眼看出速度趋势。</span>
-                  </span>
-                  <span className="motion-view-switch">{viewOptions.showVelocityCurve ? "开" : "关"}</span>
+                  速度曲线
                 </button>
-              </div>
-            </section>
-
-            <section className="force-control-section">
-              <div className="force-control-section-head">
-                <h5 className="force-control-section-title">逐秒对比</h5>
-                <span className="force-section-hint">看每一段 1 秒内位移怎么变化</span>
-              </div>
-
-              <div className="motion-interval-list">
-                {intervalComparisons.map((item) => (
-                  <article
-                    key={item.key}
-                    className={item.isActive ? "motion-interval-card is-active" : "motion-interval-card"}
-                  >
-                    <div className="motion-interval-head">
-                      <strong>
-                        {formatNumber(item.startTime, item.startTime % 1 === 0 ? 0 : 1)}s -{" "}
-                        {formatNumber(item.endTime, item.endTime % 1 === 0 ? 0 : 1)}s
-                      </strong>
-                      <span className="motion-interval-badge">
-                        {item.isUpcoming ? "即将观察" : item.isActive ? "当前区间" : item.trendLabel}
-                      </span>
-                    </div>
-                    <div className="motion-interval-meta">
-                      <span>位移 {formatNumber(item.distance, 1)} m</span>
-                      <span>均速 {formatNumber(item.averageVelocity, 1)} m/s</span>
-                      <span>末速 {formatNumber(item.endVelocity, 1)} m/s</span>
-                    </div>
-                    <p>{item.note}</p>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <section className="force-control-section">
-              <div className="force-control-section-head">
-                <h5 className="force-control-section-title">暂停对照</h5>
-                <span className="force-section-hint">暂停后拖动参数，保留当前时刻即时比较</span>
-              </div>
-
-              {hasProgress ? (
-                <div className="motion-compare-card">
-                  <div className="motion-compare-head">
-                    <strong>当前停在 t = {formatNumber(currentTime, 1)} s</strong>
-                    <span className="motion-view-switch">即时联动</span>
-                  </div>
-                  <p className="motion-compare-copy">
-                    {pausedComparison.isUsingPreset
-                      ? "当前就是这个模式的默认参数。暂停后改动滑块，会立刻看到这一刻的位移和速度差异。"
-                      : `相对当前模式默认值，位移 ${formatSignedNumber(pausedComparison.positionDelta)} m，速度 ${formatSignedNumber(pausedComparison.velocityDelta)} m/s。`}
-                  </p>
-                  <div className="motion-compare-grid">
-                    <article className="motion-compare-metric">
-                      <span>默认位移</span>
-                      <strong>{formatNumber(pausedComparison.baselinePosition, 1)} m</strong>
-                    </article>
-                    <article className="motion-compare-metric">
-                      <span>当前位移</span>
-                      <strong>{formatNumber(currentMotion.position, 1)} m</strong>
-                    </article>
-                    <article className="motion-compare-metric">
-                      <span>默认速度</span>
-                      <strong>{formatNumber(pausedComparison.baselineVelocity, 1)} m/s</strong>
-                    </article>
-                    <article className="motion-compare-metric">
-                      <span>当前速度</span>
-                      <strong>{formatNumber(currentMotion.velocity, 1)} m/s</strong>
-                    </article>
-                  </div>
-                </div>
-              ) : (
-                <p className="force-inline-copy">
-                  先播放或拖动时间轴到某一刻，再暂停。这样你改动参数时，会保留这一个时间点做即时对照。
-                </p>
-              )}
-            </section>
-
-            <section className="force-control-section">
-              <div className="force-control-section-head">
-                <h5 className="force-control-section-title">教学观察</h5>
-                <span className="force-section-hint">这里保留口语化结论，方便直接讲解</span>
-              </div>
-
-              <div className="force-highlight-row is-panel">
-                {topic.highlights.map((item) => (
-                  <span key={item} className="force-highlight-chip">
-                    {item}
-                  </span>
-                ))}
-              </div>
-
-              <p className="force-inline-copy">{summary.observation}</p>
-              <p className="force-inline-copy">{summary.conclusion}</p>
-              <p className="force-inline-copy">{summary.displacementFormula}</p>
-              <p className="force-inline-copy">{summary.velocityFormula}</p>
-
-              <div className="motion-teaching-grid">
-                {teachingCues.map((item) => (
-                  <article key={item.title} className="motion-teaching-card">
-                    <strong>{item.title}</strong>
-                    <span>{item.detail}</span>
-                  </article>
-                ))}
               </div>
             </section>
           </div>
@@ -754,7 +579,7 @@ export function MotionTrackLab({
               viewBox={`0 0 ${SVG_STAGE.width} ${SVG_STAGE.height}`}
               className="motion-stage-svg"
               role="img"
-              aria-label="速度与位移轨迹可视化示意图"
+              aria-label={`${topic.title}可视化示意图`}
             >
               <defs>
                 <linearGradient id="motion-stage-line-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -1188,10 +1013,17 @@ function RangeControl({
   step,
   value,
   disabled,
+  className,
   onChange,
 }: RangeControlProps) {
   return (
-    <div className={disabled ? "force-control-stack is-disabled" : "force-control-stack"}>
+    <div
+      className={
+        disabled
+          ? `force-control-stack is-disabled${className ? ` ${className}` : ""}`
+          : `force-control-stack${className ? ` ${className}` : ""}`
+      }
+    >
       <div className="force-control-label-row">
         <label htmlFor={id} className="force-control-label">
           {label}
@@ -1475,121 +1307,6 @@ function buildIntervalComparisons({
   });
 }
 
-function buildPausedComparison({
-  mode,
-  currentTime,
-  duration,
-  initialVelocity,
-  acceleration,
-}: {
-  mode: MotionMode;
-  currentTime: number;
-  duration: number;
-  initialVelocity: number;
-  acceleration: number;
-}) {
-  const preset = MOTION_PRESETS[mode];
-  const baselineSample = resolveMotionAtTime({
-    time: currentTime,
-    duration: Math.max(duration, currentTime, preset.duration),
-    initialVelocity: preset.initialVelocity,
-    acceleration: preset.acceleration,
-  });
-
-  const currentSample = resolveMotionAtTime({
-    time: currentTime,
-    duration,
-    initialVelocity,
-    acceleration,
-  });
-  const isUsingPreset =
-    Math.abs(initialVelocity - preset.initialVelocity) < 0.001 &&
-    Math.abs(acceleration - preset.acceleration) < 0.001 &&
-    Math.abs(duration - preset.duration) < 0.001;
-
-  return {
-    baselinePosition: baselineSample.position,
-    baselineVelocity: baselineSample.velocity,
-    positionDelta: currentSample.position - baselineSample.position,
-    velocityDelta: currentSample.velocity - baselineSample.velocity,
-    isUsingPreset,
-  };
-}
-
-function buildTeachingCues({
-  mode,
-  activeInterval,
-  currentMotion,
-}: {
-  mode: MotionMode;
-  activeInterval: MotionIntervalComparison | null;
-  currentMotion: MotionSample;
-}): MotionTeachingCue[] {
-  const intervalText = activeInterval
-    ? `${formatNumber(activeInterval.startTime, activeInterval.startTime % 1 === 0 ? 0 : 1)}s 到 ${formatNumber(activeInterval.endTime, activeInterval.endTime % 1 === 0 ? 0 : 1)}s`
-    : "当前区间";
-  const isFirstInterval = !activeInterval || activeInterval.startTime === 0;
-
-  if (mode === "uniform") {
-    return [
-      {
-        title: "先提问",
-        detail: isFirstInterval
-          ? `先把 ${intervalText} 当作基准，再继续往后看，观察相邻采样点间距为什么几乎一致。`
-          : `让学生比较 ${intervalText} 和前一段，观察相邻采样点间距为什么几乎一致。`,
-      },
-      {
-        title: "重点看",
-        detail: "位移 - 时间图像一直保持同样斜率，说明速度没有变化。",
-      },
-      {
-        title: "一句带走",
-        detail: "匀速运动里，每秒增加的位移基本相同，所以 s 和 t 成正比。",
-      },
-    ];
-  }
-
-  if (mode === "accelerating") {
-    return [
-      {
-        title: "先提问",
-        detail: isFirstInterval
-          ? `先把 ${intervalText} 当作基准，再问一句：后面每一秒为什么会走得更远？`
-          : `让学生比较 ${intervalText} 和前一段，问一句：为什么这 1 秒走得更远？`,
-      },
-      {
-        title: "重点看",
-        detail: "相邻秒位移越来越大，v-t 图像是一条向上倾斜的直线。",
-      },
-      {
-        title: "一句带走",
-        detail: "匀加速不是每秒多走同样距离，而是每秒速度增加同样数值。",
-      },
-    ];
-  }
-
-  return [
-    {
-      title: "先提问",
-      detail: currentMotion.hasStopped
-        ? "让学生观察停止点，问一句：为什么后面的时间不再继续前进？"
-        : isFirstInterval
-          ? `先把 ${intervalText} 当作基准，再问一句：后面每一秒为什么会走得更少？`
-          : `让学生比较 ${intervalText} 和前一段，问一句：为什么这 1 秒走得更少？`,
-    },
-    {
-      title: "重点看",
-      detail: currentMotion.hasStopped
-        ? "小车停下后，轨道位置和位移都保持不变。"
-        : "相邻秒位移越来越小，v-t 图像会一直下降直到 0。",
-    },
-    {
-      title: "一句带走",
-      detail: "匀减速时速度每秒减少相同数值，减到 0 后位移不再变化。",
-    },
-  ];
-}
-
 function buildGraphGeometry({
   series,
   playedSeries,
@@ -1801,13 +1518,6 @@ function formatNumber(value: number, digits = 1) {
   return Number(value.toFixed(digits)).toString();
 }
 
-function formatSignedNumber(value: number, digits = 1) {
-  if (Math.abs(value) < 0.05) {
-    return `0`;
-  }
-
-  return `${value > 0 ? "+" : "-"}${formatNumber(Math.abs(value), digits)}`;
-}
 
 function formatTimeLabel(value: number) {
   return `${formatNumber(value, value % 1 === 0 ? 0 : 1)}s`;
