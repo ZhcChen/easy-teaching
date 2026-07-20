@@ -39,8 +39,35 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
       <ellipse cx="160" cy="152" rx="106" ry="18" fill={preset.colors.shadow} />
 
       <g transform="translate(0 2)">
+        <g>
+          {[108, 244].map((cx) => (
+            <g key={cx}>
+              <circle cx={cx} cy="120.5" r="22.5" fill={preset.colors.wheel} stroke="#7f8898" strokeOpacity="0.42" strokeWidth="1.2" />
+              <circle cx={cx} cy="120.5" r="18.2" fill="none" stroke="#ffffff" strokeOpacity="0.14" strokeWidth="1.4" />
+              <circle
+                cx={cx}
+                cy="120.5"
+                r="12.2"
+                fill={`url(#${rimGradientId})`}
+                stroke={preset.colors.wheel}
+                strokeOpacity="0.24"
+                strokeWidth="1.4"
+              />
+              <circle cx={cx} cy="120.5" r="4.4" fill={preset.colors.wheel} fillOpacity="0.72" />
+              <path
+                d={`M${cx} 109.5V131.5 M${cx - 10} 120.5H${cx + 10} M${cx - 6} 113.5L${cx + 6} 127.5 M${cx + 6} 113.5L${cx - 6} 127.5`}
+                fill="none"
+                stroke={preset.colors.wheel}
+                strokeOpacity="0.34"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </g>
+          ))}
+        </g>
+
         <path
-          d="M50 104C50 85 64 70 82 70H180C195 70 205 66 215 57L234 42C240 38 247 36 255 36H272C286 36 297 44 303 56L311 77C314 84 315 89 314 96C313 101 307 104 297 104H50Z"
+          d="M50 104C50 85 64 70 82 70H180C195 70 205 66 215 57L234 42C240 38 247 36 255 36H272C286 36 297 44 303 56L311 77C314 84 315 89 314 96C313 101 307 104 297 104H268Q244 88 220 104H132Q108 88 84 104H50Z"
           fill={`url(#${bodyGradientId})`}
           stroke={preset.colors.outline}
           strokeWidth="4"
@@ -108,60 +135,22 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
           strokeWidth="3.2"
           strokeLinecap="round"
         />
-
         <path
-          d="M81 104Q93 89 108 89Q123 89 135 104"
+          d="M87 104Q108 92 129 104"
           fill="none"
           stroke={preset.colors.roof}
-          strokeOpacity="0.44"
-          strokeWidth="3"
+          strokeOpacity="0.34"
+          strokeWidth="2.4"
           strokeLinecap="round"
         />
         <path
-          d="M217 104Q229 89 244 89Q259 89 271 104"
+          d="M223 104Q244 92 265 104"
           fill="none"
           stroke={preset.colors.roof}
-          strokeOpacity="0.44"
-          strokeWidth="3"
+          strokeOpacity="0.34"
+          strokeWidth="2.4"
           strokeLinecap="round"
         />
-        <path
-          d="M84 104Q95 95 108 95Q121 95 132 104L132 107H84Z"
-          fill={preset.colors.roof}
-          fillOpacity="0.12"
-        />
-        <path
-          d="M220 104Q231 95 244 95Q257 95 268 104L268 107H220Z"
-          fill={preset.colors.roof}
-          fillOpacity="0.12"
-        />
-
-        <g>
-          {[108, 244].map((cx) => (
-            <g key={cx}>
-              <circle cx={cx} cy="120.5" r="22.5" fill={preset.colors.wheel} stroke="#697385" strokeOpacity="0.34" strokeWidth="1.2" />
-              <circle cx={cx} cy="120.5" r="18.2" fill="none" stroke="#ffffff" strokeOpacity="0.12" strokeWidth="1.4" />
-              <circle
-                cx={cx}
-                cy="120.5"
-                r="12.2"
-                fill={`url(#${rimGradientId})`}
-                stroke={preset.colors.wheel}
-                strokeOpacity="0.24"
-                strokeWidth="1.4"
-              />
-              <circle cx={cx} cy="120.5" r="4.4" fill={preset.colors.wheel} fillOpacity="0.72" />
-              <path
-                d={`M${cx} 109.5V131.5 M${cx - 10} 120.5H${cx + 10} M${cx - 6} 113.5L${cx + 6} 127.5 M${cx + 6} 113.5L${cx - 6} 127.5`}
-                fill="none"
-                stroke={preset.colors.wheel}
-                strokeOpacity="0.34"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </g>
-          ))}
-        </g>
       </g>
     </svg>
   )
