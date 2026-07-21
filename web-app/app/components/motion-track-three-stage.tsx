@@ -347,6 +347,12 @@ export function MotionTrackThreeStage({
           trailMaterial.color.set(new THREE.Color(accentColor));
           trailMaterial.opacity = 0.8;
         }
+        const desiredRearLampIntensity =
+          state.acceleration < -0.02 ? 1.38 : state.velocity > 0.04 ? 0.72 : 0.56;
+        carRig.rearLampMaterial.emissiveIntensity +=
+          (desiredRearLampIntensity - carRig.rearLampMaterial.emissiveIntensity) * 0.18;
+        carRig.rearLampMaterial.opacity =
+          state.acceleration < -0.02 ? 1 : 0.92;
         const zoomRatio = cameraZoomRef.current;
         const desiredCameraX =
           carCenterX -
@@ -734,6 +740,30 @@ function buildMotionCartRig(THREE: ThreeModule) {
     roughness: 0.38,
     metalness: 0.44,
   });
+  const trimMaterial = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(MOTION_CART_COLORS.trim),
+    roughness: 0.34,
+    metalness: 0.28,
+  });
+  const darkTrimMaterial = new THREE.MeshStandardMaterial({
+    color: 0x131b27,
+    roughness: 0.54,
+    metalness: 0.18,
+  });
+  const mirrorMaterial = new THREE.MeshStandardMaterial({
+    color: 0x1b2430,
+    roughness: 0.38,
+    metalness: 0.24,
+  });
+  const rearLampMaterial = new THREE.MeshStandardMaterial({
+    color: 0xff8a78,
+    emissive: 0xff4b3a,
+    emissiveIntensity: 0.56,
+    roughness: 0.24,
+    metalness: 0.08,
+    transparent: true,
+    opacity: 0.92,
+  });
 
   const lowerBody = new THREE.Mesh(
     new THREE.BoxGeometry(4.06 * WORLD_UNITS_PER_METER, 0.58 * WORLD_UNITS_PER_METER, 1.76 * WORLD_UNITS_PER_METER),
@@ -777,6 +807,45 @@ function buildMotionCartRig(THREE: ThreeModule) {
   glass.scale.z = 0.84;
   bodyGroup.add(glass);
 
+  const windshield = new THREE.Mesh(
+    new THREE.BoxGeometry(0.16, 0.72, 1.22 * WORLD_UNITS_PER_METER),
+    glassMaterial,
+  );
+  windshield.position.set(1.18 * WORLD_UNITS_PER_METER, 1.78, 0);
+  windshield.rotation.z = -0.58;
+  windshield.scale.z = 0.78;
+  bodyGroup.add(windshield);
+
+  const rearGlass = new THREE.Mesh(
+    new THREE.BoxGeometry(0.16, 0.56, 1.16 * WORLD_UNITS_PER_METER),
+    glassMaterial,
+  );
+  rearGlass.position.set(-1.22 * WORLD_UNITS_PER_METER, 1.78, 0);
+  rearGlass.rotation.z = 0.44;
+  rearGlass.scale.z = 0.8;
+  bodyGroup.add(rearGlass);
+
+  const bPillar = new THREE.Mesh(
+    new THREE.BoxGeometry(0.08, 0.7, 1.18 * WORLD_UNITS_PER_METER),
+    darkTrimMaterial,
+  );
+  bPillar.position.set(-0.16 * WORLD_UNITS_PER_METER, 1.78, 0);
+  bodyGroup.add(bPillar);
+
+  const frontDoorSeam = new THREE.Mesh(
+    new THREE.BoxGeometry(0.04, 0.7, 1.34 * WORLD_UNITS_PER_METER),
+    trimMaterial,
+  );
+  frontDoorSeam.position.set(0.48 * WORLD_UNITS_PER_METER, 1.28, 0);
+  bodyGroup.add(frontDoorSeam);
+
+  const rearDoorSeam = new THREE.Mesh(
+    new THREE.BoxGeometry(0.04, 0.7, 1.34 * WORLD_UNITS_PER_METER),
+    trimMaterial,
+  );
+  rearDoorSeam.position.set(-0.8 * WORLD_UNITS_PER_METER, 1.28, 0);
+  bodyGroup.add(rearDoorSeam);
+
   const accentStrip = new THREE.Mesh(
     new THREE.BoxGeometry(2.36 * WORLD_UNITS_PER_METER, 0.05, 0.08),
     accentMaterial,
@@ -792,6 +861,31 @@ function buildMotionCartRig(THREE: ThreeModule) {
   accentStripMirror.position.z *= -1;
   bodyGroup.add(accentStripMirror);
 
+  const sideSkirt = new THREE.Mesh(
+    new THREE.BoxGeometry(5 * WORLD_UNITS_PER_METER, 0.08, 0.08),
+    darkTrimMaterial,
+  );
+  sideSkirt.position.set(-0.18 * WORLD_UNITS_PER_METER, 0.76, 0.92 * WORLD_UNITS_PER_METER);
+  bodyGroup.add(sideSkirt);
+
+  const sideSkirtMirror = sideSkirt.clone();
+  sideSkirtMirror.position.z *= -1;
+  bodyGroup.add(sideSkirtMirror);
+
+  const frontSplitter = new THREE.Mesh(
+    new THREE.BoxGeometry(0.22, 0.12, 1.28 * WORLD_UNITS_PER_METER),
+    darkTrimMaterial,
+  );
+  frontSplitter.position.set(2.96 * WORLD_UNITS_PER_METER, 0.88, 0);
+  bodyGroup.add(frontSplitter);
+
+  const rearDiffuser = new THREE.Mesh(
+    new THREE.BoxGeometry(0.22, 0.12, 1.22 * WORLD_UNITS_PER_METER),
+    darkTrimMaterial,
+  );
+  rearDiffuser.position.set(-2.96 * WORLD_UNITS_PER_METER, 0.9, 0);
+  bodyGroup.add(rearDiffuser);
+
   const headLamp = new THREE.Mesh(
     new THREE.BoxGeometry(0.08, 0.18, 0.42),
     lampMaterial,
@@ -806,6 +900,55 @@ function buildMotionCartRig(THREE: ThreeModule) {
   const headLampMirror = headLamp.clone();
   headLampMirror.position.z *= -1;
   bodyGroup.add(headLampMirror);
+
+  const frontLampBar = new THREE.Mesh(
+    new THREE.BoxGeometry(0.08, 0.12, 1.08 * WORLD_UNITS_PER_METER),
+    lampMaterial,
+  );
+  frontLampBar.position.set(2.98 * WORLD_UNITS_PER_METER, 1.12, 0);
+  bodyGroup.add(frontLampBar);
+
+  const rearLampBar = new THREE.Mesh(
+    new THREE.BoxGeometry(0.08, 0.16, 1.18 * WORLD_UNITS_PER_METER),
+    rearLampMaterial,
+  );
+  rearLampBar.position.set(-2.98 * WORLD_UNITS_PER_METER, 1.14, 0);
+  bodyGroup.add(rearLampBar);
+
+  const rearLampWing = new THREE.Mesh(
+    new THREE.BoxGeometry(0.18, 0.15, 0.34),
+    rearLampMaterial,
+  );
+  rearLampWing.position.set(-2.82 * WORLD_UNITS_PER_METER, 1.14, 0.76 * WORLD_UNITS_PER_METER);
+  bodyGroup.add(rearLampWing);
+
+  const rearLampWingMirror = rearLampWing.clone();
+  rearLampWingMirror.position.z *= -1;
+  bodyGroup.add(rearLampWingMirror);
+
+  const mirrorArm = new THREE.Mesh(
+    new THREE.BoxGeometry(0.16, 0.05, 0.14),
+    mirrorMaterial,
+  );
+  mirrorArm.position.set(1.08 * WORLD_UNITS_PER_METER, 1.58, 0.86 * WORLD_UNITS_PER_METER);
+  bodyGroup.add(mirrorArm);
+
+  const mirrorArmMirror = mirrorArm.clone();
+  mirrorArmMirror.position.z *= -1;
+  bodyGroup.add(mirrorArmMirror);
+
+  const mirrorPod = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2, 0.14, 0.28),
+    mirrorMaterial,
+  );
+  mirrorPod.position.set(1.24 * WORLD_UNITS_PER_METER, 1.58, 1.04 * WORLD_UNITS_PER_METER);
+  mirrorPod.rotation.y = 0.2;
+  bodyGroup.add(mirrorPod);
+
+  const mirrorPodMirror = mirrorPod.clone();
+  mirrorPodMirror.position.z *= -1;
+  mirrorPodMirror.rotation.y *= -1;
+  bodyGroup.add(mirrorPodMirror);
 
   const wheelXOffsets = [1.39, -1.39] as const;
   const wheelZOffsets = [0.74, -0.74] as const;
@@ -858,6 +1001,19 @@ function buildMotionCartRig(THREE: ThreeModule) {
     });
   });
 
+  wheelXOffsets.forEach((wheelX) => {
+    const archTrim = new THREE.Mesh(
+      new THREE.TorusGeometry(CAR_WHEEL_RADIUS_WORLD * 1.18, 0.04, 12, 28, Math.PI),
+      trimMaterial,
+    );
+    archTrim.position.set(
+      wheelX * WORLD_UNITS_PER_METER,
+      CAR_WHEEL_RADIUS_WORLD * 1.16,
+      0,
+    );
+    bodyGroup.add(archTrim);
+  });
+
   const shadow = new THREE.Mesh(
     new THREE.CircleGeometry(2.42 * WORLD_UNITS_PER_METER, 32),
     new THREE.MeshBasicMaterial({
@@ -876,6 +1032,7 @@ function buildMotionCartRig(THREE: ThreeModule) {
     group: carGroup,
     bodyGroup,
     wheelRotors,
+    rearLampMaterial,
     shadow,
   };
 }
