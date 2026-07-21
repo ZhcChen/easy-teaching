@@ -7,6 +7,11 @@ import {
   type RefObject,
 } from "react";
 
+import {
+  DEFAULT_MOTION_CART_SCALE,
+  MotionCartAsset,
+  getMotionCartFrontOffset,
+} from "./motion-cart-asset";
 import type { TeachingTopic } from "../data/teaching-catalog";
 
 type MotionMode = "uniform" | "accelerating" | "braking";
@@ -323,6 +328,7 @@ export function MotionTrackLab({
   const progress = duration === 0 ? 0 : currentTime / duration;
   const velocityArrowLength =
     currentMotion.velocity <= 0 ? 0 : 72 + 110 * (currentMotion.velocity / velocityDomain);
+  const cartFrontX = currentTrackX + getMotionCartFrontOffset(DEFAULT_MOTION_CART_SCALE);
   const motionThemeStyle = {
     "--motion-accent": preset.accent,
     "--motion-accent-soft": preset.accentSoft,
@@ -721,24 +727,11 @@ export function MotionTrackLab({
                 </g>
               ) : null}
 
-              <ellipse
-                cx={currentTrackX}
-                cy={SVG_STAGE.trackY + 58}
-                rx="72"
-                ry="18"
-                className="motion-stage-cart-shadow"
+              <MotionCartAsset
+                centerX={currentTrackX}
+                wheelBaseY={SVG_STAGE.trackY - 2}
+                scale={DEFAULT_MOTION_CART_SCALE}
               />
-
-              <g transform={`translate(${currentTrackX - 48}, ${SVG_STAGE.trackY - 80})`}>
-                <rect width="96" height="58" rx="24" className="motion-stage-cart-body" />
-                <rect x="10" y="10" width="76" height="38" rx="18" className="motion-stage-cart-inner" />
-                <circle cx="72" cy="30" r="8" className="motion-stage-cart-front" />
-                <circle cx="24" cy="64" r="10" className="motion-stage-wheel" />
-                <circle cx="72" cy="64" r="10" className="motion-stage-wheel" />
-                <text x="48" y="34" textAnchor="middle" className="motion-stage-cart-label">
-                  小车
-                </text>
-              </g>
 
               <text x={currentTrackX} y={SVG_STAGE.trackY - 122} textAnchor="middle" className="motion-stage-value-callout">
                 s = {formatNumber(currentMotion.position, 1)} m
@@ -747,15 +740,15 @@ export function MotionTrackLab({
               {velocityArrowLength > 0 ? (
                 <g>
                   <line
-                    x1={currentTrackX + 58}
+                    x1={cartFrontX + 12}
                     y1={SVG_STAGE.trackY - 44}
-                    x2={currentTrackX + 58 + velocityArrowLength}
+                    x2={cartFrontX + 12 + velocityArrowLength}
                     y2={SVG_STAGE.trackY - 44}
                     className="motion-stage-velocity-arrow"
                     markerEnd="url(#motion-arrow)"
                   />
                   <text
-                    x={currentTrackX + 70 + velocityArrowLength / 2}
+                    x={cartFrontX + 24 + velocityArrowLength / 2}
                     y={SVG_STAGE.trackY - 60}
                     textAnchor="middle"
                     className="motion-stage-value-callout"

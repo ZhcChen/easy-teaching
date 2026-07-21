@@ -3943,39 +3943,6 @@ html[data-theme="dark"] .force-state-pill.is-active {
   fill: #ffd596;
 }
 
-.motion-stage-cart-shadow {
-  fill: rgba(4, 10, 22, 0.58);
-}
-
-.motion-stage-cart-body {
-  fill: rgba(10, 24, 44, 0.92);
-  stroke: color-mix(in srgb, var(--motion-accent) 58%, rgba(138, 190, 255, 0.28));
-  stroke-width: 2;
-}
-
-.motion-stage-cart-inner {
-  fill: rgba(18, 42, 76, 0.48);
-  stroke: rgba(138, 190, 255, 0.22);
-  stroke-width: 1.5;
-}
-
-.motion-stage-cart-front {
-  fill: var(--motion-accent);
-  opacity: 0.92;
-}
-
-.motion-stage-wheel {
-  fill: rgba(5, 12, 24, 0.92);
-  stroke: rgba(138, 190, 255, 0.26);
-  stroke-width: 1.4;
-}
-
-.motion-stage-cart-label {
-  fill: var(--canvas-text);
-  font-size: 15px;
-  font-weight: 700;
-}
-
 .motion-stage-velocity-arrow {
   stroke: var(--motion-accent);
   stroke-width: 4;
