@@ -483,10 +483,11 @@ export function MotionTrackLab({
                     key={item.mode}
                     type="button"
                     className={mode === item.mode ? "motion-mode-chip is-active" : "motion-mode-chip"}
+                    aria-label={item.label}
+                    title={item.description}
                     onClick={() => applyPreset(item.mode)}
                   >
-                    <span className="motion-mode-badge">{item.badge}</span>
-                    <strong>{item.label}</strong>
+                    <strong className="motion-mode-chip-label">{item.badge}</strong>
                   </button>
                 ))}
               </div>
