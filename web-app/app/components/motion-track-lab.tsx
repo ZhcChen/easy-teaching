@@ -7,6 +7,7 @@ import {
   type RefObject,
 } from "react";
 
+import { ControlChipGroup } from "./control-chip-group";
 import {
   DEFAULT_MOTION_CART_SCALE,
   MotionCartAsset,
@@ -458,18 +459,15 @@ export function MotionTrackLab({
                 }}
               />
 
-              <div className="motion-rate-grid">
-                {PLAYBACK_RATES.map((rate) => (
-                  <button
-                    key={rate}
-                    type="button"
-                    className={playbackRate === rate ? "motion-rate-button is-active" : "motion-rate-button"}
-                    onClick={() => setPlaybackRate(rate)}
-                  >
-                    {rate === 1 ? "1x" : `${rate}x`}
-                  </button>
-                ))}
-              </div>
+              <ControlChipGroup
+                items={PLAYBACK_RATES.map((rate) => ({
+                  key: `${rate}`,
+                  label: rate === 1 ? "1x" : `${rate}x`,
+                  active: playbackRate === rate,
+                  onClick: () => setPlaybackRate(rate),
+                }))}
+                columns={3}
+              />
             </section>
 
             <section className="force-control-section motion-panel-section">
@@ -477,20 +475,18 @@ export function MotionTrackLab({
                 <h5 className="force-control-section-title">运动模式</h5>
               </div>
 
-              <div className="motion-mode-compact-grid">
-                {Object.values(MOTION_PRESETS).map((item) => (
-                  <button
-                    key={item.mode}
-                    type="button"
-                    className={mode === item.mode ? "motion-mode-chip is-active" : "motion-mode-chip"}
-                    aria-label={item.label}
-                    title={item.description}
-                    onClick={() => applyPreset(item.mode)}
-                  >
-                    <strong className="motion-mode-chip-label">{item.badge}</strong>
-                  </button>
-                ))}
-              </div>
+              <ControlChipGroup
+                items={Object.values(MOTION_PRESETS).map((item) => ({
+                  key: item.mode,
+                  label: item.badge,
+                  active: mode === item.mode,
+                  ariaLabel: item.label,
+                  title: item.description,
+                  onClick: () => applyPreset(item.mode),
+                }))}
+                columns={3}
+                compact
+              />
             </section>
 
             <section className="force-control-section motion-panel-section">
@@ -541,29 +537,29 @@ export function MotionTrackLab({
                 <h5 className="force-control-section-title">显示项</h5>
               </div>
 
-              <div className="motion-toggle-chip-grid">
-                <button
-                  type="button"
-                  className={viewOptions.showTrail ? "motion-toggle-chip is-active" : "motion-toggle-chip"}
-                  onClick={() => toggleView("showTrail")}
-                >
-                  位移拖尾
-                </button>
-                <button
-                  type="button"
-                  className={viewOptions.showSamples ? "motion-toggle-chip is-active" : "motion-toggle-chip"}
-                  onClick={() => toggleView("showSamples")}
-                >
-                  秒级采样点
-                </button>
-                <button
-                  type="button"
-                  className={viewOptions.showVelocityCurve ? "motion-toggle-chip is-active" : "motion-toggle-chip"}
-                  onClick={() => toggleView("showVelocityCurve")}
-                >
-                  速度曲线
-                </button>
-              </div>
+              <ControlChipGroup
+                items={[
+                  {
+                    key: "trail",
+                    label: "位移拖尾",
+                    active: viewOptions.showTrail,
+                    onClick: () => toggleView("showTrail"),
+                  },
+                  {
+                    key: "samples",
+                    label: "秒级采样点",
+                    active: viewOptions.showSamples,
+                    onClick: () => toggleView("showSamples"),
+                  },
+                  {
+                    key: "velocity-curve",
+                    label: "速度曲线",
+                    active: viewOptions.showVelocityCurve,
+                    onClick: () => toggleView("showVelocityCurve"),
+                  },
+                ]}
+                columns={2}
+              />
             </section>
           </div>
         </aside>

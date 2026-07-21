@@ -3453,15 +3453,13 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
 .motion-primary-button,
 .motion-ghost-button,
-.motion-rate-button,
-.motion-toggle-chip,
-.motion-mode-chip {
+.control-chip-button {
   font: inherit;
 }
 
 .motion-primary-button,
 .motion-ghost-button,
-.motion-rate-button {
+.control-chip-button {
   min-height: 36px;
   border-radius: 12px;
   font-size: 12px;
@@ -3485,8 +3483,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
 }
 
 .motion-ghost-button,
-.motion-rate-button,
-.motion-toggle-chip {
+.control-chip-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3498,63 +3495,49 @@ html[data-theme="dark"] .force-state-pill.is-active {
 }
 
 .motion-ghost-button:hover,
-.motion-rate-button:hover,
-.motion-toggle-chip:hover,
-.motion-mode-chip:hover {
+.control-chip-button:hover {
   transform: translateY(-1px);
   border-color: var(--line-strong);
 }
 
-.motion-rate-grid {
+.control-chip-group {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
-.motion-rate-button.is-active,
-.motion-toggle-chip.is-active {
+.control-chip-group.is-1-column {
+  grid-template-columns: 1fr;
+}
+
+.control-chip-group.is-2-column {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.control-chip-group.is-3-column {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.control-chip-group.is-compact {
+  gap: 10px;
+}
+
+.control-chip-button.is-active {
   border-color: var(--brand);
   background: color-mix(in srgb, var(--brand-soft) 76%, var(--surface-strong));
   color: var(--brand-strong);
   box-shadow: 0 8px 18px rgba(23, 105, 255, 0.08);
 }
 
-.motion-mode-compact-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.motion-mode-chip {
-  display: inline-flex;
+.control-chip-button.is-compact {
   min-height: 52px;
-  align-items: center;
-  justify-content: center;
   padding: 0 10px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
   background: color-mix(in srgb, var(--surface-strong) 96%, transparent);
-  color: var(--text-primary);
-  text-align: center;
-  cursor: pointer;
 }
 
-.motion-mode-chip.is-active {
-  border-color: color-mix(in srgb, var(--motion-accent) 42%, var(--line-strong));
-  background: color-mix(in srgb, var(--motion-accent-soft) 62%, var(--surface-strong));
-  box-shadow: 0 8px 16px rgba(23, 105, 255, 0.08);
-}
-
-.motion-mode-chip-label {
+.control-chip-label {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.01em;
-}
-
-.motion-toggle-chip-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
 }
 
 .motion-range-stack {
@@ -4609,8 +4592,8 @@ html[data-theme="dark"] .force-state-pill.is-active {
     gap: 8px;
   }
 
-  .motion-mode-compact-grid,
-  .motion-toggle-chip-grid {
+  .control-chip-group.is-3-column,
+  .control-chip-group.is-2-column {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -4750,9 +4733,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .motion-mode-compact-grid,
-  .motion-toggle-chip-grid,
-  .motion-rate-grid {
+  .control-chip-group {
     grid-template-columns: 1fr;
   }
 
