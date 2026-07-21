@@ -11,6 +11,7 @@ import { ControlButton } from "./control-button";
 import { ControlChipGroup } from "./control-chip-group";
 import { ControlPanelSection } from "./control-panel-section";
 import { ControlRange } from "./control-range";
+import { ControlStatusBar } from "./control-status-bar";
 import {
   DEFAULT_MOTION_CART_SCALE,
   MotionCartAsset,
@@ -404,13 +405,17 @@ export function MotionTrackLab({
 
           <div className="force-control-scroll motion-control-scroll">
             <ControlPanelSection title="实验控制" accent className="motion-panel-section">
-              <div className="motion-panel-toolbar">
-                <div className="force-toolbar-status motion-toolbar-status">
-                  <StatusPill>{preset.label}</StatusPill>
-                  <StatusPill>总时长 {formatNumber(duration, 1)} s</StatusPill>
-                </div>
-                <StatusPill tone={summary.stateTone}>{summary.stateLabel}</StatusPill>
-              </div>
+              <ControlStatusBar
+                className="motion-panel-toolbar"
+                itemsClassName="motion-toolbar-status"
+                items={[
+                  <StatusPill key="mode">{preset.label}</StatusPill>,
+                  <StatusPill key="duration">总时长 {formatNumber(duration, 1)} s</StatusPill>,
+                ]}
+                status={
+                  <StatusPill tone={summary.stateTone}>{summary.stateLabel}</StatusPill>
+                }
+              />
 
               <div className="motion-action-row">
                 <ControlButton

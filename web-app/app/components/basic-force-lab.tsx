@@ -4,6 +4,7 @@ import { ControlButton } from "./control-button";
 import { ControlOptionGroup } from "./control-option-group";
 import { ControlPanelSection } from "./control-panel-section";
 import { ControlRange } from "./control-range";
+import { ControlStatusBar } from "./control-status-bar";
 import { StatusPill } from "./status-pill";
 import type { TeachingTopic } from "../data/teaching-catalog";
 
@@ -557,11 +558,17 @@ export function BasicForceLab({
 
           <div className="force-control-scroll">
             <ControlPanelSection title="实验控制" hint="先预测，再播放，再对比" accent>
-              <div className="force-toolbar-status">
-                <StatusPill tone={displayedScene.stateTone}>{displayedScene.stateLabel}</StatusPill>
-                <StatusPill>{displayedScene.frictionModeLabel}</StatusPill>
-                <StatusPill>f静,max {formatNumber(metrics.staticLimit, 1)} N</StatusPill>
-              </div>
+              <ControlStatusBar
+                items={[
+                  <StatusPill key="state" tone={displayedScene.stateTone}>
+                    {displayedScene.stateLabel}
+                  </StatusPill>,
+                  <StatusPill key="mode">{displayedScene.frictionModeLabel}</StatusPill>,
+                  <StatusPill key="limit">
+                    f静,max {formatNumber(metrics.staticLimit, 1)} N
+                  </StatusPill>,
+                ]}
+              />
 
               <div className="force-action-grid">
                 <ControlButton

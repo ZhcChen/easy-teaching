@@ -2459,6 +2459,7 @@ a:focus-visible {
 
 .force-toolbar,
 .force-toolbar-status,
+.control-status-items,
 .force-toolbar-actions,
 .force-highlight-row {
   display: flex;
@@ -2470,6 +2471,31 @@ a:focus-visible {
 .force-toolbar {
   justify-content: space-between;
   gap: 12px 16px;
+}
+
+.control-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px 14px;
+}
+
+.control-status-bar.has-status {
+  justify-content: space-between;
+}
+
+.control-status-items {
+  min-width: 0;
+}
+
+.control-status-side {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.control-status-item {
+  display: inline-flex;
 }
 
 .force-toolbar-actions {
@@ -4485,6 +4511,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
     align-items: stretch;
   }
 
+  .control-status-items,
   .force-toolbar-status,
   .force-toolbar-actions {
     width: 100%;
