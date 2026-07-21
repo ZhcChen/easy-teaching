@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
+import { ControlRange } from "./control-range";
+import { ControlSectionHeader } from "./control-section-header";
+import { StatusPill } from "./status-pill";
 import type { TeachingTopic } from "../data/teaching-catalog";
 
 type ForceKey = "gravity" | "normal" | "pull" | "friction" | "net";
@@ -552,17 +555,12 @@ export function BasicForceLab({
 
           <div className="force-control-scroll">
             <section className="force-control-section force-control-section-accent">
-              <div className="force-control-section-head">
-                <h5 className="force-control-section-title">实验控制</h5>
-                <span className="force-section-hint">先预测，再播放，再对比</span>
-              </div>
+              <ControlSectionHeader title="实验控制" hint="先预测，再播放，再对比" />
 
               <div className="force-toolbar-status">
-                <span className={`force-state-pill is-${displayedScene.stateTone}`}>
-                  {displayedScene.stateLabel}
-                </span>
-                <span className="force-quick-pill">{displayedScene.frictionModeLabel}</span>
-                <span className="force-quick-pill">f静,max {formatNumber(metrics.staticLimit, 1)} N</span>
+                <StatusPill tone={displayedScene.stateTone}>{displayedScene.stateLabel}</StatusPill>
+                <StatusPill>{displayedScene.frictionModeLabel}</StatusPill>
+                <StatusPill>f静,max {formatNumber(metrics.staticLimit, 1)} N</StatusPill>
               </div>
 
               <div className="force-action-grid">
@@ -607,30 +605,20 @@ export function BasicForceLab({
                 ))}
               </div>
 
-              <div className="force-control-stack">
-                <div className="force-control-label-row">
-                  <span className="force-control-label">实验时间轴</span>
-                  <span className="force-control-value">
-                    {Math.round((experimentStatus.progress || 0) * 100)}%
-                  </span>
-                </div>
-                <input
-                  className="force-range-input"
-                  type="range"
-                  min={0}
-                  max={totalExperimentMs}
-                  step={10}
-                  value={hasPlaybackStarted ? experimentElapsedMs : 0}
-                  onChange={(event) => seekExperiment(Number(event.target.value))}
-                />
-              </div>
+              <ControlRange
+                id="force-experiment-progress"
+                label="实验时间轴"
+                min={0}
+                max={totalExperimentMs}
+                step={10}
+                value={hasPlaybackStarted ? experimentElapsedMs : 0}
+                valueFormatter={() => `${Math.round((experimentStatus.progress || 0) * 100)}%`}
+                onChange={seekExperiment}
+              />
             </section>
 
             <section className="force-control-section">
-              <div className="force-control-section-head">
-                <h5 className="force-control-section-title">研究目标</h5>
-                <span className="force-section-hint">只观察三个教学变量</span>
-              </div>
+              <ControlSectionHeader title="研究目标" hint="只观察三个教学变量" />
 
               <div className="force-highlight-row is-panel">
                 {OBJECTIVES.map((item) => (
@@ -645,12 +633,9 @@ export function BasicForceLab({
             </section>
 
             <section className="force-control-section">
-              <div className="force-control-section-head">
-                <h5 className="force-control-section-title">压力 / 正压力</h5>
-                <span className="force-section-hint">直接改变 N 的大小</span>
-              </div>
+              <ControlSectionHeader title="压力 / 正压力" hint="直接改变 N 的大小" />
 
-              <RangeControl
+              <ControlRange
                 id="force-pressure"
                 label="当前压力"
                 unit="N"
@@ -674,10 +659,7 @@ export function BasicForceLab({
             </section>
 
             <section className="force-control-section">
-              <div className="force-control-section-head">
-                <h5 className="force-control-section-title">接触材质</h5>
-                <span className="force-section-hint">改变摩擦系数 μ</span>
-              </div>
+              <ControlSectionHeader title="接触材质" hint="改变摩擦系数 μ" />
 
               <div className="force-surface-grid">
                 {SURFACE_PRESETS.map((preset) => (
@@ -695,10 +677,7 @@ export function BasicForceLab({
             </section>
 
             <section className="force-control-section">
-              <div className="force-control-section-head">
-                <h5 className="force-control-section-title">摆放方式</h5>
-                <span className="force-section-hint">验证面积是否进入公式</span>
-              </div>
+              <ControlSectionHeader title="摆放方式" hint="验证面积是否进入公式" />
 
               <div className="force-area-grid">
                 {CONTACT_AREAS.map((item) => (
@@ -719,10 +698,7 @@ export function BasicForceLab({
             </section>
 
             <section className="force-control-section">
-              <div className="force-control-section-head">
-                <h5 className="force-control-section-title">当前结论</h5>
-                <span className="force-section-hint">对比两组结果最有价值</span>
-              </div>
+              <ControlSectionHeader title="当前结论" hint="对比两组结果最有价值" />
 
               <p className="force-inline-copy">{currentForce.description}</p>
               <p className="force-inline-copy">{experimentStatus.formula}</p>
@@ -749,9 +725,7 @@ export function BasicForceLab({
                       <article key={record.id} className="force-stage-record-card">
                         <div className="force-stage-record-head">
                           <strong>{index === 0 ? "当前结果" : "上一组结果"}</strong>
-                          <span className="force-quick-pill">
-                            {formatNumber(record.kineticFriction, 1)} N
-                          </span>
+                          <StatusPill>{formatNumber(record.kineticFriction, 1)} N</StatusPill>
                         </div>
                         <div className="force-stage-record-meta">
                           <span>{record.surfaceLabel}</span>
@@ -1024,9 +998,7 @@ export function BasicForceLab({
               <div className="force-stage-hud-card">
                 <div className="force-stage-hud-head">
                   <span className="force-stage-hud-title">{experimentStatus.label}</span>
-                  <span className={`force-state-pill is-${displayedScene.stateTone}`}>
-                    {experimentStatus.badge}
-                  </span>
+                  <StatusPill tone={displayedScene.stateTone}>{experimentStatus.badge}</StatusPill>
                 </div>
                 <div className="force-stage-progress-inline">
                   <span style={{ width: `${experimentStatus.progress * 100}%` }} />
@@ -1086,51 +1058,6 @@ export function BasicForceLab({
         </div>
       </div>
     </section>
-  );
-}
-
-type RangeControlProps = {
-  id: string;
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  step: number;
-  unit: string;
-  onChange: (value: number) => void;
-};
-
-function RangeControl({
-  id,
-  label,
-  value,
-  min,
-  max,
-  step,
-  unit,
-  onChange,
-}: RangeControlProps) {
-  return (
-    <div className="force-control-stack">
-      <div className="force-control-label-row">
-        <label htmlFor={id} className="force-control-label">
-          {label}
-        </label>
-        <span className="force-control-value">
-          {formatNumber(value, step < 0.1 ? 2 : 1)} {unit}
-        </span>
-      </div>
-      <input
-        id={id}
-        className="force-range-input"
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
-      />
-    </div>
   );
 }
 

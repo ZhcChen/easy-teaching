@@ -8,10 +8,13 @@ import {
 } from "react";
 
 import { ControlChipGroup } from "./control-chip-group";
+import { ControlRange } from "./control-range";
+import { ControlSectionHeader } from "./control-section-header";
 import {
   DEFAULT_MOTION_CART_SCALE,
   MotionCartAsset,
 } from "./motion-cart-asset";
+import { StatusPill } from "./status-pill";
 import type { TeachingTopic } from "../data/teaching-catalog";
 
 type MotionMode = "uniform" | "accelerating" | "braking";
@@ -67,19 +70,6 @@ type MotionIntervalComparison = {
   trendLabel: string;
   isActive: boolean;
   isUpcoming: boolean;
-};
-
-type RangeControlProps = {
-  id: string;
-  label: string;
-  unit: string;
-  min: number;
-  max: number;
-  step: number;
-  value: number;
-  disabled?: boolean;
-  className?: string;
-  onChange: (value: number) => void;
 };
 
 const MOTION_PRESETS: Record<MotionMode, MotionPreset> = {
@@ -415,10 +405,10 @@ export function MotionTrackLab({
             <section className="force-control-section force-control-section-accent motion-panel-section">
               <div className="motion-panel-toolbar">
                 <div className="force-toolbar-status motion-toolbar-status">
-                  <span className="force-quick-pill">{preset.label}</span>
-                  <span className="force-quick-pill">总时长 {formatNumber(duration, 1)} s</span>
+                  <StatusPill>{preset.label}</StatusPill>
+                  <StatusPill>总时长 {formatNumber(duration, 1)} s</StatusPill>
                 </div>
-                <span className={`force-state-pill is-${summary.stateTone}`}>{summary.stateLabel}</span>
+                <StatusPill tone={summary.stateTone}>{summary.stateLabel}</StatusPill>
               </div>
 
               <div className="motion-action-row">
@@ -444,7 +434,7 @@ export function MotionTrackLab({
                 </button>
               </div>
 
-              <RangeControl
+              <ControlRange
                 id="motion-track-time"
                 label="时间轴"
                 unit="s"
@@ -471,9 +461,7 @@ export function MotionTrackLab({
             </section>
 
             <section className="force-control-section motion-panel-section">
-              <div className="force-control-section-head">
-                <h5 className="force-control-section-title">运动模式</h5>
-              </div>
+              <ControlSectionHeader title="运动模式" />
 
               <ControlChipGroup
                 items={Object.values(MOTION_PRESETS).map((item) => ({
@@ -490,11 +478,9 @@ export function MotionTrackLab({
             </section>
 
             <section className="force-control-section motion-panel-section">
-              <div className="force-control-section-head">
-                <h5 className="force-control-section-title">核心参数</h5>
-              </div>
+              <ControlSectionHeader title="核心参数" />
 
-              <RangeControl
+              <ControlRange
                 id="motion-track-v0"
                 label="初速度"
                 unit="m/s"
@@ -506,7 +492,7 @@ export function MotionTrackLab({
                 onChange={updateVelocity}
               />
 
-              <RangeControl
+              <ControlRange
                 id="motion-track-acceleration"
                 label={mode === "braking" ? "加速度（负）" : "加速度"}
                 unit="m/s²"
@@ -519,7 +505,7 @@ export function MotionTrackLab({
                 onChange={updateAcceleration}
               />
 
-              <RangeControl
+              <ControlRange
                 id="motion-track-duration"
                 label="演示时长"
                 unit="s"
@@ -533,9 +519,7 @@ export function MotionTrackLab({
             </section>
 
             <section className="force-control-section motion-panel-section">
-              <div className="force-control-section-head">
-                <h5 className="force-control-section-title">显示项</h5>
-              </div>
+              <ControlSectionHeader title="显示项" />
 
               <ControlChipGroup
                 items={[
@@ -962,7 +946,7 @@ export function MotionTrackLab({
                 <div className="motion-stage-summary-main">
                   <div className="motion-stage-hud-head is-compact">
                     <span className="motion-stage-mode-pill">{preset.badge}</span>
-                    <span className={`force-state-pill is-${summary.stateTone}`}>{summary.stateLabel}</span>
+                    <StatusPill tone={summary.stateTone}>{summary.stateLabel}</StatusPill>
                     {activeInterval ? (
                       <span className="motion-stage-kpi-pill">
                         本段 {formatNumber(activeInterval.distance, 1)} m
@@ -1003,49 +987,6 @@ export function MotionTrackLab({
         </div>
       </div>
     </section>
-  );
-}
-
-function RangeControl({
-  id,
-  label,
-  unit,
-  min,
-  max,
-  step,
-  value,
-  disabled,
-  className,
-  onChange,
-}: RangeControlProps) {
-  return (
-    <div
-      className={
-        disabled
-          ? `force-control-stack is-disabled${className ? ` ${className}` : ""}`
-          : `force-control-stack${className ? ` ${className}` : ""}`
-      }
-    >
-      <div className="force-control-label-row">
-        <label htmlFor={id} className="force-control-label">
-          {label}
-        </label>
-        <span className="force-control-value">
-          {formatNumber(value, step < 0.1 ? 2 : 1)} {unit}
-        </span>
-      </div>
-      <input
-        id={id}
-        className="force-range-input"
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        disabled={disabled}
-        onChange={(event) => onChange(Number(event.target.value))}
-      />
-    </div>
   );
 }
 
