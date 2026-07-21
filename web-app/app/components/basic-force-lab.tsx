@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
 import { ControlButton } from "./control-button";
+import { ControlOptionGroup } from "./control-option-group";
 import { ControlPanelSection } from "./control-panel-section";
 import { ControlRange } from "./control-range";
 import { StatusPill } from "./status-pill";
@@ -653,38 +654,34 @@ export function BasicForceLab({
             </ControlPanelSection>
 
             <ControlPanelSection title="接触材质" hint="改变摩擦系数 μ">
-              <div className="force-surface-grid">
-                {SURFACE_PRESETS.map((preset) => (
-                  <button
-                    key={preset.key}
-                    type="button"
-                    className={surfacePreset === preset.key ? "force-surface-card is-active" : "force-surface-card"}
-                    onClick={() => setSurfacePreset(preset.key)}
-                  >
-                    <strong>{preset.label}</strong>
-                    <span>{preset.description}</span>
-                  </button>
-                ))}
-              </div>
+              <ControlOptionGroup
+                items={SURFACE_PRESETS.map((preset) => ({
+                  key: preset.key,
+                  label: preset.label,
+                  description: preset.description,
+                  active: surfacePreset === preset.key,
+                  onClick: () => setSurfacePreset(preset.key),
+                }))}
+                columns={2}
+              />
             </ControlPanelSection>
 
             <ControlPanelSection title="摆放方式" hint="验证面积是否进入公式">
-              <div className="force-area-grid">
-                {CONTACT_AREAS.map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    className={contactArea === item.key ? "force-area-card is-active" : "force-area-card"}
-                    onClick={() => setContactArea(item.key)}
-                  >
-                    <span className={`force-area-preview is-${item.key}`} aria-hidden="true">
+              <ControlOptionGroup
+                items={CONTACT_AREAS.map((item) => ({
+                  key: item.key,
+                  label: item.label,
+                  description: item.description,
+                  active: contactArea === item.key,
+                  preview: (
+                    <span className={`control-option-preview is-${item.key}`}>
                       <span />
                     </span>
-                    <strong>{item.label}</strong>
-                    <span>{item.description}</span>
-                  </button>
-                ))}
-              </div>
+                  ),
+                  onClick: () => setContactArea(item.key),
+                }))}
+                columns={3}
+              />
             </ControlPanelSection>
 
             <ControlPanelSection title="当前结论" hint="对比两组结果最有价值">

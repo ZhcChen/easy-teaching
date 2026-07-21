@@ -2344,13 +2344,24 @@ a:focus-visible {
   transform: none;
 }
 
-.force-surface-grid {
+.control-option-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-.force-surface-card {
+.control-option-grid.is-1-column {
+  grid-template-columns: 1fr;
+}
+
+.control-option-grid.is-2-column {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.control-option-grid.is-3-column {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.control-option-card {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -2364,18 +2375,22 @@ a:focus-visible {
   cursor: pointer;
 }
 
-.force-surface-card strong {
+.control-option-card.has-preview {
+  min-height: 126px;
+}
+
+.control-option-title {
   font-size: 13px;
   line-height: 1.3;
 }
 
-.force-surface-card span {
+.control-option-copy {
   color: var(--text-secondary);
   font-size: 12px;
   line-height: 1.55;
 }
 
-.force-surface-card.is-active {
+.control-option-card.is-active {
   border-color: var(--line-strong);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 18%, transparent) 0%, transparent 100%),
@@ -2383,51 +2398,16 @@ a:focus-visible {
   box-shadow: 0 12px 26px rgba(23, 105, 255, 0.08);
 }
 
-.force-surface-card:disabled {
+.control-option-card:disabled {
   opacity: 0.42;
   cursor: not-allowed;
 }
 
-.force-area-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+.control-option-preview-slot {
+  display: block;
 }
 
-.force-area-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-height: 126px;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--surface-strong) 90%, transparent);
-  color: var(--text-primary);
-  text-align: left;
-  cursor: pointer;
-}
-
-.force-area-card strong {
-  font-size: 13px;
-  line-height: 1.3;
-}
-
-.force-area-card span:last-child {
-  color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-.force-area-card.is-active {
-  border-color: var(--line-strong);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 18%, transparent) 0%, transparent 100%),
-    color-mix(in srgb, var(--surface-strong) 94%, transparent);
-  box-shadow: 0 12px 26px rgba(23, 105, 255, 0.08);
-}
-
-.force-area-preview {
+.control-option-preview {
   display: grid;
   place-items: center;
   height: 38px;
@@ -2436,24 +2416,24 @@ a:focus-visible {
   background: color-mix(in srgb, var(--surface-soft) 92%, transparent);
 }
 
-.force-area-preview span {
+.control-option-preview span {
   display: block;
   border-radius: 8px;
   background: linear-gradient(135deg, rgba(23, 105, 255, 0.18) 0%, rgba(23, 105, 255, 0.32) 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-.force-area-preview.is-flat span {
+.control-option-preview.is-flat span {
   width: 48px;
   height: 16px;
 }
 
-.force-area-preview.is-side span {
+.control-option-preview.is-side span {
   width: 34px;
   height: 22px;
 }
 
-.force-area-preview.is-upright span {
+.control-option-preview.is-upright span {
   width: 22px;
   height: 28px;
 }
@@ -4514,8 +4494,8 @@ html[data-theme="dark"] .force-state-pill.is-active {
     grid-template-columns: 1fr;
   }
 
-  .force-surface-grid,
-  .force-area-grid {
+  .control-option-grid.is-2-column,
+  .control-option-grid.is-3-column {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -4703,8 +4683,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
     min-height: 1100px;
   }
 
-  .force-area-grid,
-  .force-surface-grid,
+  .control-option-grid,
   .force-stage-metric-grid {
     grid-template-columns: 1fr;
   }
