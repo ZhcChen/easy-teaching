@@ -1032,6 +1032,7 @@ export function MotionTrackLab({
                     <div className="motion-stage-hud-head is-compact">
                       <span className="motion-stage-mode-pill">3D</span>
                       <span className="motion-stage-kpi-pill">第三人称跟随</span>
+                      <span className="motion-stage-kpi-pill">滚轮缩放视角</span>
                       <span className="motion-stage-kpi-pill">蓝箭头 = 速度</span>
                       <span className="motion-stage-kpi-pill">
                         {Math.abs(currentMotion.acceleration) < 0.02

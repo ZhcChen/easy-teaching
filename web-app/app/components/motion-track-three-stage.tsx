@@ -36,6 +36,10 @@ const CAR_WHEEL_RADIUS_M = 0.34;
 const CAR_WHEEL_RADIUS_WORLD = CAR_WHEEL_RADIUS_M * WORLD_UNITS_PER_METER;
 const CAR_FRONT_OFFSET_M = 2.17;
 const CAR_FRONT_OFFSET_WORLD = CAR_FRONT_OFFSET_M * WORLD_UNITS_PER_METER;
+const DEFAULT_CAMERA_ZOOM_RATIO = 1.18;
+const MIN_CAMERA_ZOOM_RATIO = 0.82;
+const MAX_CAMERA_ZOOM_RATIO = 1.82;
+const CAMERA_WHEEL_STEP = 0.0012;
 
 export function MotionTrackThreeStage({
   currentMotion,
@@ -47,6 +51,7 @@ export function MotionTrackThreeStage({
   showAccelerationArrow,
 }: MotionTrackThreeStageProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
+  const cameraZoomRef = useRef(DEFAULT_CAMERA_ZOOM_RATIO);
   const motionStateRef = useRef<MotionStateRef>({
     position: currentMotion.position,
     velocity: currentMotion.velocity,
@@ -85,6 +90,15 @@ export function MotionTrackThreeStage({
     let rendererInstance: any = null;
     let sceneInstance: any = null;
 
+    function handleWheel(event: WheelEvent) {
+      event.preventDefault();
+      cameraZoomRef.current = clamp(
+        cameraZoomRef.current + event.deltaY * CAMERA_WHEEL_STEP,
+        MIN_CAMERA_ZOOM_RATIO,
+        MAX_CAMERA_ZOOM_RATIO,
+      );
+    }
+
     async function setupScene() {
       const THREE = await import("three");
 
@@ -112,7 +126,7 @@ export function MotionTrackThreeStage({
       scene.fog = new THREE.FogExp2(0x07111f, 0.02);
 
       const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 500);
-      camera.position.set(-8, 4.8, 9.4);
+      camera.position.set(-10.6, 5.5, 12.4);
 
       const ambientLight = new THREE.HemisphereLight(0xb7dcff, 0x09111d, 2.4);
       scene.add(ambientLight);
@@ -179,6 +193,8 @@ export function MotionTrackThreeStage({
       scene.add(accelerationArrow);
 
       const lookAtTarget = new THREE.Vector3(0, 1.35, 0);
+
+      hostElement.addEventListener("wheel", handleWheel, { passive: false });
 
       function resizeRendererToDisplaySize() {
         if (!hostElement) {
@@ -271,10 +287,12 @@ export function MotionTrackThreeStage({
           );
         }
 
+        const zoomRatio = cameraZoomRef.current;
         const desiredCameraX =
-          carCenterX - 8.2 + clamp(state.velocity * 0.42, 0, 1.8);
-        const desiredCameraY = 4.6 + clamp(accelerationMagnitude * 0.12, 0, 0.45);
-        const desiredCameraZ = 9.2;
+          carCenterX - (9.2 * zoomRatio + clamp(state.velocity * 0.34, 0, 1.5));
+        const desiredCameraY =
+          4.8 + clamp(accelerationMagnitude * 0.12, 0, 0.45) + (zoomRatio - 1) * 1.9;
+        const desiredCameraZ = 10.4 * zoomRatio;
         camera.position.x += (desiredCameraX - camera.position.x) * 0.08;
         camera.position.y += (desiredCameraY - camera.position.y) * 0.08;
         camera.position.z += (desiredCameraZ - camera.position.z) * 0.08;
@@ -295,6 +313,10 @@ export function MotionTrackThreeStage({
     return () => {
       isDisposed = true;
       window.cancelAnimationFrame(animationFrameId);
+
+      if (hostElement) {
+        hostElement.removeEventListener("wheel", handleWheel);
+      }
 
       if (rendererInstance) {
         rendererInstance.dispose();
