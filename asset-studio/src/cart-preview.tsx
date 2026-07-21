@@ -68,7 +68,7 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
         </g>
 
         <path
-          d="M42 106C42 90 50 79 64 73C75 68 90 67 111 67H168C181 67 192 64 202 58L216 48C226 40 238 36 250 36H255C266 36 275 39 281 44C287 49 291 56 295 65L301 79C303 85 303 91 301 97C299 103 294 106 286 106H260C252 106 246 103 241 98C235 91 229 87 221 87C212 87 206 91 200 98C196 103 190 106 181 106H137C129 106 123 103 118 98C112 91 106 87 97 87C88 87 82 91 76 98C72 103 66 106 57 106H48Z"
+          d="M42 108C42 90 50 79 64 73C75 68 90 67 111 67H168C181 67 192 64 202 58L216 48C226 40 238 36 250 36H255C266 36 275 39 281 44C287 49 291 56 295 65L301 79C303 85 303 91 301 99C299 105 294 108 286 108H260C252 108 246 105 241 100C235 92 229 88 221 88C212 88 206 92 200 100C196 105 190 108 181 108H137C129 108 123 105 118 100C112 92 106 88 97 88C88 88 82 92 76 100C72 105 66 108 57 108H48Z"
           fill={`url(#${bodyGradientId})`}
           stroke={preset.colors.outline}
           strokeWidth="4"
@@ -139,7 +139,7 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
           strokeLinecap="round"
         />
         <path
-          d="M74 104Q86 92 98 92Q110 92 122 104"
+          d="M74 105Q86 93 98 93Q110 93 122 105"
           fill="none"
           stroke={preset.colors.roof}
           strokeOpacity="0.36"
@@ -147,7 +147,7 @@ export function CartPreview({ preset, size = 'medium' }: CartPreviewProps) {
           strokeLinecap="round"
         />
         <path
-          d="M198 104Q209.5 90 221 90Q232.5 90 244 104"
+          d="M198 105Q209.5 91 221 91Q232.5 91 244 105"
           fill="none"
           stroke={preset.colors.roof}
           strokeOpacity="0.36"
