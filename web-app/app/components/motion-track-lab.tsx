@@ -329,6 +329,7 @@ export function MotionTrackLab({
   const velocityArrowLength =
     currentMotion.velocity <= 0 ? 0 : 72 + 110 * (currentMotion.velocity / velocityDomain);
   const cartFrontX = currentTrackX + getMotionCartFrontOffset(DEFAULT_MOTION_CART_SCALE);
+  const showTrackPositionCallout = currentTrackX > SVG_STAGE.panelX + 240;
   const motionThemeStyle = {
     "--motion-accent": preset.accent,
     "--motion-accent-soft": preset.accentSoft,
@@ -733,9 +734,16 @@ export function MotionTrackLab({
                 scale={DEFAULT_MOTION_CART_SCALE}
               />
 
-              <text x={currentTrackX} y={SVG_STAGE.trackY - 122} textAnchor="middle" className="motion-stage-value-callout">
-                s = {formatNumber(currentMotion.position, 1)} m
-              </text>
+              {showTrackPositionCallout ? (
+                <text
+                  x={currentTrackX}
+                  y={SVG_STAGE.trackY - 122}
+                  textAnchor="middle"
+                  className="motion-stage-value-callout"
+                >
+                  s = {formatNumber(currentMotion.position, 1)} m
+                </text>
+              ) : null}
 
               {velocityArrowLength > 0 ? (
                 <g>
