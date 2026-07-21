@@ -1675,6 +1675,55 @@ a:focus-visible {
   border-radius: 14px;
 }
 
+.visual-mode-switch {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid rgba(138, 190, 255, 0.14);
+  border-radius: 18px;
+  background: rgba(7, 17, 31, 0.54);
+  box-shadow: 0 18px 36px rgba(3, 8, 18, 0.18);
+  backdrop-filter: blur(14px);
+}
+
+.visual-mode-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--canvas-copy);
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.visual-mode-button:hover {
+  transform: translateX(1px);
+  color: var(--canvas-text);
+}
+
+.visual-mode-button.is-active {
+  border-color: rgba(138, 190, 255, 0.24);
+  background: linear-gradient(180deg, rgba(103, 198, 255, 0.28) 0%, rgba(93, 226, 177, 0.2) 100%);
+  color: var(--canvas-text);
+}
+
+.visual-mode-label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .visual-canvas {
   position: relative;
   overflow: hidden;
@@ -3759,6 +3808,12 @@ html[data-theme="dark"] .force-state-pill.is-active {
   isolation: isolate;
 }
 
+.motion-stage-canvas.is-3d-mode {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(103, 198, 255, 0.14) 0%, transparent 28%),
+    linear-gradient(180deg, #07111f 0%, #091828 40%, #050b12 100%);
+}
+
 .motion-stage-canvas .visual-grid-layer {
   background-size: 56px 56px;
   opacity: 0.18;
@@ -3778,6 +3833,10 @@ html[data-theme="dark"] .force-state-pill.is-active {
   display: none;
 }
 
+.motion-stage-canvas.is-3d-mode .visual-grid-layer {
+  opacity: 0;
+}
+
 .motion-stage-canvas::after {
   content: "";
   position: absolute;
@@ -3789,6 +3848,12 @@ html[data-theme="dark"] .force-state-pill.is-active {
   pointer-events: none;
 }
 
+.motion-stage-canvas.is-3d-mode::after {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(103, 198, 255, 0.16) 0%, transparent 26%),
+    radial-gradient(circle at 82% 70%, rgba(93, 226, 177, 0.12) 0%, transparent 24%);
+}
+
 .motion-stage-svg {
   position: relative;
   z-index: 1;
@@ -3796,6 +3861,21 @@ html[data-theme="dark"] .force-state-pill.is-active {
   width: 100%;
   height: 100%;
   min-height: clamp(620px, calc(100vh - 140px), 860px);
+}
+
+.motion-stage-3d-layer {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+}
+
+.motion-stage-3d-layer canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
 }
 
 .motion-stage-panel-shell,
@@ -3972,6 +4052,12 @@ html[data-theme="dark"] .force-state-pill.is-active {
   z-index: 2;
 }
 
+.motion-stage-overlay.is-top-left {
+  top: 24px;
+  left: 108px;
+  max-width: min(360px, calc(100% - 180px));
+}
+
 .motion-stage-overlay.is-bottom-bar {
   bottom: 16px;
   left: 16px;
@@ -4027,6 +4113,19 @@ html[data-theme="dark"] .force-state-pill.is-active {
 .motion-stage-note.is-compact {
   color: var(--canvas-copy);
   font-size: 12px;
+}
+
+.motion-stage-3d-hud {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(138, 190, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(7, 17, 31, 0.42);
+  box-shadow: 0 14px 28px rgba(3, 8, 18, 0.18);
+  backdrop-filter: blur(12px);
 }
 
 .motion-stage-conclusion {
@@ -4141,6 +4240,14 @@ html[data-theme="dark"] .force-state-pill.is-active {
   min-width: 0;
   flex-direction: column;
   gap: 4px;
+}
+
+.motion-stage-view-switch {
+  position: absolute;
+  top: 50%;
+  left: 20px;
+  z-index: 3;
+  transform: translateY(-50%);
 }
 
 .motion-stage-summary-label {
@@ -4732,6 +4839,22 @@ html[data-theme="dark"] .force-state-pill.is-active {
     left: 12px;
     right: 12px;
     bottom: 12px;
+  }
+
+  .motion-stage-overlay.is-top-left {
+    top: 72px;
+    left: 16px;
+    max-width: calc(100% - 32px);
+  }
+
+  .motion-stage-view-switch {
+    top: 18px;
+    left: 16px;
+    transform: none;
+  }
+
+  .motion-stage-view-switch .visual-mode-switch {
+    flex-direction: row;
   }
 
   .force-stage-overlay,

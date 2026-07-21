@@ -12,16 +12,24 @@ import { ControlChipGroup } from "./control-chip-group";
 import { ControlPanelSection } from "./control-panel-section";
 import { ControlRange } from "./control-range";
 import { ControlStatusBar } from "./control-status-bar";
+import { MotionTrackThreeStage } from "./motion-track-three-stage";
 import {
   DEFAULT_MOTION_CART_SCALE,
   MotionCartAsset,
 } from "./motion-cart-asset";
 import { StatusPill } from "./status-pill";
+import { VisualModeSwitch } from "./visual-mode-switch";
 import type { TeachingTopic } from "../data/teaching-catalog";
 
 type MotionMode = "uniform" | "accelerating" | "braking";
+type MotionViewMode = "2d" | "3d";
 type PlaybackRate = 0.75 | 1 | 1.5;
-type ViewOptionKey = "showTrail" | "showSamples" | "showVelocityCurve";
+type ViewOptionKey =
+  | "showTrail"
+  | "showSamples"
+  | "showVelocityCurve"
+  | "showVelocityArrow"
+  | "showAccelerationArrow";
 type Tone = "balanced" | "warning" | "active";
 
 type MotionTrackLabProps = {
@@ -116,7 +124,27 @@ const DEFAULT_VIEW_OPTIONS: Record<ViewOptionKey, boolean> = {
   showTrail: true,
   showSamples: true,
   showVelocityCurve: true,
+  showVelocityArrow: true,
+  showAccelerationArrow: true,
 };
+
+const MOTION_VIEW_STORAGE_KEY = "easy-teaching.motion-track.view-mode";
+const MOTION_VIEW_OPTIONS: Array<{
+  key: MotionViewMode;
+  label: string;
+  title: string;
+}> = [
+  {
+    key: "2d",
+    label: "2D",
+    title: "2D 解析视图",
+  },
+  {
+    key: "3d",
+    label: "3D",
+    title: "3D 第三人称视图",
+  },
+];
 
 const SVG_STAGE = {
   width: 1320,
@@ -144,6 +172,7 @@ export function MotionTrackLab({
   fullscreenRef,
 }: MotionTrackLabProps) {
   const [mode, setMode] = useState<MotionMode>("uniform");
+  const [viewMode, setViewMode] = useState<MotionViewMode>(readStoredMotionViewMode);
   const [initialVelocity, setInitialVelocity] = useState(MOTION_PRESETS.uniform.initialVelocity);
   const [acceleration, setAcceleration] = useState(MOTION_PRESETS.uniform.acceleration);
   const [duration, setDuration] = useState(MOTION_PRESETS.uniform.duration);
@@ -190,6 +219,14 @@ export function MotionTrackLab({
 
     setIsPlaying(false);
   }, [currentTime, duration, isPlaying]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem(MOTION_VIEW_STORAGE_KEY, viewMode);
+  }, [viewMode]);
 
   const motionSeries = useMemo(
     () =>
@@ -523,26 +560,50 @@ export function MotionTrackLab({
 
             <ControlPanelSection title="显示项" className="motion-panel-section">
               <ControlChipGroup
-                items={[
-                  {
-                    key: "trail",
-                    label: "位移拖尾",
-                    active: viewOptions.showTrail,
-                    onClick: () => toggleView("showTrail"),
-                  },
-                  {
-                    key: "samples",
-                    label: "秒级采样点",
-                    active: viewOptions.showSamples,
-                    onClick: () => toggleView("showSamples"),
-                  },
-                  {
-                    key: "velocity-curve",
-                    label: "速度曲线",
-                    active: viewOptions.showVelocityCurve,
-                    onClick: () => toggleView("showVelocityCurve"),
-                  },
-                ]}
+                items={
+                  viewMode === "2d"
+                    ? [
+                        {
+                          key: "trail",
+                          label: "位移拖尾",
+                          active: viewOptions.showTrail,
+                          onClick: () => toggleView("showTrail"),
+                        },
+                        {
+                          key: "samples",
+                          label: "秒级采样点",
+                          active: viewOptions.showSamples,
+                          onClick: () => toggleView("showSamples"),
+                        },
+                        {
+                          key: "velocity-curve",
+                          label: "速度曲线",
+                          active: viewOptions.showVelocityCurve,
+                          onClick: () => toggleView("showVelocityCurve"),
+                        },
+                      ]
+                    : [
+                        {
+                          key: "trail",
+                          label: "运动拖尾",
+                          active: viewOptions.showTrail,
+                          onClick: () => toggleView("showTrail"),
+                        },
+                        {
+                          key: "velocity-arrow",
+                          label: "速度箭头",
+                          active: viewOptions.showVelocityArrow,
+                          onClick: () => toggleView("showVelocityArrow"),
+                        },
+                        {
+                          key: "acceleration-arrow",
+                          label:
+                            acceleration < 0 ? "减速度箭头" : "加速度箭头",
+                          active: viewOptions.showAccelerationArrow,
+                          onClick: () => toggleView("showAccelerationArrow"),
+                        },
+                      ]
+                }
                 columns={2}
               />
             </ControlPanelSection>
@@ -550,7 +611,13 @@ export function MotionTrackLab({
         </aside>
 
         <div className="force-lab-main motion-lab-main">
-          <div className="visual-canvas motion-stage-canvas">
+          <div
+            className={
+              viewMode === "3d"
+                ? "visual-canvas motion-stage-canvas is-3d-mode"
+                : "visual-canvas motion-stage-canvas"
+            }
+          >
             <button
               type="button"
               onClick={() => {
@@ -562,13 +629,20 @@ export function MotionTrackLab({
             >
               {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
             </button>
+            <VisualModeSwitch
+              className="motion-stage-view-switch"
+              value={viewMode}
+              options={MOTION_VIEW_OPTIONS}
+              onChange={(nextValue) => setViewMode(nextValue as MotionViewMode)}
+            />
             <div className="visual-grid-layer" />
             <div className="visual-glow visual-glow-a" />
             <div className="visual-glow visual-glow-b" />
             <div className="visual-line visual-line-a" />
             <div className="visual-line visual-line-b" />
 
-            <svg
+            {viewMode === "2d" ? (
+              <svg
               viewBox={`0 0 ${SVG_STAGE.width} ${SVG_STAGE.height}`}
               className="motion-stage-svg"
               role="img"
@@ -942,6 +1016,38 @@ export function MotionTrackLab({
                 </text>
               )}
             </svg>
+            ) : (
+              <>
+                <MotionTrackThreeStage
+                  currentMotion={currentMotion}
+                  distanceDomain={distanceDomain}
+                  accentColor={preset.accent}
+                  accentSoftColor={preset.accentSoft}
+                  showTrail={viewOptions.showTrail}
+                  showVelocityArrow={viewOptions.showVelocityArrow}
+                  showAccelerationArrow={viewOptions.showAccelerationArrow}
+                />
+                <div className="motion-stage-overlay is-top-left">
+                  <div className="motion-stage-3d-hud">
+                    <div className="motion-stage-hud-head is-compact">
+                      <span className="motion-stage-mode-pill">3D</span>
+                      <span className="motion-stage-kpi-pill">第三人称跟随</span>
+                      <span className="motion-stage-kpi-pill">蓝箭头 = 速度</span>
+                      <span className="motion-stage-kpi-pill">
+                        {Math.abs(currentMotion.acceleration) < 0.02
+                          ? "当前 a ≈ 0"
+                          : currentMotion.acceleration < 0
+                          ? "橙箭头 = 减速度"
+                          : "绿箭头 = 加速度"}
+                      </span>
+                    </div>
+                    <p className="motion-stage-note is-compact">
+                      {summary.observation}
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="motion-stage-overlay is-bottom-bar">
               <div className="motion-stage-summary-bar">
@@ -1466,6 +1572,16 @@ function formatNumber(value: number, digits = 1) {
 
 function formatTimeLabel(value: number) {
   return `${formatNumber(value, value % 1 === 0 ? 0 : 1)}s`;
+}
+
+function readStoredMotionViewMode(): MotionViewMode {
+  if (typeof window === "undefined") {
+    return "2d";
+  }
+
+  return window.localStorage.getItem(MOTION_VIEW_STORAGE_KEY) === "3d"
+    ? "3d"
+    : "2d";
 }
 
 function clamp(value: number, min: number, max: number) {
