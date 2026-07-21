@@ -7,9 +7,10 @@ import {
   type RefObject,
 } from "react";
 
+import { ControlButton } from "./control-button";
 import { ControlChipGroup } from "./control-chip-group";
+import { ControlPanelSection } from "./control-panel-section";
 import { ControlRange } from "./control-range";
-import { ControlSectionHeader } from "./control-section-header";
 import {
   DEFAULT_MOTION_CART_SCALE,
   MotionCartAsset,
@@ -402,7 +403,7 @@ export function MotionTrackLab({
           </div>
 
           <div className="force-control-scroll motion-control-scroll">
-            <section className="force-control-section force-control-section-accent motion-panel-section">
+            <ControlPanelSection title="实验控制" accent className="motion-panel-section">
               <div className="motion-panel-toolbar">
                 <div className="force-toolbar-status motion-toolbar-status">
                   <StatusPill>{preset.label}</StatusPill>
@@ -412,9 +413,9 @@ export function MotionTrackLab({
               </div>
 
               <div className="motion-action-row">
-                <button
-                  type="button"
-                  className="motion-primary-button"
+                <ControlButton
+                  variant="primary"
+                  size="compact"
                   onClick={() => {
                     if (isPlaying) {
                       pausePlayback();
@@ -425,13 +426,13 @@ export function MotionTrackLab({
                   }}
                 >
                   {primaryActionLabel}
-                </button>
-                <button type="button" className="motion-ghost-button" onClick={restartPlayback}>
+                </ControlButton>
+                <ControlButton size="compact" onClick={restartPlayback}>
                   重播
-                </button>
-                <button type="button" className="motion-ghost-button" onClick={resetDefaults}>
+                </ControlButton>
+                <ControlButton size="compact" onClick={resetDefaults}>
                   默认
-                </button>
+                </ControlButton>
               </div>
 
               <ControlRange
@@ -458,11 +459,9 @@ export function MotionTrackLab({
                 }))}
                 columns={3}
               />
-            </section>
+            </ControlPanelSection>
 
-            <section className="force-control-section motion-panel-section">
-              <ControlSectionHeader title="运动模式" />
-
+            <ControlPanelSection title="运动模式" className="motion-panel-section">
               <ControlChipGroup
                 items={Object.values(MOTION_PRESETS).map((item) => ({
                   key: item.mode,
@@ -475,11 +474,9 @@ export function MotionTrackLab({
                 columns={3}
                 compact
               />
-            </section>
+            </ControlPanelSection>
 
-            <section className="force-control-section motion-panel-section">
-              <ControlSectionHeader title="核心参数" />
-
+            <ControlPanelSection title="核心参数" className="motion-panel-section">
               <ControlRange
                 id="motion-track-v0"
                 label="初速度"
@@ -516,11 +513,9 @@ export function MotionTrackLab({
                 className="motion-range-stack"
                 onChange={updateDuration}
               />
-            </section>
+            </ControlPanelSection>
 
-            <section className="force-control-section motion-panel-section">
-              <ControlSectionHeader title="显示项" />
-
+            <ControlPanelSection title="显示项" className="motion-panel-section">
               <ControlChipGroup
                 items={[
                   {
@@ -544,7 +539,7 @@ export function MotionTrackLab({
                 ]}
                 columns={2}
               />
-            </section>
+            </ControlPanelSection>
           </div>
         </aside>
 

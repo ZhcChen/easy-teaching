@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
+import { ControlButton } from "./control-button";
+import { ControlPanelSection } from "./control-panel-section";
 import { ControlRange } from "./control-range";
-import { ControlSectionHeader } from "./control-section-header";
 import { StatusPill } from "./status-pill";
 import type { TeachingTopic } from "../data/teaching-catalog";
 
@@ -554,9 +555,7 @@ export function BasicForceLab({
           </div>
 
           <div className="force-control-scroll">
-            <section className="force-control-section force-control-section-accent">
-              <ControlSectionHeader title="实验控制" hint="先预测，再播放，再对比" />
-
+            <ControlPanelSection title="实验控制" hint="先预测，再播放，再对比" accent>
               <div className="force-toolbar-status">
                 <StatusPill tone={displayedScene.stateTone}>{displayedScene.stateLabel}</StatusPill>
                 <StatusPill>{displayedScene.frictionModeLabel}</StatusPill>
@@ -564,9 +563,8 @@ export function BasicForceLab({
               </div>
 
               <div className="force-action-grid">
-                <button
-                  type="button"
-                  className="force-primary-button"
+                <ControlButton
+                  variant="primary"
                   onClick={() => {
                     if (isExperimentRunning) {
                       pauseExperiment();
@@ -582,13 +580,13 @@ export function BasicForceLab({
                   }}
                 >
                   {primaryActionLabel}
-                </button>
-                <button type="button" className="force-ghost-button" onClick={startExperiment}>
+                </ControlButton>
+                <ControlButton onClick={startExperiment}>
                   从头播放
-                </button>
-                <button type="button" className="force-ghost-button" onClick={resetDefaults}>
+                </ControlButton>
+                <ControlButton onClick={resetDefaults}>
                   恢复默认
-                </button>
+                </ControlButton>
               </div>
 
               <div className="force-walkthrough-steps is-panel">
@@ -615,11 +613,9 @@ export function BasicForceLab({
                 valueFormatter={() => `${Math.round((experimentStatus.progress || 0) * 100)}%`}
                 onChange={seekExperiment}
               />
-            </section>
+            </ControlPanelSection>
 
-            <section className="force-control-section">
-              <ControlSectionHeader title="研究目标" hint="只观察三个教学变量" />
-
+            <ControlPanelSection title="研究目标" hint="只观察三个教学变量">
               <div className="force-highlight-row is-panel">
                 {OBJECTIVES.map((item) => (
                   <span key={item.title} className="force-highlight-chip">
@@ -630,11 +626,9 @@ export function BasicForceLab({
 
               <p className="force-inline-copy">{displayedScene.summary}</p>
               <p className="force-inline-copy">{displayedScene.motionHint}</p>
-            </section>
+            </ControlPanelSection>
 
-            <section className="force-control-section">
-              <ControlSectionHeader title="压力 / 正压力" hint="直接改变 N 的大小" />
-
+            <ControlPanelSection title="压力 / 正压力" hint="直接改变 N 的大小">
               <ControlRange
                 id="force-pressure"
                 label="当前压力"
@@ -656,11 +650,9 @@ export function BasicForceLab({
                   <strong className="force-insight-value">{formatNumber(metrics.kineticFriction, 1)} N</strong>
                 </article>
               </div>
-            </section>
+            </ControlPanelSection>
 
-            <section className="force-control-section">
-              <ControlSectionHeader title="接触材质" hint="改变摩擦系数 μ" />
-
+            <ControlPanelSection title="接触材质" hint="改变摩擦系数 μ">
               <div className="force-surface-grid">
                 {SURFACE_PRESETS.map((preset) => (
                   <button
@@ -674,11 +666,9 @@ export function BasicForceLab({
                   </button>
                 ))}
               </div>
-            </section>
+            </ControlPanelSection>
 
-            <section className="force-control-section">
-              <ControlSectionHeader title="摆放方式" hint="验证面积是否进入公式" />
-
+            <ControlPanelSection title="摆放方式" hint="验证面积是否进入公式">
               <div className="force-area-grid">
                 {CONTACT_AREAS.map((item) => (
                   <button
@@ -695,11 +685,9 @@ export function BasicForceLab({
                   </button>
                 ))}
               </div>
-            </section>
+            </ControlPanelSection>
 
-            <section className="force-control-section">
-              <ControlSectionHeader title="当前结论" hint="对比两组结果最有价值" />
-
+            <ControlPanelSection title="当前结论" hint="对比两组结果最有价值">
               <p className="force-inline-copy">{currentForce.description}</p>
               <p className="force-inline-copy">{experimentStatus.formula}</p>
 
@@ -737,7 +725,7 @@ export function BasicForceLab({
                   </div>
                 ) : null}
               </div>
-            </section>
+            </ControlPanelSection>
           </div>
         </aside>
 
