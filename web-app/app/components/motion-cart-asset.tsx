@@ -46,7 +46,7 @@ const colors = sharedCartPreset?.colors ?? FALLBACK_COLORS;
 const CART_WHEEL_CENTERS = [98, 221] as const;
 const CART_WHEEL_RADIUS = 22.5;
 const CART_WHEEL_CENTER_Y = 122.5;
-const CART_FRONT_EDGE_X = 301;
+const CART_FRONT_EDGE_X = 42;
 
 export const DEFAULT_MOTION_CART_SCALE = 0.56;
 
@@ -60,11 +60,11 @@ export function MotionCartAsset({
   const glassGradientId = `${instanceId}-glass`;
   const rimGradientId = `${instanceId}-rim`;
 
-  const translateX = frontX - CART_FRONT_EDGE_X * scale;
+  const translateX = frontX + CART_FRONT_EDGE_X * scale;
   const translateY = wheelBaseY - (CART_WHEEL_CENTER_Y + CART_WHEEL_RADIUS) * scale;
 
   return (
-    <g transform={`translate(${translateX}, ${translateY}) scale(${scale})`}>
+    <g transform={`translate(${translateX}, ${translateY}) scale(${-scale}, ${scale})`}>
       <defs>
         <linearGradient id={bodyGradientId} x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor={colors.body} />

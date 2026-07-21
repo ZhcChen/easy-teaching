@@ -331,7 +331,7 @@ export function MotionTrackLab({
   const showTrackPositionCallout = currentTrackX > SVG_STAGE.panelX + 240;
   const isTrackPositionNearEnd = currentTrackX > SVG_STAGE.trackRight - 90;
   const trackPositionCalloutX =
-    isTrackPositionNearEnd ? currentTrackX - 44 : currentTrackX;
+    isTrackPositionNearEnd ? currentTrackX - 88 : currentTrackX;
   const trackPositionCalloutAnchor: "middle" | "end" =
     isTrackPositionNearEnd ? "end" : "middle";
   const motionThemeStyle = {
@@ -624,11 +624,11 @@ export function MotionTrackLab({
                 className="motion-stage-panel-shell"
               />
 
-              <text x={SVG_STAGE.panelX + 36} y={SVG_STAGE.panelY + 38} className="motion-stage-panel-title">
+              <text x={SVG_STAGE.panelX + 36} y={SVG_STAGE.panelY + 30} className="motion-stage-panel-title">
                 轨道视图
               </text>
-              <text x={SVG_STAGE.panelX + 36} y={SVG_STAGE.panelY + 66} className="motion-stage-panel-copy">
-                看采样点间距，就能直观判断速度是否变化。
+              <text x={SVG_STAGE.panelX + 36} y={SVG_STAGE.panelY + 54} className="motion-stage-panel-copy">
+                看采样点间距，判断速度变化。
               </text>
 
               {Array.from({ length: TRACK_TICK_COUNT }).map((_, index) => {
