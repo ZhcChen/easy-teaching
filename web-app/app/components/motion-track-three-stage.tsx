@@ -36,9 +36,9 @@ const CAR_WHEEL_RADIUS_M = 0.34;
 const CAR_WHEEL_RADIUS_WORLD = CAR_WHEEL_RADIUS_M * WORLD_UNITS_PER_METER;
 const CAR_FRONT_OFFSET_M = 2.17;
 const CAR_FRONT_OFFSET_WORLD = CAR_FRONT_OFFSET_M * WORLD_UNITS_PER_METER;
-const DEFAULT_CAMERA_ZOOM_RATIO = 1.18;
+const DEFAULT_CAMERA_ZOOM_RATIO = 1.28;
 const MIN_CAMERA_ZOOM_RATIO = 0.82;
-const MAX_CAMERA_ZOOM_RATIO = 1.82;
+const MAX_CAMERA_ZOOM_RATIO = 1.92;
 const CAMERA_WHEEL_STEP = 0.0012;
 
 export function MotionTrackThreeStage({
@@ -52,6 +52,12 @@ export function MotionTrackThreeStage({
 }: MotionTrackThreeStageProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const cameraZoomRef = useRef(DEFAULT_CAMERA_ZOOM_RATIO);
+  const cameraDynamicsRef = useRef({
+    speedRatio: 0,
+    accelerationBias: 0,
+    accelerationKick: 0,
+    roll: 0,
+  });
   const motionStateRef = useRef<MotionStateRef>({
     position: currentMotion.position,
     velocity: currentMotion.velocity,
@@ -147,6 +153,13 @@ export function MotionTrackThreeStage({
 
       const markers = buildTrackMarkers(THREE, accentColor);
       scene.add(markers);
+
+      const roadsideEnvironment = buildRoadsideEnvironment(
+        THREE,
+        accentColor,
+        accentSoftColor,
+      );
+      scene.add(roadsideEnvironment);
 
       const finishGate = buildFinishGate(THREE, accentColor);
       scene.add(finishGate);
@@ -287,18 +300,53 @@ export function MotionTrackThreeStage({
           );
         }
 
+        const speedRatioTarget = clamp(state.velocity / 6.4, 0, 1);
+        const accelerationBiasTarget = clamp(state.acceleration / 1.6, -1, 1);
+        const accelerationKickTarget = clamp(
+          state.acceleration - cameraDynamicsRef.current.accelerationBias * 1.6,
+          -1,
+          1,
+        );
+
+        cameraDynamicsRef.current.speedRatio +=
+          (speedRatioTarget - cameraDynamicsRef.current.speedRatio) * 0.06;
+        cameraDynamicsRef.current.accelerationBias +=
+          (accelerationBiasTarget - cameraDynamicsRef.current.accelerationBias) * 0.08;
+        cameraDynamicsRef.current.accelerationKick +=
+          (accelerationKickTarget - cameraDynamicsRef.current.accelerationKick) * 0.16;
+        cameraDynamicsRef.current.roll +=
+          ((-cameraDynamicsRef.current.accelerationBias * 0.05) -
+            cameraDynamicsRef.current.roll) *
+          0.08;
+
+        const speedRatio = cameraDynamicsRef.current.speedRatio;
+        const accelerationBias = cameraDynamicsRef.current.accelerationBias;
+        const accelerationKick = cameraDynamicsRef.current.accelerationKick;
         const zoomRatio = cameraZoomRef.current;
         const desiredCameraX =
-          carCenterX - (9.2 * zoomRatio + clamp(state.velocity * 0.34, 0, 1.5));
+          carCenterX -
+          (10 * zoomRatio + speedRatio * 2.4 + clamp(accelerationBias * 0.4, -0.4, 0.4));
         const desiredCameraY =
-          4.8 + clamp(accelerationMagnitude * 0.12, 0, 0.45) + (zoomRatio - 1) * 1.9;
-        const desiredCameraZ = 10.4 * zoomRatio;
+          5 +
+          (zoomRatio - 1) * 2.15 +
+          clamp(accelerationMagnitude * 0.12, 0, 0.45) -
+          accelerationBias * 0.3 +
+          Math.abs(accelerationKick) * 0.08;
+        const desiredCameraZ =
+          10.9 * zoomRatio + speedRatio * 1.15 + Math.abs(accelerationBias) * 0.35;
         camera.position.x += (desiredCameraX - camera.position.x) * 0.08;
         camera.position.y += (desiredCameraY - camera.position.y) * 0.08;
         camera.position.z += (desiredCameraZ - camera.position.z) * 0.08;
 
-        lookAtTarget.x += (carCenterX + 4.8 - lookAtTarget.x) * 0.11;
-        lookAtTarget.y += (1.38 - lookAtTarget.y) * 0.11;
+        const desiredLookAhead = 5.2 + speedRatio * 2 + accelerationBias * 0.32;
+        const desiredLookAtY =
+          1.34 + accelerationBias * 0.24 - Math.abs(accelerationKick) * 0.05;
+        lookAtTarget.x += (carCenterX + desiredLookAhead - lookAtTarget.x) * 0.11;
+        lookAtTarget.y += (desiredLookAtY - lookAtTarget.y) * 0.11;
+        camera.up.set(cameraDynamicsRef.current.roll, 1, 0).normalize();
+        const desiredFov = 38 + speedRatio * 2.6 + Math.abs(accelerationBias) * 1.2;
+        camera.fov += (desiredFov - camera.fov) * 0.08;
+        camera.updateProjectionMatrix();
         camera.lookAt(lookAtTarget);
 
         renderer.render(scene, camera);
@@ -451,6 +499,117 @@ function buildTrackMarkers(THREE: ThreeModule, accentColor: string) {
   }
 
   return markerGroup;
+}
+
+function buildRoadsideEnvironment(
+  THREE: ThreeModule,
+  accentColor: string,
+  accentSoftColor: string,
+) {
+  const environmentGroup = new THREE.Group();
+  const towerMaterial = new THREE.MeshStandardMaterial({
+    color: 0x16324c,
+    emissive: new THREE.Color(accentSoftColor),
+    emissiveIntensity: 0.26,
+    roughness: 0.46,
+    metalness: 0.18,
+  });
+  const panelMaterial = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(accentColor),
+    emissive: new THREE.Color(accentColor),
+    emissiveIntensity: 0.34,
+    roughness: 0.32,
+    metalness: 0.18,
+    transparent: true,
+    opacity: 0.72,
+  });
+  const railMaterial = new THREE.MeshStandardMaterial({
+    color: 0x0f2537,
+    emissive: new THREE.Color(accentSoftColor),
+    emissiveIntensity: 0.18,
+    roughness: 0.58,
+    metalness: 0.12,
+  });
+
+  const leftRail = new THREE.Mesh(
+    new THREE.BoxGeometry(TRACK_LENGTH_WORLD, 0.05, 0.08),
+    railMaterial,
+  );
+  leftRail.position.set(TRACK_LENGTH_WORLD / 2, 0.56, ROAD_WIDTH / 2 + 1.48);
+  environmentGroup.add(leftRail);
+
+  const rightRail = leftRail.clone();
+  rightRail.position.z = -ROAD_WIDTH / 2 - 1.48;
+  environmentGroup.add(rightRail);
+
+  for (let index = 0; index < 13; index += 1) {
+    const x = 14 + index * 28 + (index % 2) * 4;
+    const towerHeight = index % 3 === 0 ? 3.8 : 2.9;
+    const zOffset = ROAD_WIDTH / 2 + 2.5 + (index % 2) * 0.55;
+
+    addRoadsideTower({
+      THREE,
+      group: environmentGroup,
+      material: towerMaterial,
+      panelMaterial,
+      x,
+      y: towerHeight / 2,
+      z: zOffset,
+      height: towerHeight,
+      tilt: index % 2 === 0 ? -0.08 : 0.08,
+    });
+
+    addRoadsideTower({
+      THREE,
+      group: environmentGroup,
+      material: towerMaterial,
+      panelMaterial,
+      x,
+      y: towerHeight / 2,
+      z: -zOffset,
+      height: towerHeight,
+      tilt: index % 2 === 0 ? 0.08 : -0.08,
+    });
+  }
+
+  return environmentGroup;
+}
+
+function addRoadsideTower({
+  THREE,
+  group,
+  material,
+  panelMaterial,
+  x,
+  y,
+  z,
+  height,
+  tilt,
+}: {
+  THREE: ThreeModule;
+  group: any;
+  material: any;
+  panelMaterial: any;
+  x: number;
+  y: number;
+  z: number;
+  height: number;
+  tilt: number;
+}) {
+  const post = new THREE.Mesh(
+    new THREE.BoxGeometry(0.14, height, 0.14),
+    material,
+  );
+  post.position.set(x, y, z);
+  group.add(post);
+
+  const panel = new THREE.Mesh(
+    new THREE.BoxGeometry(0.08, 1.1, 1.2),
+    panelMaterial,
+  );
+  panel.position.set(x + 0.12, y + height * 0.18, z);
+  panel.rotation.y = tilt;
+  group.add(panel);
 }
 
 function buildFinishGate(THREE: ThreeModule, accentColor: string) {
