@@ -25,6 +25,7 @@ type MotionCartAssetProps = {
   frontX: number;
   wheelBaseY: number;
   scale?: number;
+  travelDistance?: number;
 };
 
 const FALLBACK_COLORS: CartColors = {
@@ -54,6 +55,7 @@ export function MotionCartAsset({
   frontX,
   wheelBaseY,
   scale = DEFAULT_MOTION_CART_SCALE,
+  travelDistance = 0,
 }: MotionCartAssetProps) {
   const instanceId = useId().replace(/:/g, "");
   const bodyGradientId = `${instanceId}-body`;
@@ -62,6 +64,10 @@ export function MotionCartAsset({
 
   const translateX = frontX + CART_FRONT_EDGE_X * scale;
   const translateY = wheelBaseY - (CART_WHEEL_CENTER_Y + CART_WHEEL_RADIUS) * scale;
+  const wheelRadius = CART_WHEEL_RADIUS * Math.abs(scale);
+  const wheelCircumference = 2 * Math.PI * wheelRadius;
+  const wheelRotationDegrees =
+    wheelCircumference === 0 ? 0 : -(travelDistance / wheelCircumference) * 360;
 
   return (
     <g transform={`translate(${translateX}, ${translateY}) scale(${-scale}, ${scale})`}>
@@ -89,24 +95,26 @@ export function MotionCartAsset({
           <g key={cx}>
             <circle cx={cx} cy="120.5" r="22.5" fill={colors.wheel} stroke="#7f8898" strokeOpacity="0.42" strokeWidth="1.2" />
             <circle cx={cx} cy="120.5" r="18.2" fill="none" stroke="#ffffff" strokeOpacity="0.14" strokeWidth="1.4" />
-            <circle
-              cx={cx}
-              cy="120.5"
-              r="12.2"
-              fill={`url(#${rimGradientId})`}
-              stroke={colors.wheel}
-              strokeOpacity="0.24"
-              strokeWidth="1.4"
-            />
-            <circle cx={cx} cy="120.5" r="4.4" fill={colors.wheel} fillOpacity="0.72" />
-            <path
-              d={`M${cx} 109.5V131.5 M${cx - 10} 120.5H${cx + 10} M${cx - 6} 113.5L${cx + 6} 127.5 M${cx + 6} 113.5L${cx - 6} 127.5`}
-              fill="none"
-              stroke={colors.wheel}
-              strokeOpacity="0.34"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
+            <g transform={`rotate(${wheelRotationDegrees} ${cx} 120.5)`}>
+              <circle
+                cx={cx}
+                cy="120.5"
+                r="12.2"
+                fill={`url(#${rimGradientId})`}
+                stroke={colors.wheel}
+                strokeOpacity="0.24"
+                strokeWidth="1.4"
+              />
+              <circle cx={cx} cy="120.5" r="4.4" fill={colors.wheel} fillOpacity="0.72" />
+              <path
+                d={`M${cx} 109.5V131.5 M${cx - 10} 120.5H${cx + 10} M${cx - 6} 113.5L${cx + 6} 127.5 M${cx + 6} 113.5L${cx - 6} 127.5`}
+                fill="none"
+                stroke={colors.wheel}
+                strokeOpacity="0.34"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </g>
           </g>
         ))}
 

@@ -321,6 +321,7 @@ export function MotionTrackLab({
   const velocityArrowLength =
     currentMotion.velocity <= 0 ? 0 : 72 + 110 * (currentMotion.velocity / velocityDomain);
   const cartFrontX = currentTrackX;
+  const cartTravelDistance = Math.max(0, currentTrackX - SVG_STAGE.trackLeft);
   const showTrackPositionCallout = currentTrackX > SVG_STAGE.panelX + 240;
   const isTrackPositionNearEnd = currentTrackX > SVG_STAGE.trackRight - 90;
   const trackPositionCalloutX =
@@ -717,6 +718,7 @@ export function MotionTrackLab({
                 frontX={cartFrontX}
                 wheelBaseY={SVG_STAGE.trackY - 2}
                 scale={DEFAULT_MOTION_CART_SCALE}
+                travelDistance={cartTravelDistance}
               />
 
               {showTrackPositionCallout ? (
