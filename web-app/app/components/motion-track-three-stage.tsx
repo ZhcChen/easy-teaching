@@ -322,6 +322,31 @@ export function MotionTrackThreeStage({
         const speedRatio = cameraDynamicsRef.current.speedRatio;
         const accelerationBias = cameraDynamicsRef.current.accelerationBias;
         const accelerationKick = cameraDynamicsRef.current.accelerationKick;
+        const bodyPitch =
+          clamp(accelerationBias * 0.042 + accelerationKick * 0.022, -0.082, 0.068);
+        const bodyFloat =
+          0.02 + Math.abs(accelerationKick) * 0.06 + speedRatio * 0.02;
+        carRig.bodyGroup.rotation.z +=
+          (bodyPitch - carRig.bodyGroup.rotation.z) * 0.12;
+        carRig.bodyGroup.position.y +=
+          (bodyFloat - carRig.bodyGroup.position.y) * 0.12;
+        carRig.shadow.material.opacity =
+          0.22 + speedRatio * 0.04 + Math.abs(accelerationBias) * 0.05;
+        const shadowScaleX = 1.06 - speedRatio * 0.03;
+        const shadowScaleY = 0.7 - Math.abs(accelerationBias) * 0.04;
+        carRig.shadow.scale.x += (shadowScaleX - carRig.shadow.scale.x) * 0.1;
+        carRig.shadow.scale.y += (shadowScaleY - carRig.shadow.scale.y) * 0.1;
+
+        if (state.acceleration < -0.02) {
+          trailMaterial.color.set(0xffb766);
+          trailMaterial.opacity = 0.92;
+        } else if (state.acceleration > 0.02) {
+          trailMaterial.color.set(0x5de2b1);
+          trailMaterial.opacity = 0.86;
+        } else {
+          trailMaterial.color.set(new THREE.Color(accentColor));
+          trailMaterial.opacity = 0.8;
+        }
         const zoomRatio = cameraZoomRef.current;
         const desiredCameraX =
           carCenterX -
@@ -665,6 +690,7 @@ function buildOriginBeacon(THREE: ThreeModule) {
 
 function buildMotionCartRig(THREE: ThreeModule) {
   const carGroup = new THREE.Group();
+  const bodyGroup = new THREE.Group();
   const wheelRotors: Array<any> = [];
 
   const bodyMaterial = new THREE.MeshStandardMaterial({
@@ -715,7 +741,7 @@ function buildMotionCartRig(THREE: ThreeModule) {
   );
   lowerBody.position.set(-0.18 * WORLD_UNITS_PER_METER, 0.94, 0);
   lowerBody.scale.z = 0.92;
-  carGroup.add(lowerBody);
+  bodyGroup.add(lowerBody);
 
   const hood = new THREE.Mesh(
     new THREE.BoxGeometry(1.18 * WORLD_UNITS_PER_METER, 0.18 * WORLD_UNITS_PER_METER, 1.62 * WORLD_UNITS_PER_METER),
@@ -724,7 +750,7 @@ function buildMotionCartRig(THREE: ThreeModule) {
   hood.position.set(1.28 * WORLD_UNITS_PER_METER, 1.26, 0);
   hood.rotation.z = -0.12;
   hood.scale.z = 0.94;
-  carGroup.add(hood);
+  bodyGroup.add(hood);
 
   const rearDeck = new THREE.Mesh(
     new THREE.BoxGeometry(0.92 * WORLD_UNITS_PER_METER, 0.16 * WORLD_UNITS_PER_METER, 1.48 * WORLD_UNITS_PER_METER),
@@ -733,7 +759,7 @@ function buildMotionCartRig(THREE: ThreeModule) {
   rearDeck.position.set(-1.78 * WORLD_UNITS_PER_METER, 1.28, 0);
   rearDeck.rotation.z = 0.12;
   rearDeck.scale.z = 0.92;
-  carGroup.add(rearDeck);
+  bodyGroup.add(rearDeck);
 
   const cabin = new THREE.Mesh(
     new THREE.BoxGeometry(2.28 * WORLD_UNITS_PER_METER, 0.76 * WORLD_UNITS_PER_METER, 1.58 * WORLD_UNITS_PER_METER),
@@ -741,7 +767,7 @@ function buildMotionCartRig(THREE: ThreeModule) {
   );
   cabin.position.set(-0.18 * WORLD_UNITS_PER_METER, 1.72, 0);
   cabin.scale.z = 0.88;
-  carGroup.add(cabin);
+  bodyGroup.add(cabin);
 
   const glass = new THREE.Mesh(
     new THREE.BoxGeometry(2.04 * WORLD_UNITS_PER_METER, 0.54 * WORLD_UNITS_PER_METER, 1.42 * WORLD_UNITS_PER_METER),
@@ -749,7 +775,7 @@ function buildMotionCartRig(THREE: ThreeModule) {
   );
   glass.position.set(-0.12 * WORLD_UNITS_PER_METER, 1.76, 0);
   glass.scale.z = 0.84;
-  carGroup.add(glass);
+  bodyGroup.add(glass);
 
   const accentStrip = new THREE.Mesh(
     new THREE.BoxGeometry(2.36 * WORLD_UNITS_PER_METER, 0.05, 0.08),
@@ -760,11 +786,11 @@ function buildMotionCartRig(THREE: ThreeModule) {
     1.28,
     0.82 * WORLD_UNITS_PER_METER,
   );
-  carGroup.add(accentStrip);
+  bodyGroup.add(accentStrip);
 
   const accentStripMirror = accentStrip.clone();
   accentStripMirror.position.z *= -1;
-  carGroup.add(accentStripMirror);
+  bodyGroup.add(accentStripMirror);
 
   const headLamp = new THREE.Mesh(
     new THREE.BoxGeometry(0.08, 0.18, 0.42),
@@ -775,11 +801,11 @@ function buildMotionCartRig(THREE: ThreeModule) {
     1.08,
     0.62 * WORLD_UNITS_PER_METER,
   );
-  carGroup.add(headLamp);
+  bodyGroup.add(headLamp);
 
   const headLampMirror = headLamp.clone();
   headLampMirror.position.z *= -1;
-  carGroup.add(headLampMirror);
+  bodyGroup.add(headLampMirror);
 
   const wheelXOffsets = [1.39, -1.39] as const;
   const wheelZOffsets = [0.74, -0.74] as const;
@@ -827,7 +853,7 @@ function buildMotionCartRig(THREE: ThreeModule) {
       spokeB.rotation.z = Math.PI / 2;
       wheelRotor.add(spokeB);
 
-      carGroup.add(wheelRotor);
+      bodyGroup.add(wheelRotor);
       wheelRotors.push(wheelRotor);
     });
   });
@@ -844,10 +870,13 @@ function buildMotionCartRig(THREE: ThreeModule) {
   shadow.position.set(-0.14 * WORLD_UNITS_PER_METER, 0.03, 0);
   shadow.scale.set(1.06, 0.7, 1);
   carGroup.add(shadow);
+  carGroup.add(bodyGroup);
 
   return {
     group: carGroup,
+    bodyGroup,
     wheelRotors,
+    shadow,
   };
 }
 
