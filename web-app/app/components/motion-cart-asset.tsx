@@ -22,7 +22,7 @@ type CartAssetManifest = {
 };
 
 type MotionCartAssetProps = {
-  centerX: number;
+  frontX: number;
   wheelBaseY: number;
   scale?: number;
 };
@@ -46,18 +46,12 @@ const colors = sharedCartPreset?.colors ?? FALLBACK_COLORS;
 const CART_WHEEL_CENTERS = [98, 221] as const;
 const CART_WHEEL_RADIUS = 22.5;
 const CART_WHEEL_CENTER_Y = 122.5;
-const CART_AVERAGE_WHEEL_CENTER_X = (CART_WHEEL_CENTERS[0] + CART_WHEEL_CENTERS[1]) / 2;
 const CART_FRONT_EDGE_X = 301;
-const CART_FRONT_OFFSET_FROM_CENTER = CART_FRONT_EDGE_X - CART_AVERAGE_WHEEL_CENTER_X;
 
 export const DEFAULT_MOTION_CART_SCALE = 0.56;
 
-export function getMotionCartFrontOffset(scale = DEFAULT_MOTION_CART_SCALE) {
-  return CART_FRONT_OFFSET_FROM_CENTER * scale;
-}
-
 export function MotionCartAsset({
-  centerX,
+  frontX,
   wheelBaseY,
   scale = DEFAULT_MOTION_CART_SCALE,
 }: MotionCartAssetProps) {
@@ -66,7 +60,7 @@ export function MotionCartAsset({
   const glassGradientId = `${instanceId}-glass`;
   const rimGradientId = `${instanceId}-rim`;
 
-  const translateX = centerX - CART_AVERAGE_WHEEL_CENTER_X * scale;
+  const translateX = frontX - CART_FRONT_EDGE_X * scale;
   const translateY = wheelBaseY - (CART_WHEEL_CENTER_Y + CART_WHEEL_RADIUS) * scale;
 
   return (

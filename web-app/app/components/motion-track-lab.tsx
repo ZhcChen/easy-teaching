@@ -10,7 +10,6 @@ import {
 import {
   DEFAULT_MOTION_CART_SCALE,
   MotionCartAsset,
-  getMotionCartFrontOffset,
 } from "./motion-cart-asset";
 import type { TeachingTopic } from "../data/teaching-catalog";
 
@@ -328,8 +327,13 @@ export function MotionTrackLab({
   const progress = duration === 0 ? 0 : currentTime / duration;
   const velocityArrowLength =
     currentMotion.velocity <= 0 ? 0 : 72 + 110 * (currentMotion.velocity / velocityDomain);
-  const cartFrontX = currentTrackX + getMotionCartFrontOffset(DEFAULT_MOTION_CART_SCALE);
+  const cartFrontX = currentTrackX;
   const showTrackPositionCallout = currentTrackX > SVG_STAGE.panelX + 240;
+  const isTrackPositionNearEnd = currentTrackX > SVG_STAGE.trackRight - 90;
+  const trackPositionCalloutX =
+    isTrackPositionNearEnd ? currentTrackX - 44 : currentTrackX;
+  const trackPositionCalloutAnchor: "middle" | "end" =
+    isTrackPositionNearEnd ? "end" : "middle";
   const motionThemeStyle = {
     "--motion-accent": preset.accent,
     "--motion-accent-soft": preset.accentSoft,
@@ -624,7 +628,7 @@ export function MotionTrackLab({
                 轨道视图
               </text>
               <text x={SVG_STAGE.panelX + 36} y={SVG_STAGE.panelY + 66} className="motion-stage-panel-copy">
-                看秒级采样点间距，就能直观判断速度是否变化。
+                看采样点间距，就能直观判断速度是否变化。
               </text>
 
               {Array.from({ length: TRACK_TICK_COUNT }).map((_, index) => {
@@ -729,16 +733,16 @@ export function MotionTrackLab({
               ) : null}
 
               <MotionCartAsset
-                centerX={currentTrackX}
+                frontX={cartFrontX}
                 wheelBaseY={SVG_STAGE.trackY - 2}
                 scale={DEFAULT_MOTION_CART_SCALE}
               />
 
               {showTrackPositionCallout ? (
                 <text
-                  x={currentTrackX}
+                  x={trackPositionCalloutX}
                   y={SVG_STAGE.trackY - 122}
-                  textAnchor="middle"
+                  textAnchor={trackPositionCalloutAnchor}
                   className="motion-stage-value-callout"
                 >
                   s = {formatNumber(currentMotion.position, 1)} m
