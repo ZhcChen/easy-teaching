@@ -161,11 +161,11 @@ function getTopicTrack(topicId: string, mode: string) {
   }
 
   if (topicId === "basic-force") {
-    return "实验联动 / 受力拆解 / 对比测量";
+    return "受力联动 / 摩擦观察 / 平衡判断";
   }
 
   if (topicId === "circuit-observer") {
-    return "回路切换 / 通断观察 / 结论归纳";
+    return "回路切换 / 亮灭联动 / 规律归纳";
   }
 
   if (mode === "3D") {
