@@ -932,7 +932,7 @@ function createModel3BodyShape(THREE: ThreeModule) {
 
 function createWheelWellPath(THREE: ThreeModule, centerX: number) {
   const path = new THREE.Path();
-  const archRadius = 0.6;
+  const archRadius = 0.52;
   const rockerY = 0.38;
 
   path.moveTo(
