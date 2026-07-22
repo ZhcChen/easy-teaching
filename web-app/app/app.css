@@ -1320,6 +1320,21 @@ a:focus-visible {
   --topic-accent-soft: rgba(43, 183, 255, 0.16);
 }
 
+.topic-tech-card.is-motion {
+  --topic-accent: #2bb7ff;
+  --topic-accent-soft: rgba(43, 183, 255, 0.16);
+}
+
+.topic-tech-card.is-force {
+  --topic-accent: #ff9a4d;
+  --topic-accent-soft: rgba(255, 154, 77, 0.18);
+}
+
+.topic-tech-card.is-circuit {
+  --topic-accent: #6d8cff;
+  --topic-accent-soft: rgba(109, 140, 255, 0.16);
+}
+
 .topic-tech-card.is-3d {
   --topic-accent: #8b5cff;
   --topic-accent-soft: rgba(139, 92, 255, 0.15);

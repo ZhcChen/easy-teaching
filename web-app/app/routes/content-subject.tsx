@@ -93,12 +93,13 @@ export default function ContentSubjectPage({ params }: Route.ComponentProps) {
         <div className="entry-grid entry-grid-topic">
           {subject.topics.map((topic) => {
             const modeClass = getTopicModeClass(topic.mode);
+            const themeClass = getTopicThemeClass(topic.id);
 
             return (
               <Link
                 key={topic.id}
                 to={`/visual/${topic.id}`}
-                className={`entry-card entry-card-topic topic-tech-card ${modeClass}`}
+                className={`entry-card entry-card-topic topic-tech-card ${modeClass} ${themeClass}`}
               >
                 <div className="topic-tech-grid" aria-hidden="true" />
                 <div className="topic-tech-orbits" aria-hidden="true">
@@ -137,7 +138,7 @@ export default function ContentSubjectPage({ params }: Route.ComponentProps) {
                 </ul>
 
                 <div className="topic-tech-footer">
-                  <span className="topic-tech-track">{getTopicTrack(topic.mode)}</span>
+                  <span className="topic-tech-track">{getTopicTrack(topic.id, topic.mode)}</span>
                   <span className="topic-tech-footer-line" aria-hidden="true" />
                 </div>
               </Link>
@@ -161,7 +162,35 @@ function getTopicModeClass(mode: string) {
   return "is-2d";
 }
 
-function getTopicTrack(mode: string) {
+function getTopicThemeClass(topicId: string) {
+  if (topicId === "motion-track") {
+    return "is-motion";
+  }
+
+  if (topicId === "basic-force") {
+    return "is-force";
+  }
+
+  if (topicId === "circuit-observer") {
+    return "is-circuit";
+  }
+
+  return "";
+}
+
+function getTopicTrack(topicId: string, mode: string) {
+  if (topicId === "motion-track") {
+    return "图解联动 / 参数观察 / 逐步讲解";
+  }
+
+  if (topicId === "basic-force") {
+    return "实验联动 / 受力拆解 / 对比测量";
+  }
+
+  if (topicId === "circuit-observer") {
+    return "回路切换 / 通断观察 / 结论归纳";
+  }
+
   if (mode === "3D") {
     return "空间演示 / 旋转观察 / 沉浸查看";
   }
