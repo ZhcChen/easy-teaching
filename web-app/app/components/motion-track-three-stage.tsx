@@ -1087,6 +1087,11 @@ function buildMotionCartRig(THREE: ThreeModule) {
     roughness: 0.8,
     metalness: 0.1,
   });
+  const tireTreadMaterial = new THREE.MeshStandardMaterial({
+    color: 0x515b68,
+    roughness: 0.74,
+    metalness: 0.12,
+  });
   const wheelInnerMaterial = new THREE.MeshStandardMaterial({
     color: 0x1c2430,
     roughness: 0.48,
@@ -1136,6 +1141,11 @@ function buildMotionCartRig(THREE: ThreeModule) {
     color: 0xf1f5fb,
     roughness: 0.24,
     metalness: 0.72,
+  });
+  const centerCapMaterial = new THREE.MeshStandardMaterial({
+    color: 0xc8d0db,
+    roughness: 0.26,
+    metalness: 0.64,
   });
   const rearLampMaterial = new THREE.MeshStandardMaterial({
     color: 0xff8a78,
@@ -1595,6 +1605,8 @@ function buildMotionCartRig(THREE: ThreeModule) {
       const sidewallOffset = toWorldUnits(0.102);
       const rimFaceOffset = wheelSide * toWorldUnits(0.045);
       const lugRingRadius = CAR_WHEEL_RADIUS_WORLD * 0.18;
+      const treadRingRadius = CAR_WHEEL_RADIUS_WORLD * 0.92;
+      const treadRowOffsets = [-toWorldUnits(0.058), 0, toWorldUnits(0.058)];
 
       const tire = new THREE.Mesh(
         new THREE.CylinderGeometry(
@@ -1642,6 +1654,30 @@ function buildMotionCartRig(THREE: ThreeModule) {
       tireShoulderMirror.position.z *= -1;
       wheelRotor.add(tireShoulderMirror);
 
+      treadRowOffsets.forEach((rowOffset, rowIndex) => {
+        for (let treadIndex = 0; treadIndex < 14; treadIndex += 1) {
+          const treadAngle =
+            (Math.PI * 2 * treadIndex) / 14 +
+            (rowIndex === 1 ? Math.PI / 14 : 0) +
+            (rowIndex === 2 ? Math.PI / 28 : 0);
+          const treadBlock = new THREE.Mesh(
+            new THREE.BoxGeometry(
+              toWorldUnits(0.17),
+              toWorldUnits(0.05),
+              toWorldUnits(0.026),
+            ),
+            tireTreadMaterial,
+          );
+          treadBlock.position.set(
+            Math.cos(treadAngle) * treadRingRadius,
+            Math.sin(treadAngle) * treadRingRadius,
+            rowOffset,
+          );
+          treadBlock.rotation.z = treadAngle + Math.PI / 2;
+          wheelRotor.add(treadBlock);
+        }
+      });
+
       const rimBarrel = new THREE.Mesh(
         new THREE.CylinderGeometry(
           CAR_WHEEL_RADIUS_WORLD * 0.74,
@@ -1666,6 +1702,51 @@ function buildMotionCartRig(THREE: ThreeModule) {
       brakeDisc.rotation.x = Math.PI / 2;
       brakeDisc.position.z = -wheelSide * toWorldUnits(0.02);
       wheelRotor.add(brakeDisc);
+
+      const brakeDiscHat = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          CAR_WHEEL_RADIUS_WORLD * 0.24,
+          CAR_WHEEL_RADIUS_WORLD * 0.24,
+          toWorldUnits(0.06),
+          24,
+        ),
+        rimShadowMaterial,
+      );
+      brakeDiscHat.rotation.x = Math.PI / 2;
+      brakeDiscHat.position.z = -wheelSide * toWorldUnits(0.014);
+      wheelRotor.add(brakeDiscHat);
+
+      const brakeDiscRing = new THREE.Mesh(
+        new THREE.TorusGeometry(
+          CAR_WHEEL_RADIUS_WORLD * 0.42,
+          toWorldUnits(0.012),
+          10,
+          28,
+        ),
+        rimShadowMaterial,
+      );
+      brakeDiscRing.rotation.x = Math.PI / 2;
+      brakeDiscRing.position.z = -wheelSide * toWorldUnits(0.056);
+      wheelRotor.add(brakeDiscRing);
+
+      for (let slotIndex = 0; slotIndex < 6; slotIndex += 1) {
+        const slotAngle = (Math.PI * 2 * slotIndex) / 6 + 0.18;
+        const brakeSlot = new THREE.Mesh(
+          new THREE.BoxGeometry(
+            toWorldUnits(0.1),
+            toWorldUnits(0.022),
+            toWorldUnits(0.018),
+          ),
+          wheelInnerMaterial,
+        );
+        brakeSlot.position.set(
+          Math.cos(slotAngle) * CAR_WHEEL_RADIUS_WORLD * 0.34,
+          Math.sin(slotAngle) * CAR_WHEEL_RADIUS_WORLD * 0.34,
+          -wheelSide * toWorldUnits(0.058),
+        );
+        brakeSlot.rotation.z = slotAngle + 0.44;
+        wheelRotor.add(brakeSlot);
+      }
 
       const rim = new THREE.Mesh(
         new THREE.CylinderGeometry(
@@ -1788,6 +1869,19 @@ function buildMotionCartRig(THREE: ThreeModule) {
       hub.rotation.x = Math.PI / 2;
       hub.position.z = rimFaceOffset + wheelSide * toWorldUnits(0.072);
       wheelRotor.add(hub);
+
+      const centerCap = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          CAR_WHEEL_RADIUS_WORLD * 0.1,
+          CAR_WHEEL_RADIUS_WORLD * 0.1,
+          toWorldUnits(0.036),
+          18,
+        ),
+        centerCapMaterial,
+      );
+      centerCap.rotation.x = Math.PI / 2;
+      centerCap.position.z = rimFaceOffset + wheelSide * toWorldUnits(0.094);
+      wheelRotor.add(centerCap);
 
       const brakeCaliper = new THREE.Mesh(
         new THREE.BoxGeometry(
