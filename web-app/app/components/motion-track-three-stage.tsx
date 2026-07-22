@@ -427,7 +427,7 @@ export function MotionTrackThreeStage({
         const bodyPitch =
           clamp(accelerationBias * 0.042 + accelerationKick * 0.022, -0.082, 0.068);
         const bodyFloat =
-          0.146 + Math.abs(accelerationKick) * 0.042 + speedRatio * 0.014;
+          0.132 + Math.abs(accelerationKick) * 0.042 + speedRatio * 0.014;
         carRig.bodyGroup.rotation.z +=
           (bodyPitch - carRig.bodyGroup.rotation.z) * 0.12;
         carRig.bodyGroup.position.y +=
