@@ -2306,7 +2306,8 @@ a:focus-visible {
   margin-top: calc((var(--range-track-height) - var(--range-thumb-size)) / 2);
   border: 1px solid color-mix(in srgb, var(--brand) 24%, rgba(255, 255, 255, 0.8));
   border-radius: 999px;
-  background: linear-gradient(180deg, #ffffff 0%, color-mix(in srgb, var(--brand-soft) 40%, #f6f9ff) 100%);
+  background: #ffffff;
+  opacity: 1;
   box-shadow:
     0 4px 10px rgba(23, 105, 255, 0.18),
     0 1px 2px rgba(12, 20, 32, 0.16);
@@ -2334,7 +2335,8 @@ a:focus-visible {
   height: var(--range-thumb-size);
   border: 1px solid color-mix(in srgb, var(--brand) 24%, rgba(255, 255, 255, 0.8));
   border-radius: 999px;
-  background: linear-gradient(180deg, #ffffff 0%, color-mix(in srgb, var(--brand-soft) 40%, #f6f9ff) 100%);
+  background: #ffffff;
+  opacity: 1;
   box-shadow:
     0 4px 10px rgba(23, 105, 255, 0.18),
     0 1px 2px rgba(12, 20, 32, 0.16);
@@ -3736,7 +3738,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
 }
 
 .motion-range-stack .force-range-input {
-  --range-track-height: 2px;
+  --range-track-height: 3px;
   --range-thumb-size: 14px;
 }
 
