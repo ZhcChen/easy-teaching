@@ -515,7 +515,6 @@ export function MotionTrackLab({
                   onClick: () => applyPreset(item.mode),
                 }))}
                 columns={3}
-                compact
               />
             </ControlPanelSection>
 
