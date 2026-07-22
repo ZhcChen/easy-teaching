@@ -46,6 +46,12 @@ const DEFAULT_CAMERA_ZOOM_RATIO = 1.28;
 const MIN_CAMERA_ZOOM_RATIO = 0.82;
 const MAX_CAMERA_ZOOM_RATIO = 1.92;
 const CAMERA_WHEEL_STEP = 0.0012;
+const CAMERA_DRAG_ROTATION_STEP = 0.0052;
+const CAMERA_ORBIT_DAMPING = 0.14;
+const MIN_CAMERA_PITCH_OFFSET = -0.26;
+const MAX_CAMERA_PITCH_OFFSET = 0.34;
+const MIN_CAMERA_ELEVATION = -0.06;
+const MAX_CAMERA_ELEVATION = 0.78;
 
 export function MotionTrackThreeStage({
   currentMotion,
@@ -63,6 +69,16 @@ export function MotionTrackThreeStage({
     accelerationBias: 0,
     accelerationKick: 0,
     roll: 0,
+  });
+  const cameraOrbitRef = useRef({
+    yawOffset: 0,
+    pitchOffset: 0,
+    targetYawOffset: 0,
+    targetPitchOffset: 0,
+    isDragging: false,
+    pointerId: -1,
+    lastPointerX: 0,
+    lastPointerY: 0,
   });
   const motionStateRef = useRef<MotionStateRef>({
     position: currentMotion.position,
@@ -109,6 +125,67 @@ export function MotionTrackThreeStage({
         MIN_CAMERA_ZOOM_RATIO,
         MAX_CAMERA_ZOOM_RATIO,
       );
+    }
+
+    function stopDragging() {
+      const orbitState = cameraOrbitRef.current;
+      orbitState.isDragging = false;
+      orbitState.pointerId = -1;
+      if (hostElement) {
+        hostElement.classList.remove("is-dragging");
+      }
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      if (event.button !== 0 || !hostElement) {
+        return;
+      }
+
+      event.preventDefault();
+      const orbitState = cameraOrbitRef.current;
+      orbitState.isDragging = true;
+      orbitState.pointerId = event.pointerId;
+      orbitState.lastPointerX = event.clientX;
+      orbitState.lastPointerY = event.clientY;
+      hostElement.classList.add("is-dragging");
+      hostElement.setPointerCapture(event.pointerId);
+    }
+
+    function handlePointerMove(event: PointerEvent) {
+      const orbitState = cameraOrbitRef.current;
+      if (!orbitState.isDragging || orbitState.pointerId !== event.pointerId) {
+        return;
+      }
+
+      event.preventDefault();
+      const deltaX = event.clientX - orbitState.lastPointerX;
+      const deltaY = event.clientY - orbitState.lastPointerY;
+
+      orbitState.lastPointerX = event.clientX;
+      orbitState.lastPointerY = event.clientY;
+      orbitState.targetYawOffset -= deltaX * CAMERA_DRAG_ROTATION_STEP;
+      orbitState.targetPitchOffset = clamp(
+        orbitState.targetPitchOffset - deltaY * CAMERA_DRAG_ROTATION_STEP,
+        MIN_CAMERA_PITCH_OFFSET,
+        MAX_CAMERA_PITCH_OFFSET,
+      );
+    }
+
+    function handlePointerUp(event: PointerEvent) {
+      if (!hostElement) {
+        return;
+      }
+
+      const orbitState = cameraOrbitRef.current;
+      if (orbitState.pointerId !== event.pointerId) {
+        return;
+      }
+
+      if (hostElement.hasPointerCapture(event.pointerId)) {
+        hostElement.releasePointerCapture(event.pointerId);
+      }
+
+      stopDragging();
     }
 
     async function setupScene() {
@@ -212,8 +289,15 @@ export function MotionTrackThreeStage({
       scene.add(accelerationArrow);
 
       const lookAtTarget = new THREE.Vector3(0, 1.35, 0);
+      const desiredCameraPosition = new THREE.Vector3();
+      const orbitOffset = new THREE.Vector3();
 
       hostElement.addEventListener("wheel", handleWheel, { passive: false });
+      hostElement.addEventListener("pointerdown", handlePointerDown);
+      hostElement.addEventListener("pointermove", handlePointerMove);
+      hostElement.addEventListener("pointerup", handlePointerUp);
+      hostElement.addEventListener("pointercancel", handlePointerUp);
+      hostElement.addEventListener("lostpointercapture", stopDragging);
 
       function resizeRendererToDisplaySize() {
         if (!hostElement) {
@@ -367,29 +451,68 @@ export function MotionTrackThreeStage({
           (desiredRearLampIntensity - carRig.rearLampMaterial.emissiveIntensity) * 0.18;
         carRig.rearLampMaterial.opacity =
           state.acceleration < -0.02 ? 1 : 0.92;
+        const orbitState = cameraOrbitRef.current;
+        orbitState.yawOffset +=
+          (orbitState.targetYawOffset - orbitState.yawOffset) * CAMERA_ORBIT_DAMPING;
+        orbitState.pitchOffset +=
+          (orbitState.targetPitchOffset - orbitState.pitchOffset) *
+          CAMERA_ORBIT_DAMPING;
         const zoomRatio = cameraZoomRef.current;
-        const desiredCameraX =
-          carCenterX -
-          (11.4 * zoomRatio +
-            speedRatio * 2.85 +
-            clamp(accelerationBias * 0.46, -0.46, 0.46));
         const desiredCameraY =
           5.35 +
           (zoomRatio - 1) * 2.25 +
           clamp(accelerationMagnitude * 0.12, 0, 0.45) -
           accelerationBias * 0.3 +
           Math.abs(accelerationKick) * 0.08;
-        const desiredCameraZ =
+        const desiredCameraSideOffset =
           12.4 * zoomRatio + speedRatio * 1.4 + Math.abs(accelerationBias) * 0.42;
-        camera.position.x += (desiredCameraX - camera.position.x) * 0.08;
-        camera.position.y += (desiredCameraY - camera.position.y) * 0.08;
-        camera.position.z += (desiredCameraZ - camera.position.z) * 0.08;
-
         const desiredLookAhead = 5.8 + speedRatio * 2.2 + accelerationBias * 0.34;
         const desiredLookAtY =
           1.34 + accelerationBias * 0.24 - Math.abs(accelerationKick) * 0.05;
         lookAtTarget.x += (carCenterX + desiredLookAhead - lookAtTarget.x) * 0.11;
         lookAtTarget.y += (desiredLookAtY - lookAtTarget.y) * 0.11;
+
+        const desiredRearOffset =
+          11.4 * zoomRatio +
+          speedRatio * 2.85 +
+          clamp(accelerationBias * 0.46, -0.46, 0.46) +
+          desiredLookAhead;
+        const baseCameraOffsetX = -desiredRearOffset;
+        const baseCameraOffsetY = desiredCameraY - desiredLookAtY;
+        const baseCameraElevation = Math.atan2(
+          baseCameraOffsetY,
+          Math.hypot(baseCameraOffsetX, desiredCameraSideOffset),
+        );
+        const baseCameraAzimuth = Math.atan2(
+          desiredCameraSideOffset,
+          baseCameraOffsetX,
+        );
+        const cameraRadius = Math.hypot(
+          baseCameraOffsetX,
+          baseCameraOffsetY,
+          desiredCameraSideOffset,
+        );
+        const orbitElevation = clamp(
+          baseCameraElevation + orbitState.pitchOffset,
+          MIN_CAMERA_ELEVATION,
+          MAX_CAMERA_ELEVATION,
+        );
+        const orbitAzimuth = baseCameraAzimuth + orbitState.yawOffset;
+        const orbitHorizontalRadius = Math.cos(orbitElevation) * cameraRadius;
+
+        orbitOffset.set(
+          Math.cos(orbitAzimuth) * orbitHorizontalRadius,
+          Math.sin(orbitElevation) * cameraRadius,
+          Math.sin(orbitAzimuth) * orbitHorizontalRadius,
+        );
+        desiredCameraPosition.copy(lookAtTarget).add(orbitOffset);
+        camera.position.x +=
+          (desiredCameraPosition.x - camera.position.x) * 0.08;
+        camera.position.y +=
+          (desiredCameraPosition.y - camera.position.y) * 0.08;
+        camera.position.z +=
+          (desiredCameraPosition.z - camera.position.z) * 0.08;
+
         camera.up.set(cameraDynamicsRef.current.roll, 1, 0).normalize();
         const desiredFov = 38 + speedRatio * 2.6 + Math.abs(accelerationBias) * 1.2;
         camera.fov += (desiredFov - camera.fov) * 0.08;
@@ -411,6 +534,12 @@ export function MotionTrackThreeStage({
 
       if (hostElement) {
         hostElement.removeEventListener("wheel", handleWheel);
+        hostElement.removeEventListener("pointerdown", handlePointerDown);
+        hostElement.removeEventListener("pointermove", handlePointerMove);
+        hostElement.removeEventListener("pointerup", handlePointerUp);
+        hostElement.removeEventListener("pointercancel", handlePointerUp);
+        hostElement.removeEventListener("lostpointercapture", stopDragging);
+        hostElement.classList.remove("is-dragging");
       }
 
       if (rendererInstance) {
