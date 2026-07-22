@@ -1362,13 +1362,17 @@ function buildMotionCartRig(THREE: ThreeModule) {
 
   const sideSkirt = new THREE.Mesh(
     new THREE.BoxGeometry(
-      toWorldUnits(1.72),
-      toWorldUnits(0.08),
-      toWorldUnits(0.08),
+      toWorldUnits(1.58),
+      toWorldUnits(0.06),
+      toWorldUnits(0.03),
     ),
     darkTrimMaterial,
   );
-  sideSkirt.position.set(toWorldUnits(-0.04), toWorldUnits(0.42), toWorldUnits(0.92));
+  sideSkirt.position.set(
+    toWorldUnits(-0.04),
+    toWorldUnits(0.44),
+    toWorldUnits(CAR_BODY_WIDTH_M / 2 - 0.03),
+  );
   bodyGroup.add(sideSkirt);
 
   const sideSkirtMirror = sideSkirt.clone();
