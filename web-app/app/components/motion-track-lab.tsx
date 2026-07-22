@@ -474,7 +474,7 @@ export function MotionTrackLab({
                   重播
                 </ControlButton>
                 <ControlButton size="compact" onClick={resetDefaults}>
-                  默认
+                  重置
                 </ControlButton>
               </div>
 
