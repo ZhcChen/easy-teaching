@@ -46,6 +46,8 @@ const CAR_CABIN_WIDTH_M = 1.38;
 const CAR_GLASS_WIDTH_M = 1.06;
 const CAR_WHEEL_X_OFFSETS_M = [1.44, -1.44] as const;
 const CAR_WHEEL_Z_OFFSETS_M = [0.845, -0.845] as const;
+const VISUAL_TRACK_START_WORLD = 0;
+const VISUAL_TRACK_END_WORLD = TRACK_LENGTH_WORLD - 8;
 const DEFAULT_CAMERA_ZOOM_RATIO = 1.28;
 const MIN_CAMERA_ZOOM_RATIO = 0.82;
 const MAX_CAMERA_ZOOM_RATIO = 1.92;
@@ -334,11 +336,13 @@ export function MotionTrackThreeStage({
         resizeRendererToDisplaySize();
 
         const state = motionStateRef.current;
-        const carFrontX = clamp(
-          state.position * WORLD_UNITS_PER_METER,
-          0,
-          TRACK_LENGTH_WORLD - 8,
-        );
+        const trackProgress =
+          state.distanceDomain <= 0
+            ? 0
+            : clamp(state.position / state.distanceDomain, 0, 1);
+        const carFrontX =
+          VISUAL_TRACK_START_WORLD +
+          (VISUAL_TRACK_END_WORLD - VISUAL_TRACK_START_WORLD) * trackProgress;
         const carCenterX = carFrontX - CAR_FRONT_OFFSET_WORLD;
         const wheelAngle = state.position / CAR_WHEEL_RADIUS_M;
 
@@ -347,11 +351,7 @@ export function MotionTrackThreeStage({
           wheelRotor.rotation.z = -wheelAngle;
         });
 
-        const finishX = clamp(
-          state.distanceDomain * WORLD_UNITS_PER_METER,
-          8,
-          TRACK_LENGTH_WORLD - 4,
-        );
+        const finishX = TRACK_LENGTH_WORLD - 4;
         finishGate.position.x = finishX;
 
         trailLine.visible = state.showTrail && carFrontX > 0.04;
