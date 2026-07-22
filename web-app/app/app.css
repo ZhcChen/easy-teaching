@@ -3599,12 +3599,28 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
 .motion-lab-layout {
   grid-template-columns: minmax(0, 304px) minmax(0, 1fr);
+  transition: grid-template-columns 0.28s cubic-bezier(0.22, 1, 0.36, 1), gap 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.motion-lab-layout.is-collapsed {
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
 }
 
 .motion-control-panel {
   gap: 12px;
   padding: 14px;
   border-radius: 20px;
+}
+
+.motion-control-panel.is-collapsed {
+  width: 44px;
+  max-width: 44px;
+  gap: 0;
+}
+
+.motion-control-panel.is-collapsed .force-panel-collapsed-shell {
+  width: 44px;
 }
 
 .motion-control-scroll {
@@ -4766,7 +4782,8 @@ html[data-theme="dark"] .force-state-pill.is-active {
     grid-template-columns: 1fr;
   }
 
-  .motion-lab-layout {
+  .motion-lab-layout,
+  .motion-lab-layout.is-collapsed {
     grid-template-columns: 1fr;
   }
 
