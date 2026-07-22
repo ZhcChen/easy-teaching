@@ -1810,50 +1810,6 @@ function buildMotionCartRig(THREE: ThreeModule) {
     });
   });
 
-  CAR_WHEEL_X_OFFSETS_M.forEach((wheelX) => {
-    const leftFenderFlare = new THREE.Mesh(
-      new THREE.TorusGeometry(
-        toWorldUnits(0.49),
-        toWorldUnits(0.045),
-        10,
-        28,
-        Math.PI,
-      ),
-      bodyHighlightMaterial,
-    );
-    leftFenderFlare.position.set(
-      toWorldUnits(wheelX),
-      toWorldUnits(0.38),
-      toWorldUnits(CAR_BODY_WIDTH_M / 2 - 0.05),
-    );
-    bodyGroup.add(leftFenderFlare);
-
-    const rightFenderFlare = leftFenderFlare.clone();
-    rightFenderFlare.position.z *= -1;
-    bodyGroup.add(rightFenderFlare);
-
-    const leftArchTrim = new THREE.Mesh(
-      new THREE.TorusGeometry(
-        toWorldUnits(0.47),
-        toWorldUnits(0.018),
-        10,
-        28,
-        Math.PI,
-      ),
-      trimMaterial,
-    );
-    leftArchTrim.position.set(
-      toWorldUnits(wheelX),
-      toWorldUnits(0.38),
-      toWorldUnits(CAR_BODY_WIDTH_M / 2 - 0.02),
-    );
-    bodyGroup.add(leftArchTrim);
-
-    const rightArchTrim = leftArchTrim.clone();
-    rightArchTrim.position.z *= -1;
-    bodyGroup.add(rightArchTrim);
-  });
-
   const shadow = new THREE.Mesh(
     new THREE.CircleGeometry(toWorldUnits(2.6), 40),
     new THREE.MeshBasicMaterial({
