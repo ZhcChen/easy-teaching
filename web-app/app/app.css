@@ -1679,41 +1679,80 @@ a:focus-visible {
   display: inline-flex;
   flex-direction: column;
   gap: 8px;
-  padding: 8px;
+  padding: 10px;
   border: 1px solid rgba(138, 190, 255, 0.14);
-  border-radius: 18px;
-  background: rgba(7, 17, 31, 0.54);
-  box-shadow: 0 18px 36px rgba(3, 8, 18, 0.18);
-  backdrop-filter: blur(14px);
+  border-radius: 20px;
+  background: rgba(7, 17, 31, 0.56);
+  box-shadow:
+    0 18px 36px rgba(3, 8, 18, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+}
+
+.visual-mode-caption {
+  color: color-mix(in srgb, var(--canvas-copy) 84%, white);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.visual-mode-track {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: repeat(var(--switch-count, 2), minmax(0, 1fr));
+  align-items: stretch;
+  min-width: 132px;
+  padding: 4px;
+  border: 1px solid rgba(138, 190, 255, 0.1);
+  border-radius: 15px;
+  background: rgba(7, 17, 31, 0.42);
+}
+
+.visual-mode-thumb {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 8px) / var(--switch-count, 2));
+  border-radius: 11px;
+  background:
+    linear-gradient(180deg, rgba(103, 198, 255, 0.34) 0%, rgba(93, 226, 177, 0.22) 100%);
+  box-shadow:
+    0 10px 20px rgba(18, 54, 110, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transform: translateX(calc(var(--switch-active-index, 0) * 100%));
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .visual-mode-button {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 56px;
-  min-height: 44px;
-  padding: 0 14px;
-  border: 1px solid transparent;
-  border-radius: 14px;
+  min-height: 38px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 11px;
   background: transparent;
   color: var(--canvas-copy);
   cursor: pointer;
   transition:
-    transform 160ms ease,
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease;
+    color 180ms ease,
+    transform 180ms ease,
+    opacity 180ms ease;
 }
 
 .visual-mode-button:hover {
-  transform: translateX(1px);
   color: var(--canvas-text);
+  transform: translateY(-1px);
 }
 
 .visual-mode-button.is-active {
-  border-color: rgba(138, 190, 255, 0.24);
-  background: linear-gradient(180deg, rgba(103, 198, 255, 0.28) 0%, rgba(93, 226, 177, 0.2) 100%);
   color: var(--canvas-text);
 }
 
@@ -4054,8 +4093,8 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
 .motion-stage-overlay.is-top-left {
   top: 24px;
-  left: 108px;
-  max-width: min(360px, calc(100% - 180px));
+  left: 188px;
+  max-width: min(360px, calc(100% - 260px));
 }
 
 .motion-stage-overlay.is-bottom-bar {
@@ -4244,10 +4283,10 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
 .motion-stage-view-switch {
   position: absolute;
-  top: 50%;
+  top: 20px;
   left: 20px;
   z-index: 3;
-  transform: translateY(-50%);
+  transform: none;
 }
 
 .motion-stage-summary-label {
@@ -4854,7 +4893,11 @@ html[data-theme="dark"] .force-state-pill.is-active {
   }
 
   .motion-stage-view-switch .visual-mode-switch {
-    flex-direction: row;
+    gap: 6px;
+  }
+
+  .motion-stage-view-switch .visual-mode-track {
+    min-width: 120px;
   }
 
   .force-stage-overlay,
