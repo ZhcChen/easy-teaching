@@ -525,8 +525,8 @@ export function MotionTrackLab({
                 label="初速度"
                 unit="m/s"
                 min={0.4}
-                max={6}
-                step={0.1}
+                max={60}
+                step={0.5}
                 value={initialVelocity}
                 className="motion-range-stack"
                 editable
@@ -552,8 +552,8 @@ export function MotionTrackLab({
                 label="演示时长"
                 unit="s"
                 min={4}
-                max={12}
-                step={0.5}
+                max={99}
+                step={1}
                 value={duration}
                 className="motion-range-stack"
                 editable
