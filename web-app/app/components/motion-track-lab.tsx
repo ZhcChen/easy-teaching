@@ -129,6 +129,7 @@ const DEFAULT_VIEW_OPTIONS: Record<ViewOptionKey, boolean> = {
 };
 
 const MOTION_VIEW_STORAGE_KEY = "easy-teaching.motion-track.view-mode";
+const MOTION_PANEL_COLLAPSED_STORAGE_KEY = "easy-teaching.motion-track.panel-collapsed";
 const MOTION_VIEW_OPTIONS: Array<{
   key: MotionViewMode;
   label: string;
@@ -173,6 +174,8 @@ export function MotionTrackLab({
 }: MotionTrackLabProps) {
   const [mode, setMode] = useState<MotionMode>("uniform");
   const [viewMode, setViewMode] = useState<MotionViewMode>(readStoredMotionViewMode);
+  const [isControlPanelCollapsed, setIsControlPanelCollapsed] =
+    useState(readStoredMotionPanelCollapsed);
   const [initialVelocity, setInitialVelocity] = useState(MOTION_PRESETS.uniform.initialVelocity);
   const [acceleration, setAcceleration] = useState(MOTION_PRESETS.uniform.acceleration);
   const [duration, setDuration] = useState(MOTION_PRESETS.uniform.duration);
@@ -227,6 +230,17 @@ export function MotionTrackLab({
 
     window.localStorage.setItem(MOTION_VIEW_STORAGE_KEY, viewMode);
   }, [viewMode]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem(
+      MOTION_PANEL_COLLAPSED_STORAGE_KEY,
+      isControlPanelCollapsed ? "1" : "0",
+    );
+  }, [isControlPanelCollapsed]);
 
   const motionSeries = useMemo(
     () =>
@@ -403,11 +417,6 @@ export function MotionTrackLab({
     setViewOptions(DEFAULT_VIEW_OPTIONS);
   }
 
-  function restartPlayback() {
-    setCurrentTime(0);
-    setIsPlaying(true);
-  }
-
   function updateVelocity(value: number) {
     setInitialVelocity(value);
     setIsPlaying(false);
@@ -433,183 +442,211 @@ export function MotionTrackLab({
 
   return (
     <section ref={fullscreenRef} className="visual-shell force-lab-shell motion-lab-shell" style={motionThemeStyle}>
-      <div className="force-lab-layout motion-lab-layout">
-        <aside className="force-control-panel motion-control-panel">
-          <div className="force-control-header">
-            <div className="force-control-title-block">
-              <h4 className="force-control-title">参数控制</h4>
+      <div className={isControlPanelCollapsed ? "force-lab-layout motion-lab-layout is-collapsed" : "force-lab-layout motion-lab-layout"}>
+        <aside
+          className={
+            isControlPanelCollapsed
+              ? "force-control-panel motion-control-panel is-collapsed"
+              : "force-control-panel motion-control-panel"
+          }
+        >
+          {isControlPanelCollapsed ? (
+            <div className="force-panel-collapsed-shell">
+              <button
+                type="button"
+                className="force-panel-toggle is-collapsed-only"
+                onClick={() => setIsControlPanelCollapsed(false)}
+                aria-label="展开参数控制面板"
+                title="展开参数控制面板"
+              >
+                <PanelChevronIcon collapsed />
+              </button>
             </div>
-          </div>
-
-          <div className="force-control-scroll motion-control-scroll">
-            <ControlPanelSection title="实验控制" accent className="motion-panel-section">
-              <ControlStatusBar
-                className="motion-panel-toolbar"
-                itemsClassName="motion-toolbar-status"
-                items={[
-                  <StatusPill key="mode">{preset.label}</StatusPill>,
-                  <StatusPill key="duration">总时长 {formatNumber(duration, 1)} s</StatusPill>,
-                ]}
-                status={
-                  <StatusPill tone={summary.stateTone}>{summary.stateLabel}</StatusPill>
-                }
-              />
-
-              <div className="motion-action-row">
-                <ControlButton
-                  variant="primary"
-                  size="compact"
-                  onClick={() => {
-                    if (isPlaying) {
-                      pausePlayback();
-                      return;
-                    }
-
-                    startPlayback();
-                  }}
+          ) : (
+            <>
+              <div className="force-control-header">
+                <div className="force-control-title-block">
+                  <h4 className="force-control-title">参数控制</h4>
+                </div>
+                <button
+                  type="button"
+                  className="force-panel-toggle"
+                  onClick={() => setIsControlPanelCollapsed(true)}
+                  aria-label="收起参数控制面板"
+                  title="收起参数控制面板"
                 >
-                  {primaryActionLabel}
-                </ControlButton>
-                <ControlButton size="compact" onClick={restartPlayback}>
-                  重播
-                </ControlButton>
-                <ControlButton size="compact" onClick={resetDefaults}>
-                  重置
-                </ControlButton>
+                  <PanelChevronIcon collapsed={false} />
+                </button>
               </div>
 
-              <ControlRange
-                id="motion-track-time"
-                label="时间轴"
-                unit="s"
-                min={0}
-                max={duration}
-                step={0.05}
-                value={Math.min(currentTime, duration)}
-                className="motion-range-stack"
-                onChange={(value) => {
-                  setCurrentTime(value);
-                  setIsPlaying(false);
-                }}
-              />
+              <div className="force-control-scroll motion-control-scroll">
+                <ControlPanelSection title="实验控制" accent className="motion-panel-section">
+                  <ControlStatusBar
+                    className="motion-panel-toolbar"
+                    itemsClassName="motion-toolbar-status"
+                    items={[
+                      <StatusPill key="mode">{preset.label}</StatusPill>,
+                      <StatusPill key="duration">总时长 {formatNumber(duration, 1)} s</StatusPill>,
+                    ]}
+                    status={
+                      <StatusPill tone={summary.stateTone}>{summary.stateLabel}</StatusPill>
+                    }
+                  />
 
-              <ControlChipGroup
-                items={PLAYBACK_RATES.map((rate) => ({
-                  key: `${rate}`,
-                  label: rate === 1 ? "1x" : `${rate}x`,
-                  active: playbackRate === rate,
-                  onClick: () => setPlaybackRate(rate),
-                }))}
-                columns={3}
-              />
-            </ControlPanelSection>
+                  <div className="motion-action-row">
+                    <ControlButton
+                      variant="primary"
+                      size="compact"
+                      onClick={() => {
+                        if (isPlaying) {
+                          pausePlayback();
+                          return;
+                        }
 
-            <ControlPanelSection title="运动模式" className="motion-panel-section">
-              <ControlChipGroup
-                items={Object.values(MOTION_PRESETS).map((item) => ({
-                  key: item.mode,
-                  label: item.badge,
-                  active: mode === item.mode,
-                  ariaLabel: item.label,
-                  title: item.description,
-                  onClick: () => applyPreset(item.mode),
-                }))}
-                columns={3}
-              />
-            </ControlPanelSection>
+                        startPlayback();
+                      }}
+                    >
+                      {primaryActionLabel}
+                    </ControlButton>
+                    <ControlButton size="compact" onClick={resetDefaults}>
+                      重置
+                    </ControlButton>
+                  </div>
 
-            <ControlPanelSection title="核心参数" className="motion-panel-section">
-              <ControlRange
-                id="motion-track-v0"
-                label="初速度"
-                unit="m/s"
-                min={0.4}
-                max={60}
-                step={0.2}
-                value={initialVelocity}
-                className="motion-range-stack"
-                editable
-                onChange={updateVelocity}
-              />
+                  <ControlRange
+                    id="motion-track-time"
+                    label="时间轴"
+                    unit="s"
+                    min={0}
+                    max={duration}
+                    step={0.05}
+                    value={Math.min(currentTime, duration)}
+                    className="motion-range-stack"
+                    onChange={(value) => {
+                      setCurrentTime(value);
+                      setIsPlaying(false);
+                    }}
+                  />
 
-              <ControlRange
-                id="motion-track-acceleration"
-                label={mode === "braking" ? "加速度（负）" : "加速度"}
-                unit="m/s²"
-                min={mode === "braking" ? -2.2 : mode === "uniform" ? 0 : 0.2}
-                max={mode === "braking" ? -0.2 : mode === "uniform" ? 0 : 1.8}
-                step={mode === "uniform" ? 1 : 0.05}
-                value={mode === "uniform" ? 0 : acceleration}
-                disabled={mode === "uniform"}
-                className="motion-range-stack"
-                editable
-                onChange={updateAcceleration}
-              />
+                  <ControlChipGroup
+                    items={PLAYBACK_RATES.map((rate) => ({
+                      key: `${rate}`,
+                      label: rate === 1 ? "1x" : `${rate}x`,
+                      active: playbackRate === rate,
+                      onClick: () => setPlaybackRate(rate),
+                    }))}
+                    columns={3}
+                  />
+                </ControlPanelSection>
 
-              <ControlRange
-                id="motion-track-duration"
-                label="演示时长"
-                unit="s"
-                min={4}
-                max={100}
-                step={1}
-                value={duration}
-                className="motion-range-stack"
-                editable
-                onChange={updateDuration}
-              />
-            </ControlPanelSection>
+                <ControlPanelSection title="运动模式" className="motion-panel-section">
+                  <ControlChipGroup
+                    items={Object.values(MOTION_PRESETS).map((item) => ({
+                      key: item.mode,
+                      label: item.badge,
+                      active: mode === item.mode,
+                      ariaLabel: item.label,
+                      title: item.description,
+                      onClick: () => applyPreset(item.mode),
+                    }))}
+                    columns={3}
+                  />
+                </ControlPanelSection>
 
-            <ControlPanelSection title="显示项" className="motion-panel-section">
-              <ControlChipGroup
-                items={
-                  viewMode === "2d"
-                    ? [
-                        {
-                          key: "trail",
-                          label: "位移拖尾",
-                          active: viewOptions.showTrail,
-                          onClick: () => toggleView("showTrail"),
-                        },
-                        {
-                          key: "samples",
-                          label: "秒级采样点",
-                          active: viewOptions.showSamples,
-                          onClick: () => toggleView("showSamples"),
-                        },
-                        {
-                          key: "velocity-curve",
-                          label: "速度曲线",
-                          active: viewOptions.showVelocityCurve,
-                          onClick: () => toggleView("showVelocityCurve"),
-                        },
-                      ]
-                    : [
-                        {
-                          key: "trail",
-                          label: "运动拖尾",
-                          active: viewOptions.showTrail,
-                          onClick: () => toggleView("showTrail"),
-                        },
-                        {
-                          key: "velocity-arrow",
-                          label: "速度箭头",
-                          active: viewOptions.showVelocityArrow,
-                          onClick: () => toggleView("showVelocityArrow"),
-                        },
-                        {
-                          key: "acceleration-arrow",
-                          label:
-                            acceleration < 0 ? "减速度箭头" : "加速度箭头",
-                          active: viewOptions.showAccelerationArrow,
-                          onClick: () => toggleView("showAccelerationArrow"),
-                        },
-                      ]
-                }
-                columns={2}
-              />
-            </ControlPanelSection>
-          </div>
+                <ControlPanelSection title="核心参数" className="motion-panel-section">
+                  <ControlRange
+                    id="motion-track-v0"
+                    label="初速度"
+                    unit="m/s"
+                    min={0.4}
+                    max={60}
+                    step={0.2}
+                    value={initialVelocity}
+                    className="motion-range-stack"
+                    editable
+                    onChange={updateVelocity}
+                  />
+
+                  <ControlRange
+                    id="motion-track-acceleration"
+                    label={mode === "braking" ? "加速度（负）" : "加速度"}
+                    unit="m/s²"
+                    min={mode === "braking" ? -2.2 : mode === "uniform" ? 0 : 0.2}
+                    max={mode === "braking" ? -0.2 : mode === "uniform" ? 0 : 1.8}
+                    step={mode === "uniform" ? 1 : 0.05}
+                    value={mode === "uniform" ? 0 : acceleration}
+                    disabled={mode === "uniform"}
+                    className="motion-range-stack"
+                    editable
+                    onChange={updateAcceleration}
+                  />
+
+                  <ControlRange
+                    id="motion-track-duration"
+                    label="演示时长"
+                    unit="s"
+                    min={4}
+                    max={100}
+                    step={1}
+                    value={duration}
+                    className="motion-range-stack"
+                    editable
+                    onChange={updateDuration}
+                  />
+                </ControlPanelSection>
+
+                <ControlPanelSection title="显示项" className="motion-panel-section">
+                  <ControlChipGroup
+                    items={
+                      viewMode === "2d"
+                        ? [
+                            {
+                              key: "trail",
+                              label: "位移拖尾",
+                              active: viewOptions.showTrail,
+                              onClick: () => toggleView("showTrail"),
+                            },
+                            {
+                              key: "samples",
+                              label: "秒级采样点",
+                              active: viewOptions.showSamples,
+                              onClick: () => toggleView("showSamples"),
+                            },
+                            {
+                              key: "velocity-curve",
+                              label: "速度曲线",
+                              active: viewOptions.showVelocityCurve,
+                              onClick: () => toggleView("showVelocityCurve"),
+                            },
+                          ]
+                        : [
+                            {
+                              key: "trail",
+                              label: "运动拖尾",
+                              active: viewOptions.showTrail,
+                              onClick: () => toggleView("showTrail"),
+                            },
+                            {
+                              key: "velocity-arrow",
+                              label: "速度箭头",
+                              active: viewOptions.showVelocityArrow,
+                              onClick: () => toggleView("showVelocityArrow"),
+                            },
+                            {
+                              key: "acceleration-arrow",
+                              label:
+                                acceleration < 0 ? "减速度箭头" : "加速度箭头",
+                              active: viewOptions.showAccelerationArrow,
+                              onClick: () => toggleView("showAccelerationArrow"),
+                            },
+                          ]
+                    }
+                    columns={2}
+                  />
+                </ControlPanelSection>
+              </div>
+            </>
+          )}
         </aside>
 
         <div className="force-lab-main motion-lab-main">
@@ -1119,6 +1156,18 @@ function ExpandIcon() {
   );
 }
 
+function PanelChevronIcon({ collapsed }: { collapsed: boolean }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      {collapsed ? (
+        <path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+      ) : (
+        <path d="M15 6l-6 6 6 6" strokeLinecap="round" strokeLinejoin="round" />
+      )}
+    </svg>
+  );
+}
+
 function CollapseIcon() {
   return (
     <svg
@@ -1581,6 +1630,14 @@ function readStoredMotionViewMode(): MotionViewMode {
   return window.localStorage.getItem(MOTION_VIEW_STORAGE_KEY) === "3d"
     ? "3d"
     : "2d";
+}
+
+function readStoredMotionPanelCollapsed() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.localStorage.getItem(MOTION_PANEL_COLLAPSED_STORAGE_KEY) === "1";
 }
 
 function clamp(value: number, min: number, max: number) {

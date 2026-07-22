@@ -3645,7 +3645,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
 .motion-action-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) repeat(2, minmax(0, 68px));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 72px);
   gap: 8px;
 }
 
