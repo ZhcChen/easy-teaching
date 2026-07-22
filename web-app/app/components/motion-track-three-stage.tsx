@@ -35,7 +35,7 @@ const ROAD_WIDTH = 7.2;
 const ROAD_THICKNESS = 0.16;
 const ROAD_SURFACE_Y = ROAD_THICKNESS;
 const CAR_LENGTH_M = 4.69;
-const CAR_WHEEL_RADIUS_M = 0.332;
+const CAR_WHEEL_RADIUS_M = 0.34;
 const CAR_WHEEL_RADIUS_WORLD = CAR_WHEEL_RADIUS_M * WORLD_UNITS_PER_METER;
 const CAR_WHEEL_CENTER_Y =
   ROAD_SURFACE_Y + CAR_WHEEL_RADIUS_WORLD + WORLD_UNITS_PER_METER * 0.01;
@@ -427,7 +427,7 @@ export function MotionTrackThreeStage({
         const bodyPitch =
           clamp(accelerationBias * 0.042 + accelerationKick * 0.022, -0.082, 0.068);
         const bodyFloat =
-          0.132 + Math.abs(accelerationKick) * 0.042 + speedRatio * 0.014;
+          0.146 + Math.abs(accelerationKick) * 0.042 + speedRatio * 0.014;
         carRig.bodyGroup.rotation.z +=
           (bodyPitch - carRig.bodyGroup.rotation.z) * 0.12;
         carRig.bodyGroup.position.y +=
