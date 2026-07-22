@@ -3645,16 +3645,11 @@ html[data-theme="dark"] .force-state-pill.is-active {
   gap: 8px;
 }
 
-.motion-range-stack .force-control-label {
-  font-size: 12px;
-}
-
+.motion-range-stack .force-control-label,
 .motion-range-stack .force-control-value,
 .motion-range-stack .force-control-value-button,
 .motion-range-stack .force-control-value-input {
-  font-size: 16px;
-  font-weight: 800;
-  line-height: 1;
+  font-size: 12px;
 }
 
 .motion-range-stack .force-range-input {
@@ -3667,9 +3662,9 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
 .motion-range-stack .force-control-value-button,
 .motion-range-stack .force-control-value-input {
-  min-width: 96px;
-  min-height: 36px;
-  padding: 0 12px;
+  min-width: 72px;
+  min-height: 28px;
+  padding: 0 9px;
 }
 
 .motion-mode-grid,
