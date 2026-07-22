@@ -1107,11 +1107,6 @@ function buildMotionCartRig(THREE: ThreeModule) {
     roughness: 0.24,
     metalness: 0.78,
   });
-  const spokePocketMaterial = new THREE.MeshStandardMaterial({
-    color: 0x243042,
-    roughness: 0.42,
-    metalness: 0.24,
-  });
   const trimMaterial = new THREE.MeshStandardMaterial({
     color: new THREE.Color(MOTION_CART_COLORS.trim),
     roughness: 0.34,
@@ -1748,53 +1743,41 @@ function buildMotionCartRig(THREE: ThreeModule) {
       aeroCover.position.z = rimFaceOffset + wheelSide * toWorldUnits(0.056);
       wheelRotor.add(aeroCover);
 
-      const spokeDesignRing = new THREE.Mesh(
-        new THREE.TorusGeometry(
-          CAR_WHEEL_RADIUS_WORLD * 0.53,
-          toWorldUnits(0.013),
-          10,
-          40,
-        ),
-        spokePocketMaterial,
-      );
-      spokeDesignRing.rotation.x = Math.PI / 2;
-      spokeDesignRing.position.z = rimFaceOffset + wheelSide * toWorldUnits(0.068);
-      wheelRotor.add(spokeDesignRing);
-
+      const spokeFaceZ = rimFaceOffset + wheelSide * toWorldUnits(0.083);
       for (let spokeIndex = 0; spokeIndex < 5; spokeIndex += 1) {
         const spokeAngle = (Math.PI * 2 * spokeIndex) / 5 - 0.06;
         const spokeGroup = new THREE.Group();
         spokeGroup.rotation.z = spokeAngle;
 
-        const spokePocket = new THREE.Mesh(
+        const spokeStem = new THREE.Mesh(
           new THREE.BoxGeometry(
-            CAR_WHEEL_RADIUS_WORLD * 0.46,
-            toWorldUnits(0.084),
-            toWorldUnits(0.02),
+            CAR_WHEEL_RADIUS_WORLD * 0.22,
+            toWorldUnits(0.024),
+            toWorldUnits(0.012),
           ),
-          spokePocketMaterial,
+          spokeFaceMaterial,
         );
-        spokePocket.position.set(
-          CAR_WHEEL_RADIUS_WORLD * 0.23,
+        spokeStem.position.set(
+          CAR_WHEEL_RADIUS_WORLD * 0.13,
           0,
-          rimFaceOffset + wheelSide * toWorldUnits(0.044),
+          spokeFaceZ,
         );
-        spokeGroup.add(spokePocket);
+        spokeGroup.add(spokeStem);
 
         const spokeLeft = new THREE.Mesh(
           new THREE.BoxGeometry(
-            CAR_WHEEL_RADIUS_WORLD * 0.36,
-            toWorldUnits(0.046),
+            CAR_WHEEL_RADIUS_WORLD * 0.28,
             toWorldUnits(0.026),
+            toWorldUnits(0.012),
           ),
           spokeFaceMaterial,
         );
         spokeLeft.position.set(
-          CAR_WHEEL_RADIUS_WORLD * 0.19,
+          CAR_WHEEL_RADIUS_WORLD * 0.27,
           -toWorldUnits(0.028),
-          rimFaceOffset + wheelSide * toWorldUnits(0.072),
+          spokeFaceZ,
         );
-        spokeLeft.rotation.z = 0.16;
+        spokeLeft.rotation.z = 0.34;
         spokeGroup.add(spokeLeft);
 
         const spokeRight = spokeLeft.clone();
@@ -1802,20 +1785,20 @@ function buildMotionCartRig(THREE: ThreeModule) {
         spokeRight.rotation.z *= -1;
         spokeGroup.add(spokeRight);
 
-        const spokeAccent = new THREE.Mesh(
+        const spokeGroove = new THREE.Mesh(
           new THREE.BoxGeometry(
             CAR_WHEEL_RADIUS_WORLD * 0.18,
-            toWorldUnits(0.016),
-            toWorldUnits(0.014),
+            toWorldUnits(0.008),
+            toWorldUnits(0.008),
           ),
-          trimMaterial,
+          rimShadowMaterial,
         );
-        spokeAccent.position.set(
-          CAR_WHEEL_RADIUS_WORLD * 0.33,
+        spokeGroove.position.set(
+          CAR_WHEEL_RADIUS_WORLD * 0.34,
           0,
-          rimFaceOffset + wheelSide * toWorldUnits(0.09),
+          spokeFaceZ + wheelSide * toWorldUnits(0.004),
         );
-        spokeGroup.add(spokeAccent);
+        spokeGroup.add(spokeGroove);
 
         wheelRotor.add(spokeGroup);
 
