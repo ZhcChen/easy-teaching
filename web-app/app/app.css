@@ -2270,9 +2270,76 @@ a:focus-visible {
 }
 
 .force-range-input {
+  --range-track-height: 4px;
+  --range-thumb-size: 16px;
   width: 100%;
-  accent-color: var(--brand);
+  height: var(--range-thumb-size);
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
   cursor: pointer;
+}
+
+.force-range-input::-webkit-slider-runnable-track {
+  height: var(--range-track-height);
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--brand-soft) 70%, transparent) 0%, color-mix(in srgb, var(--brand-soft) 32%, transparent) 100%),
+    color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
+  box-shadow: inset 0 1px 2px rgba(12, 20, 32, 0.08);
+}
+
+.force-range-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: var(--range-thumb-size);
+  height: var(--range-thumb-size);
+  margin-top: calc((var(--range-track-height) - var(--range-thumb-size)) / 2);
+  border: 1px solid color-mix(in srgb, var(--brand) 24%, rgba(255, 255, 255, 0.8));
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff 0%, color-mix(in srgb, var(--brand-soft) 40%, #f6f9ff) 100%);
+  box-shadow:
+    0 4px 10px rgba(23, 105, 255, 0.18),
+    0 1px 2px rgba(12, 20, 32, 0.16);
+}
+
+.force-range-input::-moz-range-track {
+  height: var(--range-track-height);
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--brand-soft) 70%, transparent) 0%, color-mix(in srgb, var(--brand-soft) 32%, transparent) 100%),
+    color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
+  box-shadow: inset 0 1px 2px rgba(12, 20, 32, 0.08);
+}
+
+.force-range-input::-moz-range-thumb {
+  width: var(--range-thumb-size);
+  height: var(--range-thumb-size);
+  border: 1px solid color-mix(in srgb, var(--brand) 24%, rgba(255, 255, 255, 0.8));
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff 0%, color-mix(in srgb, var(--brand-soft) 40%, #f6f9ff) 100%);
+  box-shadow:
+    0 4px 10px rgba(23, 105, 255, 0.18),
+    0 1px 2px rgba(12, 20, 32, 0.16);
+}
+
+.force-range-input:focus-visible {
+  outline: none;
+}
+
+.force-range-input:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--brand-soft) 58%, transparent),
+    0 4px 10px rgba(23, 105, 255, 0.22),
+    0 1px 2px rgba(12, 20, 32, 0.16);
+}
+
+.force-range-input:focus-visible::-moz-range-thumb {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--brand-soft) 58%, transparent),
+    0 4px 10px rgba(23, 105, 255, 0.22),
+    0 1px 2px rgba(12, 20, 32, 0.16);
 }
 
 .force-segmented {
@@ -3653,7 +3720,8 @@ html[data-theme="dark"] .force-state-pill.is-active {
 }
 
 .motion-range-stack .force-range-input {
-  accent-color: var(--brand);
+  --range-track-height: 3px;
+  --range-thumb-size: 14px;
 }
 
 .motion-range-stack .force-control-label-row {
