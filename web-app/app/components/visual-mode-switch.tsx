@@ -32,7 +32,6 @@ export function VisualModeSwitch({
 
   return (
     <div className={wrapperClassName}>
-      <span className="visual-mode-caption">视图模式</span>
       <div
         className="visual-mode-track"
         role="tablist"

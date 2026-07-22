@@ -1678,24 +1678,15 @@ a:focus-visible {
 .visual-mode-switch {
   display: inline-flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px;
+  gap: 0;
+  padding: 6px;
   border: 1px solid rgba(138, 190, 255, 0.14);
-  border-radius: 20px;
+  border-radius: 16px;
   background: rgba(7, 17, 31, 0.56);
   box-shadow:
     0 18px 36px rgba(3, 8, 18, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(16px);
-}
-
-.visual-mode-caption {
-  color: color-mix(in srgb, var(--canvas-copy) 84%, white);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  line-height: 1;
-  text-transform: uppercase;
 }
 
 .visual-mode-track {
@@ -1704,20 +1695,20 @@ a:focus-visible {
   display: grid;
   grid-template-columns: repeat(var(--switch-count, 2), minmax(0, 1fr));
   align-items: stretch;
-  min-width: 132px;
-  padding: 4px;
+  min-width: 96px;
+  padding: 3px;
   border: 1px solid rgba(138, 190, 255, 0.1);
-  border-radius: 15px;
+  border-radius: 12px;
   background: rgba(7, 17, 31, 0.42);
 }
 
 .visual-mode-thumb {
   position: absolute;
-  top: 4px;
-  bottom: 4px;
-  left: 4px;
-  width: calc((100% - 8px) / var(--switch-count, 2));
-  border-radius: 11px;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / var(--switch-count, 2));
+  border-radius: 9px;
   background:
     linear-gradient(180deg, rgba(103, 198, 255, 0.34) 0%, rgba(93, 226, 177, 0.22) 100%);
   box-shadow:
@@ -1733,11 +1724,11 @@ a:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 56px;
-  min-height: 38px;
-  padding: 0 16px;
+  min-width: 42px;
+  min-height: 30px;
+  padding: 0 12px;
   border: 0;
-  border-radius: 11px;
+  border-radius: 9px;
   background: transparent;
   color: var(--canvas-copy);
   cursor: pointer;
@@ -1757,7 +1748,7 @@ a:focus-visible {
 }
 
 .visual-mode-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -4093,8 +4084,8 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
 .motion-stage-overlay.is-top-left {
   top: 24px;
-  left: 188px;
-  max-width: min(360px, calc(100% - 260px));
+  left: 132px;
+  max-width: min(360px, calc(100% - 204px));
 }
 
 .motion-stage-overlay.is-bottom-bar {
@@ -4893,11 +4884,11 @@ html[data-theme="dark"] .force-state-pill.is-active {
   }
 
   .motion-stage-view-switch .visual-mode-switch {
-    gap: 6px;
+    padding: 5px;
   }
 
   .motion-stage-view-switch .visual-mode-track {
-    min-width: 120px;
+    min-width: 90px;
   }
 
   .force-stage-overlay,
