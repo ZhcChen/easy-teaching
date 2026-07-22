@@ -529,6 +529,7 @@ export function MotionTrackLab({
                 step={0.1}
                 value={initialVelocity}
                 className="motion-range-stack"
+                editable
                 onChange={updateVelocity}
               />
 
@@ -542,6 +543,7 @@ export function MotionTrackLab({
                 value={mode === "uniform" ? 0 : acceleration}
                 disabled={mode === "uniform"}
                 className="motion-range-stack"
+                editable
                 onChange={updateAcceleration}
               />
 
@@ -554,6 +556,7 @@ export function MotionTrackLab({
                 step={0.5}
                 value={duration}
                 className="motion-range-stack"
+                editable
                 onChange={updateDuration}
               />
             </ControlPanelSection>

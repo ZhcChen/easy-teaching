@@ -2233,6 +2233,42 @@ a:focus-visible {
   font-weight: 700;
 }
 
+.force-control-value-button,
+.force-control-value-input {
+  min-width: 76px;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.force-control-value-button {
+  border: 1px solid color-mix(in srgb, var(--brand) 20%, var(--line));
+  background: color-mix(in srgb, var(--brand-soft) 78%, var(--surface-strong));
+  color: var(--brand-strong);
+  cursor: text;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.force-control-value-button:hover {
+  border-color: color-mix(in srgb, var(--brand) 36%, var(--line-strong));
+  background: color-mix(in srgb, var(--brand-soft) 88%, var(--surface-strong));
+  transform: translateY(-1px);
+}
+
+.force-control-value-input {
+  border: 1px solid color-mix(in srgb, var(--brand) 34%, var(--line-strong));
+  background: var(--surface-strong);
+  color: var(--brand-strong);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-soft) 60%, transparent);
+}
+
 .force-range-input {
   width: 100%;
   accent-color: var(--brand);
@@ -3610,7 +3646,9 @@ html[data-theme="dark"] .force-state-pill.is-active {
 }
 
 .motion-range-stack .force-control-label,
-.motion-range-stack .force-control-value {
+.motion-range-stack .force-control-value,
+.motion-range-stack .force-control-value-button,
+.motion-range-stack .force-control-value-input {
   font-size: 12px;
 }
 
@@ -3620,6 +3658,13 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
 .motion-range-stack .force-control-label-row {
   align-items: center;
+}
+
+.motion-range-stack .force-control-value-button,
+.motion-range-stack .force-control-value-input {
+  min-width: 72px;
+  min-height: 28px;
+  padding: 0 9px;
 }
 
 .motion-mode-grid,
