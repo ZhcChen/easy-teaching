@@ -163,9 +163,9 @@ export function MotionTrackThreeStage({
 
       orbitState.lastPointerX = event.clientX;
       orbitState.lastPointerY = event.clientY;
-      orbitState.targetYawOffset -= deltaX * CAMERA_DRAG_ROTATION_STEP;
+      orbitState.targetYawOffset += deltaX * CAMERA_DRAG_ROTATION_STEP;
       orbitState.targetPitchOffset = clamp(
-        orbitState.targetPitchOffset - deltaY * CAMERA_DRAG_ROTATION_STEP,
+        orbitState.targetPitchOffset + deltaY * CAMERA_DRAG_ROTATION_STEP,
         MIN_CAMERA_PITCH_OFFSET,
         MAX_CAMERA_PITCH_OFFSET,
       );
