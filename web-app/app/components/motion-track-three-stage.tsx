@@ -1082,11 +1082,6 @@ function buildMotionCartRig(THREE: ThreeModule) {
     roughness: 0.88,
     metalness: 0.08,
   });
-  const tireSidewallMaterial = new THREE.MeshStandardMaterial({
-    color: 0x3a4350,
-    roughness: 0.8,
-    metalness: 0.1,
-  });
   const tireTreadMaterial = new THREE.MeshStandardMaterial({
     color: 0x515b68,
     roughness: 0.74,
@@ -1601,58 +1596,16 @@ function buildMotionCartRig(THREE: ThreeModule) {
       wheelAssembly.add(wheelRotor);
       const tireWidth = toWorldUnits(0.24);
       const rimWidth = toWorldUnits(0.18);
-      const sidewallDepth = toWorldUnits(0.036);
-      const sidewallOffset = toWorldUnits(0.102);
       const rimFaceOffset = wheelSide * toWorldUnits(0.045);
       const lugRingRadius = CAR_WHEEL_RADIUS_WORLD * 0.18;
       const treadRingRadius = CAR_WHEEL_RADIUS_WORLD * 0.92;
-      const treadRowOffsets = [-toWorldUnits(0.058), 0, toWorldUnits(0.058)];
+      const treadRowOffsets = [-toWorldUnits(0.054), 0, toWorldUnits(0.054)];
 
       const tire = new THREE.Mesh(
-        new THREE.CylinderGeometry(
-          CAR_WHEEL_RADIUS_WORLD,
-          CAR_WHEEL_RADIUS_WORLD,
-          tireWidth,
-          40,
-        ),
+        createTireGeometry(THREE, CAR_WHEEL_RADIUS_WORLD, tireWidth),
         wheelMaterial,
       );
-      tire.rotation.x = Math.PI / 2;
       wheelRotor.add(tire);
-
-      const outerSidewall = new THREE.Mesh(
-        new THREE.CylinderGeometry(
-          CAR_WHEEL_RADIUS_WORLD * 0.96,
-          CAR_WHEEL_RADIUS_WORLD * 0.96,
-          sidewallDepth,
-          36,
-        ),
-        tireSidewallMaterial,
-      );
-      outerSidewall.rotation.x = Math.PI / 2;
-      outerSidewall.position.z = sidewallOffset;
-      wheelRotor.add(outerSidewall);
-
-      const innerSidewall = outerSidewall.clone();
-      innerSidewall.position.z *= -1;
-      wheelRotor.add(innerSidewall);
-
-      const tireShoulder = new THREE.Mesh(
-        new THREE.TorusGeometry(
-          CAR_WHEEL_RADIUS_WORLD * 0.9,
-          toWorldUnits(0.026),
-          12,
-          42,
-        ),
-        tireSidewallMaterial,
-      );
-      tireShoulder.rotation.x = Math.PI / 2;
-      tireShoulder.position.z = sidewallOffset * 0.78;
-      wheelRotor.add(tireShoulder);
-
-      const tireShoulderMirror = tireShoulder.clone();
-      tireShoulderMirror.position.z *= -1;
-      wheelRotor.add(tireShoulderMirror);
 
       treadRowOffsets.forEach((rowOffset, rowIndex) => {
         for (let treadIndex = 0; treadIndex < 14; treadIndex += 1) {
@@ -1948,6 +1901,32 @@ function disposeSceneGraph(scene: any) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function createTireGeometry(
+  THREE: ThreeModule,
+  outerRadius: number,
+  width: number,
+) {
+  const halfWidth = width / 2;
+  const innerHalfWidth = halfWidth * 0.8;
+  const sidewallRadius = outerRadius * 0.84;
+  const innerRadius = outerRadius * 0.56;
+  const profile = [
+    new THREE.Vector2(0, -innerHalfWidth),
+    new THREE.Vector2(innerRadius, -innerHalfWidth),
+    new THREE.Vector2(sidewallRadius, -halfWidth),
+    new THREE.Vector2(outerRadius * 0.97, -halfWidth * 0.78),
+    new THREE.Vector2(outerRadius, -halfWidth * 0.24),
+    new THREE.Vector2(outerRadius, halfWidth * 0.24),
+    new THREE.Vector2(outerRadius * 0.97, halfWidth * 0.78),
+    new THREE.Vector2(sidewallRadius, halfWidth),
+    new THREE.Vector2(innerRadius, innerHalfWidth),
+    new THREE.Vector2(0, innerHalfWidth),
+  ];
+  const geometry = new THREE.LatheGeometry(profile, 40);
+  geometry.rotateX(Math.PI / 2);
+  return geometry;
 }
 
 function toWorldUnits(value: number) {
