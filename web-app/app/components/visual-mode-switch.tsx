@@ -23,50 +23,48 @@ export function VisualModeSwitch({
     0,
     options.findIndex((option) => option.key === value),
   );
-  const wrapperClassName = [
-    "visual-mode-switch",
+  const trackClassName = [
+    "visual-mode-track",
     className ?? "",
   ]
     .filter(Boolean)
     .join(" ");
 
   return (
-    <div className={wrapperClassName}>
-      <div
-        className="visual-mode-track"
-        role="tablist"
-        aria-label="可视化模式切换"
-        style={
-          {
-            "--switch-count": options.length,
-            "--switch-active-index": activeIndex,
-          } as CSSProperties
-        }
-      >
-        <span className="visual-mode-thumb" aria-hidden="true" />
-        {options.map((option) => {
-          const buttonClassName = [
-            "visual-mode-button",
-            value === option.key ? "is-active" : "",
-          ]
-            .filter(Boolean)
-            .join(" ");
+    <div
+      className={trackClassName}
+      role="tablist"
+      aria-label="可视化模式切换"
+      style={
+        {
+          "--switch-count": options.length,
+          "--switch-active-index": activeIndex,
+        } as CSSProperties
+      }
+    >
+      <span className="visual-mode-thumb" aria-hidden="true" />
+      {options.map((option) => {
+        const buttonClassName = [
+          "visual-mode-button",
+          value === option.key ? "is-active" : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
 
-          return (
-            <button
-              key={option.key}
-              type="button"
-              className={buttonClassName}
-              role="tab"
-              aria-selected={value === option.key}
-              title={option.title}
-              onClick={() => onChange(option.key)}
-            >
-              <span className="visual-mode-label">{option.label}</span>
-            </button>
-          );
-        })}
-      </div>
+        return (
+          <button
+            key={option.key}
+            type="button"
+            className={buttonClassName}
+            role="tab"
+            aria-selected={value === option.key}
+            title={option.title}
+            onClick={() => onChange(option.key)}
+          >
+            <span className="visual-mode-label">{option.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
