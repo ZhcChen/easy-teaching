@@ -46,8 +46,12 @@ const CAR_CABIN_WIDTH_M = 1.38;
 const CAR_GLASS_WIDTH_M = 1.06;
 const CAR_WHEEL_X_OFFSETS_M = [1.44, -1.44] as const;
 const CAR_WHEEL_Z_OFFSETS_M = [0.845, -0.845] as const;
-const VISUAL_TRACK_START_WORLD = 0;
-const VISUAL_TRACK_END_WORLD = TRACK_LENGTH_WORLD - 8;
+const TRACK_SCROLL_ANCHOR_WORLD = TRACK_LENGTH_WORLD * 0.24;
+const TRACK_SEGMENT_OFFSETS_WORLD = [
+  -TRACK_LENGTH_WORLD,
+  0,
+  TRACK_LENGTH_WORLD,
+] as const;
 const DEFAULT_CAMERA_ZOOM_RATIO = 1.28;
 const MIN_CAMERA_ZOOM_RATIO = 0.82;
 const MAX_CAMERA_ZOOM_RATIO = 1.92;
@@ -237,18 +241,18 @@ export function MotionTrackThreeStage({
       const ground = buildGround(THREE);
       scene.add(ground);
 
-      const road = buildRoad(THREE);
-      scene.add(road);
-
-      const markers = buildTrackMarkers(THREE, accentColor);
-      scene.add(markers);
-
-      const roadsideEnvironment = buildRoadsideEnvironment(
-        THREE,
-        accentColor,
-        accentSoftColor,
-      );
-      scene.add(roadsideEnvironment);
+      const trackLoopGroup = new THREE.Group();
+      TRACK_SEGMENT_OFFSETS_WORLD.forEach((segmentOffset) => {
+        const segmentGroup = new THREE.Group();
+        segmentGroup.position.x = segmentOffset;
+        segmentGroup.add(buildRoad(THREE));
+        segmentGroup.add(buildTrackMarkers(THREE, accentColor));
+        segmentGroup.add(
+          buildRoadsideEnvironment(THREE, accentColor, accentSoftColor),
+        );
+        trackLoopGroup.add(segmentGroup);
+      });
+      scene.add(trackLoopGroup);
 
       const finishGate = buildFinishGate(THREE, accentColor);
       scene.add(finishGate);
@@ -336,13 +340,11 @@ export function MotionTrackThreeStage({
         resizeRendererToDisplaySize();
 
         const state = motionStateRef.current;
-        const trackProgress =
-          state.distanceDomain <= 0
-            ? 0
-            : clamp(state.position / state.distanceDomain, 0, 1);
-        const carFrontX =
-          VISUAL_TRACK_START_WORLD +
-          (VISUAL_TRACK_END_WORLD - VISUAL_TRACK_START_WORLD) * trackProgress;
+        const physicalFrontX = Math.max(0, state.position * WORLD_UNITS_PER_METER);
+        const carFrontX = Math.min(physicalFrontX, TRACK_SCROLL_ANCHOR_WORLD);
+        const worldScrollOffset = Math.max(0, physicalFrontX - carFrontX);
+        trackLoopGroup.position.x =
+          -positiveModulo(worldScrollOffset, TRACK_LENGTH_WORLD);
         const carCenterX = carFrontX - CAR_FRONT_OFFSET_WORLD;
         const wheelAngle = state.position / CAR_WHEEL_RADIUS_M;
 
@@ -351,8 +353,13 @@ export function MotionTrackThreeStage({
           wheelRotor.rotation.z = -wheelAngle;
         });
 
-        const finishX = TRACK_LENGTH_WORLD - 4;
-        finishGate.position.x = finishX;
+        const finishX = state.distanceDomain * WORLD_UNITS_PER_METER - worldScrollOffset;
+        finishGate.visible = finishX >= 8 && finishX <= TRACK_LENGTH_WORLD - 4;
+        finishGate.position.x = clamp(finishX, 8, TRACK_LENGTH_WORLD - 4);
+
+        const originX = -worldScrollOffset;
+        originBeacon.visible = originX >= -8;
+        originBeacon.position.x = originX;
 
         trailLine.visible = state.showTrail && carFrontX > 0.04;
         trailPositions[0] = 0;
@@ -1911,6 +1918,14 @@ function disposeSceneGraph(scene: any) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function positiveModulo(value: number, modulus: number) {
+  if (modulus === 0) {
+    return 0;
+  }
+
+  return ((value % modulus) + modulus) % modulus;
 }
 
 function createTireGeometry(
