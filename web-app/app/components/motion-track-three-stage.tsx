@@ -35,7 +35,7 @@ const ROAD_WIDTH = 7.2;
 const ROAD_THICKNESS = 0.16;
 const ROAD_SURFACE_Y = ROAD_THICKNESS;
 const CAR_LENGTH_M = 4.69;
-const CAR_WHEEL_RADIUS_M = 0.34;
+const CAR_WHEEL_RADIUS_M = 0.332;
 const CAR_WHEEL_RADIUS_WORLD = CAR_WHEEL_RADIUS_M * WORLD_UNITS_PER_METER;
 const CAR_WHEEL_CENTER_Y =
   ROAD_SURFACE_Y + CAR_WHEEL_RADIUS_WORLD + WORLD_UNITS_PER_METER * 0.01;
@@ -45,7 +45,7 @@ const CAR_BODY_WIDTH_M = 1.72;
 const CAR_CABIN_WIDTH_M = 1.38;
 const CAR_GLASS_WIDTH_M = 1.06;
 const CAR_WHEEL_X_OFFSETS_M = [1.44, -1.44] as const;
-const CAR_WHEEL_Z_OFFSETS_M = [0.83, -0.83] as const;
+const CAR_WHEEL_Z_OFFSETS_M = [0.845, -0.845] as const;
 const DEFAULT_CAMERA_ZOOM_RATIO = 1.28;
 const MIN_CAMERA_ZOOM_RATIO = 0.82;
 const MAX_CAMERA_ZOOM_RATIO = 1.92;
@@ -932,31 +932,23 @@ function createModel3BodyShape(THREE: ThreeModule) {
 
 function createWheelWellPath(THREE: ThreeModule, centerX: number) {
   const path = new THREE.Path();
-  const halfArchWidth = 0.56;
+  const archRadius = 0.6;
   const rockerY = 0.38;
 
   path.moveTo(
-    toWorldUnits(centerX - halfArchWidth),
+    toWorldUnits(centerX - archRadius),
     toWorldUnits(rockerY),
   );
-  path.bezierCurveTo(
-    toWorldUnits(centerX - 0.52),
-    toWorldUnits(0.84),
-    toWorldUnits(centerX - 0.22),
-    toWorldUnits(0.93),
+  path.absarc(
     toWorldUnits(centerX),
-    toWorldUnits(0.93),
-  );
-  path.bezierCurveTo(
-    toWorldUnits(centerX + 0.22),
-    toWorldUnits(0.93),
-    toWorldUnits(centerX + 0.52),
-    toWorldUnits(0.84),
-    toWorldUnits(centerX + halfArchWidth),
     toWorldUnits(rockerY),
+    toWorldUnits(archRadius),
+    Math.PI,
+    0,
+    true,
   );
   path.lineTo(
-    toWorldUnits(centerX - halfArchWidth),
+    toWorldUnits(centerX - archRadius),
     toWorldUnits(rockerY),
   );
   return path;
@@ -1587,7 +1579,7 @@ function buildMotionCartRig(THREE: ThreeModule) {
       );
       const wheelRotor = new THREE.Group();
       wheelAssembly.add(wheelRotor);
-      const tireWidth = toWorldUnits(0.24);
+      const tireWidth = toWorldUnits(0.22);
       const rimWidth = toWorldUnits(0.18);
       const rimFaceOffset = wheelSide * toWorldUnits(0.045);
       const lugRingRadius = CAR_WHEEL_RADIUS_WORLD * 0.18;
