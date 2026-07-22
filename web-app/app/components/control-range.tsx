@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 type ControlRangeProps = {
   id: string;
@@ -43,6 +43,11 @@ export function ControlRange({
   const displayValue = valueFormatter
     ? valueFormatter(value)
     : formatRangeValue(value, step, unit);
+  const rangeProgress =
+    max <= min ? 0 : ((value - min) / (max - min)) * 100;
+  const rangeStyle = {
+    "--range-progress": `${Math.min(100, Math.max(0, rangeProgress))}%`,
+  } as CSSProperties;
 
   useEffect(() => {
     if (isEditing) {
@@ -129,6 +134,7 @@ export function ControlRange({
       <input
         id={id}
         className="force-range-input"
+        style={rangeStyle}
         type="range"
         min={min}
         max={max}

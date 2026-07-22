@@ -2271,10 +2271,11 @@ a:focus-visible {
 
 .force-range-input {
   --range-track-height: 4px;
-  --range-track-border-width: 1px;
   --range-thumb-size: 16px;
+  --range-progress: 0%;
   width: 100%;
   height: var(--range-thumb-size);
+  padding: 0;
   appearance: none;
   -webkit-appearance: none;
   background: transparent;
@@ -2284,18 +2285,25 @@ a:focus-visible {
 .force-range-input::-webkit-slider-runnable-track {
   height: var(--range-track-height);
   border-radius: 999px;
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--brand-soft) 70%, transparent) 0%, color-mix(in srgb, var(--brand-soft) 32%, transparent) 100%),
-    color-mix(in srgb, var(--surface-strong) 92%, transparent);
-  border: var(--range-track-border-width) solid color-mix(in srgb, var(--line) 82%, transparent);
-  box-shadow: inset 0 1px 2px rgba(12, 20, 32, 0.08);
+  box-sizing: border-box;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--brand) 86%, #9fd2ff) 0%,
+    color-mix(in srgb, var(--brand) 86%, #9fd2ff) var(--range-progress),
+    color-mix(in srgb, var(--surface-strong) 94%, rgba(142, 160, 184, 0.26)) var(--range-progress),
+    color-mix(in srgb, var(--surface-strong) 94%, rgba(142, 160, 184, 0.26)) 100%
+  );
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--line) 72%, transparent),
+    inset 0 1px 2px rgba(12, 20, 32, 0.08);
 }
 
 .force-range-input::-webkit-slider-thumb {
   -webkit-appearance: none;
+  box-sizing: border-box;
   width: var(--range-thumb-size);
   height: var(--range-thumb-size);
-  margin-top: calc((var(--range-track-height) + var(--range-track-border-width) * 2 - var(--range-thumb-size)) / 2);
+  margin-top: calc((var(--range-track-height) - var(--range-thumb-size)) / 2);
   border: 1px solid color-mix(in srgb, var(--brand) 24%, rgba(255, 255, 255, 0.8));
   border-radius: 999px;
   background: linear-gradient(180deg, #ffffff 0%, color-mix(in srgb, var(--brand-soft) 40%, #f6f9ff) 100%);
@@ -2307,14 +2315,21 @@ a:focus-visible {
 .force-range-input::-moz-range-track {
   height: var(--range-track-height);
   border-radius: 999px;
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--brand-soft) 70%, transparent) 0%, color-mix(in srgb, var(--brand-soft) 32%, transparent) 100%),
-    color-mix(in srgb, var(--surface-strong) 92%, transparent);
-  border: var(--range-track-border-width) solid color-mix(in srgb, var(--line) 82%, transparent);
-  box-shadow: inset 0 1px 2px rgba(12, 20, 32, 0.08);
+  box-sizing: border-box;
+  background: color-mix(in srgb, var(--surface-strong) 94%, rgba(142, 160, 184, 0.26));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--line) 72%, transparent),
+    inset 0 1px 2px rgba(12, 20, 32, 0.08);
+}
+
+.force-range-input::-moz-range-progress {
+  height: var(--range-track-height);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand) 86%, #9fd2ff);
 }
 
 .force-range-input::-moz-range-thumb {
+  box-sizing: border-box;
   width: var(--range-thumb-size);
   height: var(--range-thumb-size);
   border: 1px solid color-mix(in srgb, var(--brand) 24%, rgba(255, 255, 255, 0.8));
