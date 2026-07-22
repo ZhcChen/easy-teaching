@@ -35,7 +35,7 @@ const ROAD_WIDTH = 7.2;
 const ROAD_THICKNESS = 0.16;
 const ROAD_SURFACE_Y = ROAD_THICKNESS;
 const CAR_LENGTH_M = 4.69;
-const CAR_WHEEL_RADIUS_M = 0.332;
+const CAR_WHEEL_RADIUS_M = 0.324;
 const CAR_WHEEL_RADIUS_WORLD = CAR_WHEEL_RADIUS_M * WORLD_UNITS_PER_METER;
 const CAR_WHEEL_CENTER_Y =
   ROAD_SURFACE_Y + CAR_WHEEL_RADIUS_WORLD + WORLD_UNITS_PER_METER * 0.01;
@@ -45,7 +45,7 @@ const CAR_BODY_WIDTH_M = 1.72;
 const CAR_CABIN_WIDTH_M = 1.38;
 const CAR_GLASS_WIDTH_M = 1.06;
 const CAR_WHEEL_X_OFFSETS_M = [1.44, -1.44] as const;
-const CAR_WHEEL_Z_OFFSETS_M = [0.845, -0.845] as const;
+const CAR_WHEEL_Z_OFFSETS_M = [0.86, -0.86] as const;
 const DEFAULT_CAMERA_ZOOM_RATIO = 1.28;
 const MIN_CAMERA_ZOOM_RATIO = 0.82;
 const MAX_CAMERA_ZOOM_RATIO = 1.92;
@@ -872,6 +872,9 @@ function createCenteredExtrudedGeometry(
 }
 
 function createModel3BodyShape(THREE: ThreeModule) {
+  const wheelArchRadius = 0.68;
+  const wheelArchBaseY = 0.28;
+  const wheelArchMidSillY = 0.346;
   const shape = new THREE.Shape();
   shape.moveTo(toWorldUnits(-2.24), toWorldUnits(0.4));
   shape.quadraticCurveTo(
@@ -916,7 +919,39 @@ function createModel3BodyShape(THREE: ThreeModule) {
     toWorldUnits(2.04),
     toWorldUnits(0.38),
   );
-  shape.lineTo(toWorldUnits(-2.08), toWorldUnits(0.38));
+  shape.quadraticCurveTo(
+    toWorldUnits(1.98),
+    toWorldUnits(wheelArchBaseY),
+    toWorldUnits(CAR_WHEEL_X_OFFSETS_M[0] + wheelArchRadius),
+    toWorldUnits(wheelArchBaseY),
+  );
+  shape.lineTo(
+    toWorldUnits(CAR_WHEEL_X_OFFSETS_M[0] - wheelArchRadius),
+    toWorldUnits(wheelArchBaseY),
+  );
+  shape.quadraticCurveTo(
+    toWorldUnits(0.56),
+    toWorldUnits(wheelArchMidSillY - 0.01),
+    toWorldUnits(0.16),
+    toWorldUnits(wheelArchMidSillY),
+  );
+  shape.lineTo(toWorldUnits(-0.16), toWorldUnits(wheelArchMidSillY));
+  shape.quadraticCurveTo(
+    toWorldUnits(-0.56),
+    toWorldUnits(wheelArchMidSillY - 0.01),
+    toWorldUnits(CAR_WHEEL_X_OFFSETS_M[1] + wheelArchRadius),
+    toWorldUnits(wheelArchBaseY),
+  );
+  shape.lineTo(
+    toWorldUnits(CAR_WHEEL_X_OFFSETS_M[1] - wheelArchRadius),
+    toWorldUnits(wheelArchBaseY),
+  );
+  shape.quadraticCurveTo(
+    toWorldUnits(-2.16),
+    toWorldUnits(wheelArchBaseY),
+    toWorldUnits(-2.08),
+    toWorldUnits(0.38),
+  );
   shape.quadraticCurveTo(
     toWorldUnits(-2.18),
     toWorldUnits(0.38),
@@ -932,8 +967,8 @@ function createModel3BodyShape(THREE: ThreeModule) {
 
 function createWheelWellPath(THREE: ThreeModule, centerX: number) {
   const path = new THREE.Path();
-  const archRadius = 0.6;
-  const rockerY = 0.38;
+  const archRadius = 0.68;
+  const rockerY = 0.28;
 
   path.moveTo(
     toWorldUnits(centerX - archRadius),
@@ -1154,8 +1189,8 @@ function buildMotionCartRig(THREE: ThreeModule) {
 
   const bodyShell = new THREE.Mesh(
     createCenteredExtrudedGeometry(THREE, createModel3BodyShape(THREE), CAR_BODY_WIDTH_M, {
-      bevelSize: toWorldUnits(0.04),
-      bevelThickness: toWorldUnits(0.04),
+      bevelSize: toWorldUnits(0.03),
+      bevelThickness: toWorldUnits(0.024),
     }),
     bodyMaterial,
   );
