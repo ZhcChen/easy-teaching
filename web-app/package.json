@@ -5,12 +5,12 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev --host 0.0.0.0 --port 57001 --strictPort",
-    "start": "react-router-serve ./build/server/index.js",
+    "preview": "sirv build/client --single index.html --host 0.0.0.0 --port 57001",
+    "start": "npm run preview",
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
     "@react-router/node": "8.0.0",
-    "@react-router/serve": "8.0.0",
     "isbot": "^5.1.36",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
@@ -24,6 +24,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.185.1",
+    "sirv-cli": "^3.0.1",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",
     "vite": "^8.0.3"
