@@ -927,6 +927,15 @@ function buildMotionCartRig(THREE: ThreeModule) {
     roughness: 0.26,
     metalness: 0.08,
   });
+  const lampLensMaterial = new THREE.MeshStandardMaterial({
+    color: 0xf4fbff,
+    emissive: 0xd8f2ff,
+    emissiveIntensity: 0.24,
+    roughness: 0.18,
+    metalness: 0.1,
+    transparent: true,
+    opacity: 0.92,
+  });
   const wheelMaterial = new THREE.MeshStandardMaterial({
     color: new THREE.Color(MOTION_CART_COLORS.wheel),
     roughness: 0.88,
@@ -956,6 +965,16 @@ function buildMotionCartRig(THREE: ThreeModule) {
     color: 0x1b2430,
     roughness: 0.38,
     metalness: 0.24,
+  });
+  const brakeDiscMaterial = new THREE.MeshStandardMaterial({
+    color: 0xb6c0c8,
+    roughness: 0.32,
+    metalness: 0.74,
+  });
+  const brakeCaliperMaterial = new THREE.MeshStandardMaterial({
+    color: 0xd6dce6,
+    roughness: 0.26,
+    metalness: 0.34,
   });
   const rearLampMaterial = new THREE.MeshStandardMaterial({
     color: 0xff8a78,
@@ -1212,6 +1231,29 @@ function buildMotionCartRig(THREE: ThreeModule) {
   frontIntake.position.set(toWorldUnits(2.25), toWorldUnits(0.56), 0);
   bodyGroup.add(frontIntake);
 
+  const frontAperture = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toWorldUnits(0.06),
+      toWorldUnits(0.08),
+      toWorldUnits(0.46),
+    ),
+    mirrorMaterial,
+  );
+  frontAperture.position.set(toWorldUnits(2.28), toWorldUnits(0.84), 0);
+  bodyGroup.add(frontAperture);
+
+  const frontBadge = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toWorldUnits(0.03),
+      toWorldUnits(0.12),
+      toWorldUnits(0.04),
+    ),
+    windowTrimMaterial,
+  );
+  frontBadge.position.set(toWorldUnits(2.17), toWorldUnits(0.98), 0);
+  frontBadge.rotation.z = 0.08;
+  bodyGroup.add(frontBadge);
+
   const rearDiffuser = new THREE.Mesh(
     new THREE.BoxGeometry(
       toWorldUnits(0.2),
@@ -1266,6 +1308,23 @@ function buildMotionCartRig(THREE: ThreeModule) {
   headLampSideMirror.position.z *= -1;
   bodyGroup.add(headLampSideMirror);
 
+  const headLampBrow = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toWorldUnits(0.24),
+      toWorldUnits(0.022),
+      toWorldUnits(0.16),
+    ),
+    lampLensMaterial,
+  );
+  headLampBrow.position.set(toWorldUnits(2.02), toWorldUnits(0.99), toWorldUnits(0.58));
+  headLampBrow.rotation.y = -0.24;
+  bodyGroup.add(headLampBrow);
+
+  const headLampBrowMirror = headLampBrow.clone();
+  headLampBrowMirror.position.z *= -1;
+  headLampBrowMirror.rotation.y *= -1;
+  bodyGroup.add(headLampBrowMirror);
+
   const rearLamp = new THREE.Mesh(
     new THREE.BoxGeometry(
       toWorldUnits(0.14),
@@ -1297,6 +1356,32 @@ function buildMotionCartRig(THREE: ThreeModule) {
   const rearLampWingMirror = rearLampWing.clone();
   rearLampWingMirror.position.z *= -1;
   bodyGroup.add(rearLampWingMirror);
+
+  const rearLampBridge = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toWorldUnits(0.08),
+      toWorldUnits(0.05),
+      toWorldUnits(0.96),
+    ),
+    rearLampMaterial,
+  );
+  rearLampBridge.position.set(toWorldUnits(-2.02), toWorldUnits(0.98), 0);
+  bodyGroup.add(rearLampBridge);
+
+  const rearReflector = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toWorldUnits(0.08),
+      toWorldUnits(0.035),
+      toWorldUnits(0.12),
+    ),
+    lampMaterial,
+  );
+  rearReflector.position.set(toWorldUnits(-2.08), toWorldUnits(0.68), toWorldUnits(0.62));
+  bodyGroup.add(rearReflector);
+
+  const rearReflectorMirror = rearReflector.clone();
+  rearReflectorMirror.position.z *= -1;
+  bodyGroup.add(rearReflectorMirror);
 
   const mirrorArm = new THREE.Mesh(
     new THREE.BoxGeometry(
@@ -1365,6 +1450,33 @@ function buildMotionCartRig(THREE: ThreeModule) {
       rim.rotation.x = Math.PI / 2;
       wheelRotor.add(rim);
 
+      const brakeDisc = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          CAR_WHEEL_RADIUS_WORLD * 0.52,
+          CAR_WHEEL_RADIUS_WORLD * 0.52,
+          toWorldUnits(0.1),
+          28,
+        ),
+        brakeDiscMaterial,
+      );
+      brakeDisc.rotation.x = Math.PI / 2;
+      wheelRotor.add(brakeDisc);
+
+      const brakeCaliper = new THREE.Mesh(
+        new THREE.BoxGeometry(
+          toWorldUnits(0.11),
+          toWorldUnits(0.18),
+          toWorldUnits(0.08),
+        ),
+        brakeCaliperMaterial,
+      );
+      brakeCaliper.position.set(
+        CAR_WHEEL_RADIUS_WORLD * 0.46,
+        CAR_WHEEL_RADIUS_WORLD * 0.08,
+        toWorldUnits(0.08),
+      );
+      wheelRotor.add(brakeCaliper);
+
       const rimRing = new THREE.Mesh(
         new THREE.TorusGeometry(
           CAR_WHEEL_RADIUS_WORLD * 0.64,
@@ -1394,17 +1506,38 @@ function buildMotionCartRig(THREE: ThreeModule) {
       wheelRotor.add(aeroCover);
 
       for (let spokeIndex = 0; spokeIndex < 5; spokeIndex += 1) {
-        const spoke = new THREE.Mesh(
+        const spokeLeft = new THREE.Mesh(
           new THREE.BoxGeometry(
-            CAR_WHEEL_RADIUS_WORLD * 0.66,
-            toWorldUnits(0.08),
+            CAR_WHEEL_RADIUS_WORLD * 0.56,
+            toWorldUnits(0.05),
             toWorldUnits(0.04),
           ),
           trimMaterial,
         );
-        spoke.position.x = CAR_WHEEL_RADIUS_WORLD * 0.1;
-        spoke.rotation.z = (Math.PI * 2 * spokeIndex) / 5;
-        wheelRotor.add(spoke);
+        spokeLeft.position.set(
+          CAR_WHEEL_RADIUS_WORLD * 0.12,
+          -toWorldUnits(0.05),
+          toWorldUnits(0.02),
+        );
+        spokeLeft.rotation.z = (Math.PI * 2 * spokeIndex) / 5 + 0.1;
+        wheelRotor.add(spokeLeft);
+
+        const spokeRight = spokeLeft.clone();
+        spokeRight.position.y *= -1;
+        spokeRight.rotation.z -= 0.2;
+        wheelRotor.add(spokeRight);
+
+        const aeroBlade = new THREE.Mesh(
+          new THREE.BoxGeometry(
+            CAR_WHEEL_RADIUS_WORLD * 0.28,
+            toWorldUnits(0.06),
+            toWorldUnits(0.03),
+          ),
+          rimMaterial,
+        );
+        aeroBlade.position.set(CAR_WHEEL_RADIUS_WORLD * 0.28, 0, toWorldUnits(0.03));
+        aeroBlade.rotation.z = (Math.PI * 2 * spokeIndex) / 5 + 0.2;
+        wheelRotor.add(aeroBlade);
       }
 
       const hub = new THREE.Mesh(
