@@ -1102,6 +1102,16 @@ function buildMotionCartRig(THREE: ThreeModule) {
     roughness: 0.42,
     metalness: 0.58,
   });
+  const spokeFaceMaterial = new THREE.MeshStandardMaterial({
+    color: 0xe9eef7,
+    roughness: 0.24,
+    metalness: 0.78,
+  });
+  const spokePocketMaterial = new THREE.MeshStandardMaterial({
+    color: 0x243042,
+    roughness: 0.42,
+    metalness: 0.24,
+  });
   const trimMaterial = new THREE.MeshStandardMaterial({
     color: new THREE.Color(MOTION_CART_COLORS.trim),
     roughness: 0.34,
@@ -1727,8 +1737,8 @@ function buildMotionCartRig(THREE: ThreeModule) {
 
       const aeroCover = new THREE.Mesh(
         new THREE.CylinderGeometry(
-          CAR_WHEEL_RADIUS_WORLD * 0.7,
-          CAR_WHEEL_RADIUS_WORLD * 0.66,
+          CAR_WHEEL_RADIUS_WORLD * 0.62,
+          CAR_WHEEL_RADIUS_WORLD * 0.58,
           toWorldUnits(0.04),
           32,
         ),
@@ -1738,44 +1748,76 @@ function buildMotionCartRig(THREE: ThreeModule) {
       aeroCover.position.z = rimFaceOffset + wheelSide * toWorldUnits(0.056);
       wheelRotor.add(aeroCover);
 
+      const spokeDesignRing = new THREE.Mesh(
+        new THREE.TorusGeometry(
+          CAR_WHEEL_RADIUS_WORLD * 0.53,
+          toWorldUnits(0.013),
+          10,
+          40,
+        ),
+        spokePocketMaterial,
+      );
+      spokeDesignRing.rotation.x = Math.PI / 2;
+      spokeDesignRing.position.z = rimFaceOffset + wheelSide * toWorldUnits(0.068);
+      wheelRotor.add(spokeDesignRing);
+
       for (let spokeIndex = 0; spokeIndex < 5; spokeIndex += 1) {
-        const spokeAngle = (Math.PI * 2 * spokeIndex) / 5;
+        const spokeAngle = (Math.PI * 2 * spokeIndex) / 5 - 0.06;
+        const spokeGroup = new THREE.Group();
+        spokeGroup.rotation.z = spokeAngle;
+
+        const spokePocket = new THREE.Mesh(
+          new THREE.BoxGeometry(
+            CAR_WHEEL_RADIUS_WORLD * 0.46,
+            toWorldUnits(0.084),
+            toWorldUnits(0.02),
+          ),
+          spokePocketMaterial,
+        );
+        spokePocket.position.set(
+          CAR_WHEEL_RADIUS_WORLD * 0.23,
+          0,
+          rimFaceOffset + wheelSide * toWorldUnits(0.044),
+        );
+        spokeGroup.add(spokePocket);
+
         const spokeLeft = new THREE.Mesh(
           new THREE.BoxGeometry(
-            CAR_WHEEL_RADIUS_WORLD * 0.48,
-            toWorldUnits(0.04),
+            CAR_WHEEL_RADIUS_WORLD * 0.36,
+            toWorldUnits(0.046),
             toWorldUnits(0.026),
           ),
-          trimMaterial,
+          spokeFaceMaterial,
         );
         spokeLeft.position.set(
-          CAR_WHEEL_RADIUS_WORLD * 0.14,
-          -toWorldUnits(0.04),
-          rimFaceOffset + wheelSide * toWorldUnits(0.016),
+          CAR_WHEEL_RADIUS_WORLD * 0.19,
+          -toWorldUnits(0.028),
+          rimFaceOffset + wheelSide * toWorldUnits(0.072),
         );
-        spokeLeft.rotation.z = spokeAngle + 0.12;
-        wheelRotor.add(spokeLeft);
+        spokeLeft.rotation.z = 0.16;
+        spokeGroup.add(spokeLeft);
 
         const spokeRight = spokeLeft.clone();
         spokeRight.position.y *= -1;
-        spokeRight.rotation.z -= 0.24;
-        wheelRotor.add(spokeRight);
+        spokeRight.rotation.z *= -1;
+        spokeGroup.add(spokeRight);
 
-        const aeroBlade = new THREE.Mesh(
+        const spokeAccent = new THREE.Mesh(
           new THREE.BoxGeometry(
-            CAR_WHEEL_RADIUS_WORLD * 0.24,
-            toWorldUnits(0.05),
-            toWorldUnits(0.02),
+            CAR_WHEEL_RADIUS_WORLD * 0.18,
+            toWorldUnits(0.016),
+            toWorldUnits(0.014),
           ),
-          rimMaterial,
+          trimMaterial,
         );
-        aeroBlade.position.set(
-          CAR_WHEEL_RADIUS_WORLD * 0.26,
+        spokeAccent.position.set(
+          CAR_WHEEL_RADIUS_WORLD * 0.33,
           0,
-          rimFaceOffset + wheelSide * toWorldUnits(0.04),
+          rimFaceOffset + wheelSide * toWorldUnits(0.09),
         );
-        aeroBlade.rotation.z = spokeAngle + 0.2;
-        wheelRotor.add(aeroBlade);
+        spokeGroup.add(spokeAccent);
+
+        wheelRotor.add(spokeGroup);
 
         const lug = new THREE.Mesh(
           new THREE.CylinderGeometry(
