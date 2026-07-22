@@ -1727,19 +1727,6 @@ function buildMotionCartRig(THREE: ThreeModule) {
       rimDish.position.z = rimFaceOffset + wheelSide * toWorldUnits(0.035);
       wheelRotor.add(rimDish);
 
-      const rimRing = new THREE.Mesh(
-        new THREE.TorusGeometry(
-          CAR_WHEEL_RADIUS_WORLD * 0.62,
-          toWorldUnits(0.024),
-          12,
-          36,
-        ),
-        windowTrimMaterial,
-      );
-      rimRing.rotation.x = Math.PI / 2;
-      rimRing.position.z = rimFaceOffset + wheelSide * toWorldUnits(0.024);
-      wheelRotor.add(rimRing);
-
       const aeroCover = new THREE.Mesh(
         new THREE.CylinderGeometry(
           CAR_WHEEL_RADIUS_WORLD * 0.66,
