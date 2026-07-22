@@ -1834,7 +1834,7 @@ function buildMotionCartRig(THREE: ThreeModule) {
       brakeCaliper.position.set(
         CAR_WHEEL_RADIUS_WORLD * 0.44,
         CAR_WHEEL_RADIUS_WORLD * 0.1,
-        wheelSide * toWorldUnits(0.12),
+        -wheelSide * toWorldUnits(0.1),
       );
       brakeCaliper.rotation.z = -0.18 * wheelSide;
       wheelAssembly.add(brakeCaliper);
