@@ -873,10 +873,6 @@ function createCenteredExtrudedGeometry(
 
 function createModel3BodyShape(THREE: ThreeModule) {
   const shape = new THREE.Shape();
-  const wheelArchHalfWidth = 0.56;
-  const wheelArchBaseY = 0.38;
-  const wheelArchApexY = 0.92;
-
   shape.moveTo(toWorldUnits(-2.24), toWorldUnits(0.4));
   shape.quadraticCurveTo(
     toWorldUnits(-2.38),
@@ -920,26 +916,6 @@ function createModel3BodyShape(THREE: ThreeModule) {
     toWorldUnits(2.04),
     toWorldUnits(0.38),
   );
-  shape.lineTo(
-    toWorldUnits(CAR_WHEEL_X_OFFSETS_M[0] + wheelArchHalfWidth),
-    toWorldUnits(wheelArchBaseY),
-  );
-  appendWheelArchOutline(shape, {
-    apexY: wheelArchApexY,
-    baseY: wheelArchBaseY,
-    centerX: CAR_WHEEL_X_OFFSETS_M[0],
-    halfWidth: wheelArchHalfWidth,
-  });
-  shape.lineTo(
-    toWorldUnits(CAR_WHEEL_X_OFFSETS_M[1] + wheelArchHalfWidth),
-    toWorldUnits(wheelArchBaseY),
-  );
-  appendWheelArchOutline(shape, {
-    apexY: wheelArchApexY,
-    baseY: wheelArchBaseY,
-    centerX: CAR_WHEEL_X_OFFSETS_M[1],
-    halfWidth: wheelArchHalfWidth,
-  });
   shape.lineTo(toWorldUnits(-2.08), toWorldUnits(0.38));
   shape.quadraticCurveTo(
     toWorldUnits(-2.18),
@@ -948,39 +924,42 @@ function createModel3BodyShape(THREE: ThreeModule) {
     toWorldUnits(0.4),
   );
 
+  shape.holes.push(createWheelWellPath(THREE, CAR_WHEEL_X_OFFSETS_M[0]));
+  shape.holes.push(createWheelWellPath(THREE, CAR_WHEEL_X_OFFSETS_M[1]));
+
   return shape;
 }
 
-function appendWheelArchOutline(
-  shape: InstanceType<ThreeModule["Shape"]>,
-  {
-    apexY,
-    baseY,
-    centerX,
-    halfWidth,
-  }: {
-    apexY: number;
-    baseY: number;
-    centerX: number;
-    halfWidth: number;
-  },
-) {
-  shape.bezierCurveTo(
-    toWorldUnits(centerX + halfWidth * 0.8),
-    toWorldUnits(baseY),
-    toWorldUnits(centerX + halfWidth * 0.52),
-    toWorldUnits(apexY - 0.06),
+function createWheelWellPath(THREE: ThreeModule, centerX: number) {
+  const path = new THREE.Path();
+  const halfArchWidth = 0.56;
+  const rockerY = 0.38;
+
+  path.moveTo(
+    toWorldUnits(centerX - halfArchWidth),
+    toWorldUnits(rockerY),
+  );
+  path.bezierCurveTo(
+    toWorldUnits(centerX - 0.52),
+    toWorldUnits(0.84),
+    toWorldUnits(centerX - 0.22),
+    toWorldUnits(0.93),
     toWorldUnits(centerX),
-    toWorldUnits(apexY),
+    toWorldUnits(0.93),
   );
-  shape.bezierCurveTo(
-    toWorldUnits(centerX - halfWidth * 0.52),
-    toWorldUnits(apexY - 0.06),
-    toWorldUnits(centerX - halfWidth * 0.8),
-    toWorldUnits(baseY),
-    toWorldUnits(centerX - halfWidth),
-    toWorldUnits(baseY),
+  path.bezierCurveTo(
+    toWorldUnits(centerX + 0.22),
+    toWorldUnits(0.93),
+    toWorldUnits(centerX + 0.52),
+    toWorldUnits(0.84),
+    toWorldUnits(centerX + halfArchWidth),
+    toWorldUnits(rockerY),
   );
+  path.lineTo(
+    toWorldUnits(centerX - halfArchWidth),
+    toWorldUnits(rockerY),
+  );
+  return path;
 }
 
 function createModel3CabinShape(THREE: ThreeModule) {
