@@ -1428,22 +1428,12 @@ a:focus-visible {
 
 .topic-tech-body {
   flex: 1;
-  gap: 12px;
+  gap: 0;
   max-width: calc(100% - 68px);
 }
 
 .topic-tech-card .entry-card-title {
   font-size: clamp(1.3rem, 1.45vw, 1.8rem);
-}
-
-.topic-tech-card .entry-card-copy {
-  max-width: 100%;
-  font-size: 14px;
-  line-height: 1.72;
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
 }
 
 .topic-tech-tags {

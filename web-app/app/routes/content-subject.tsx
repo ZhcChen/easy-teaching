@@ -95,7 +95,6 @@ export default function ContentSubjectPage({ params }: Route.ComponentProps) {
 
                 <div className="entry-card-body topic-tech-body">
                   <h3 className="entry-card-title">{topic.title}</h3>
-                  <p className="entry-card-copy">{topic.summary}</p>
                 </div>
 
                 <div className="topic-tech-tags">
