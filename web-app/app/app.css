@@ -4061,6 +4061,12 @@ html[data-theme="dark"] .force-state-pill.is-active {
   font-size: 13px;
 }
 
+.motion-stage-panel-note-inline {
+  fill: var(--canvas-copy);
+  font-size: 13px;
+  font-weight: 500;
+}
+
 .motion-stage-track-line,
 .motion-stage-distance-line,
 .motion-stage-velocity-arrow {

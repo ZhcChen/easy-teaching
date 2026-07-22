@@ -840,9 +840,9 @@ export function MotionTrackLab({
               />
               <text x={SVG_STAGE.panelX + 28} y={SVG_STAGE.graphY + 34} className="motion-stage-panel-title">
                 位移 - 时间
-              </text>
-              <text x={SVG_STAGE.panelX + 28} y={SVG_STAGE.graphY + 60} className="motion-stage-panel-copy">
-                曲线斜率越大，表示速度越快。
+                <tspan className="motion-stage-panel-note-inline">
+                  （曲线斜率越大，表示速度越快。）
+                </tspan>
               </text>
 
               {Array.from({ length: GRAPH_GRID_STEPS + 1 }).map((_, index) => {
@@ -928,13 +928,9 @@ export function MotionTrackLab({
                 className="motion-stage-panel-title"
               >
                 速度 - 时间
-              </text>
-              <text
-                x={SVG_STAGE.panelX + graphWidth + SVG_STAGE.graphGap + 28}
-                y={SVG_STAGE.graphY + 60}
-                className="motion-stage-panel-copy"
-              >
-                这条线越高，说明同一时刻速度越大。
+                <tspan className="motion-stage-panel-note-inline">
+                  （这条线越高，说明同一时刻速度越大。）
+                </tspan>
               </text>
 
               {Array.from({ length: GRAPH_GRID_STEPS + 1 }).map((_, index) => {
