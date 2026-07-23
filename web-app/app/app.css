@@ -2959,34 +2959,76 @@ html[data-theme="dark"] .force-state-pill.is-active {
   font-size: 14px;
 }
 
+.force-stage-scale-ring {
+  fill: rgba(9, 21, 38, 0.9);
+  stroke: rgba(164, 204, 255, 0.4);
+  stroke-width: 1.5;
+}
+
+.force-stage-scale-ring-hole {
+  fill: rgba(5, 13, 25, 0.96);
+  stroke: rgba(164, 204, 255, 0.18);
+  stroke-width: 1;
+}
+
+.force-stage-scale-connector {
+  stroke: rgba(228, 236, 248, 0.84);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
 .force-stage-scale-body {
-  fill: rgba(8, 20, 36, 0.72);
-  stroke: rgba(143, 194, 255, 0.22);
+  fill: rgba(10, 22, 39, 0.84);
+  stroke: rgba(143, 194, 255, 0.24);
   stroke-width: 1.5;
   filter: drop-shadow(0 10px 18px rgba(3, 10, 22, 0.3));
 }
 
 .force-stage-scale-track {
-  fill: rgba(255, 255, 255, 0.06);
-  stroke: rgba(147, 190, 255, 0.12);
+  fill: rgba(214, 232, 255, 0.08);
+  stroke: rgba(147, 190, 255, 0.18);
   stroke-width: 1;
 }
 
 .force-stage-scale-tick {
-  stroke: rgba(236, 243, 255, 0.22);
-  stroke-width: 1.2;
+  stroke: rgba(236, 243, 255, 0.28);
+  stroke-width: 1;
+  stroke-linecap: round;
+}
+
+.force-stage-scale-spring {
+  fill: none;
+  stroke: rgba(159, 197, 255, 0.72);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.force-stage-scale-rod {
+  stroke: rgba(236, 243, 255, 0.72);
+  stroke-width: 2.2;
   stroke-linecap: round;
 }
 
 .force-stage-scale-window {
-  fill: rgba(5, 13, 25, 0.76);
-  stroke: rgba(143, 194, 255, 0.14);
+  fill: rgba(4, 11, 22, 0.82);
+  stroke: rgba(143, 194, 255, 0.16);
   stroke-width: 1;
 }
 
 .force-stage-scale-head {
-  fill: rgba(13, 29, 50, 0.94);
-  stroke: rgba(143, 194, 255, 0.18);
+  fill: rgba(18, 38, 64, 0.96);
+  stroke: rgba(143, 194, 255, 0.22);
+}
+
+.force-stage-scale-grip {
+  fill: rgba(236, 243, 255, 0.18);
+}
+
+.force-stage-scale-handle-stem {
+  stroke: rgba(228, 236, 248, 0.72);
+  stroke-width: 2.6;
+  stroke-linecap: round;
 }
 
 .force-stage-scale-indicator {

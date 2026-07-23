@@ -1700,50 +1700,6 @@ export function BasicForceLab({
                   </text>
                 </g>
 
-                <g transform={`translate(${stage.springX}, ${stage.springY})`}>
-                  <rect x="2" y="8" width="132" height="48" rx="24" className="force-stage-scale-body" />
-                  <rect x="12" y="16" width="76" height="12" rx="6" className="force-stage-scale-track" />
-                  {Array.from({ length: 7 }, (_, index) => (
-                    <line
-                      key={`force-scale-tick-${index}`}
-                      x1={22 + index * 10}
-                      y1="18.5"
-                      x2={22 + index * 10}
-                      y2={index % 3 === 0 ? "27" : "24"}
-                      className="force-stage-scale-tick"
-                    />
-                  ))}
-                  <rect
-                    x="12"
-                    y="16"
-                    width={76 * displayedScene.readingRatio}
-                    height="12"
-                    rx="6"
-                    className="force-stage-scale-fill"
-                    fill={surfacePresetMeta.accent}
-                  />
-                  <circle
-                    cx={12 + 76 * displayedScene.readingRatio}
-                    cy="22"
-                    r="5"
-                    className="force-stage-scale-indicator"
-                    fill={surfacePresetMeta.accent}
-                  />
-                  <rect x="16" y="33" width="86" height="15" rx="7.5" className="force-stage-scale-window" />
-                  <text x="59" y="44" textAnchor="middle" className="force-stage-scale-reading">
-                    {formatNumber(displayedScene.pullForce, 1)} N
-                  </text>
-                  <rect x="106" y="15" width="22" height="34" rx="11" className="force-stage-scale-head" />
-                  <line x1="128" y1="32" x2="154" y2="32" className="force-stage-scale-hook" />
-                  <text x="68" y="72" textAnchor="middle" className="force-stage-scale-label">
-                    {mode === "measurement"
-                      ? "弹簧测力计"
-                      : mode === "manual-drag"
-                        ? "手动拉动端"
-                        : "恒力输入端"}
-                  </text>
-                </g>
-
                 <line
                   x1={stage.ropeStartX}
                   y1={stage.centerY}
@@ -1751,6 +1707,56 @@ export function BasicForceLab({
                   y2={stage.centerY}
                   className="force-stage-rope"
                 />
+
+                <g transform={`translate(${stage.springX}, ${stage.springY})`}>
+                  <circle cx="12" cy="32" r="10" className="force-stage-scale-ring" />
+                  <circle cx="12" cy="32" r="4.5" className="force-stage-scale-ring-hole" />
+                  <line x1="22" y1="32" x2="28" y2="32" className="force-stage-scale-connector" />
+                  <rect x="28" y="12" width="98" height="40" rx="20" className="force-stage-scale-body" />
+                  <rect x="38" y="18" width="54" height="12" rx="6" className="force-stage-scale-track" />
+                  <polyline
+                    points="42,24 47,20 52,28 57,20 62,28 67,20 72,28 77,24"
+                    className="force-stage-scale-spring"
+                  />
+                  {Array.from({ length: 6 }, (_, index) => (
+                    <line
+                      key={`force-scale-tick-${index}`}
+                      x1={74 + index * 6}
+                      y1="18"
+                      x2={74 + index * 6}
+                      y2={index % 2 === 0 ? "30" : "26"}
+                      className="force-stage-scale-tick"
+                    />
+                  ))}
+                  <line
+                    x1="78"
+                    y1="24"
+                    x2={78 + 12 * displayedScene.readingRatio}
+                    y2="24"
+                    className="force-stage-scale-rod"
+                  />
+                  <circle
+                    cx={80 + 10 * displayedScene.readingRatio}
+                    cy="24"
+                    r="4.5"
+                    className="force-stage-scale-indicator"
+                    fill={surfacePresetMeta.accent}
+                  />
+                  <rect x="46" y="34" width="48" height="12" rx="6" className="force-stage-scale-window" />
+                  <text x="70" y="43" textAnchor="middle" className="force-stage-scale-reading">
+                    {formatNumber(displayedScene.pullForce, 1)} N
+                  </text>
+                  <rect x="116" y="18" width="22" height="28" rx="11" className="force-stage-scale-head" />
+                  <rect x="123" y="24" width="8" height="16" rx="4" className="force-stage-scale-grip" />
+                  <line x1="138" y1="32" x2="146" y2="32" className="force-stage-scale-handle-stem" />
+                  <text x="74" y="72" textAnchor="middle" className="force-stage-scale-label">
+                    {mode === "measurement"
+                      ? "弹簧测力计"
+                      : mode === "manual-drag"
+                        ? "手动拉动端"
+                        : "恒力输入端"}
+                  </text>
+                </g>
 
                 <ellipse
                   cx={stage.centerX}
@@ -3248,13 +3254,13 @@ function computeStageLayout({
   const groundY = FORCE_SVG_STAGE.sceneGroundY;
   const sceneLeft = FORCE_SVG_STAGE.sceneInset;
   const sceneRight = width - FORCE_SVG_STAGE.sceneInset;
-  const springX = sceneRight - 176;
+  const springX = sceneRight - 184;
   const springY = groundY - 96;
-  const ropeEndX = springX + 154;
+  const ropeEndX = springX + 12;
   const blockWidth = contactAreaMeta.blockWidth;
   const blockHeight = contactAreaMeta.blockHeight;
   const startX = sceneLeft + 118;
-  const maxTravel = Math.max(180, ropeEndX - startX - blockWidth - 72);
+  const maxTravel = Math.max(180, ropeEndX - startX - blockWidth - 64);
   const travel = maxTravel * travelProgress;
   const blockX = startX + travel;
   const blockY = groundY - blockHeight - 18;
