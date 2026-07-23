@@ -1701,24 +1701,41 @@ export function BasicForceLab({
                 </g>
 
                 <g transform={`translate(${stage.springX}, ${stage.springY})`}>
-                  <rect width="138" height="62" rx="18" className="force-stage-scale-body" />
-                  <rect x="18" y="16" width="84" height="14" rx="7" className="force-stage-scale-track" />
+                  <rect x="2" y="8" width="132" height="48" rx="24" className="force-stage-scale-body" />
+                  <rect x="12" y="16" width="76" height="12" rx="6" className="force-stage-scale-track" />
+                  {Array.from({ length: 7 }, (_, index) => (
+                    <line
+                      key={`force-scale-tick-${index}`}
+                      x1={22 + index * 10}
+                      y1="18.5"
+                      x2={22 + index * 10}
+                      y2={index % 3 === 0 ? "27" : "24"}
+                      className="force-stage-scale-tick"
+                    />
+                  ))}
                   <rect
-                    x="18"
+                    x="12"
                     y="16"
-                    width={84 * displayedScene.readingRatio}
-                    height="14"
-                    rx="7"
+                    width={76 * displayedScene.readingRatio}
+                    height="12"
+                    rx="6"
                     className="force-stage-scale-fill"
                     fill={surfacePresetMeta.accent}
                   />
-                  <rect x="18" y="36" width="84" height="12" rx="6" className="force-stage-scale-window" />
-                  <text x="60" y="46" textAnchor="middle" className="force-stage-scale-reading">
+                  <circle
+                    cx={12 + 76 * displayedScene.readingRatio}
+                    cy="22"
+                    r="5"
+                    className="force-stage-scale-indicator"
+                    fill={surfacePresetMeta.accent}
+                  />
+                  <rect x="16" y="33" width="86" height="15" rx="7.5" className="force-stage-scale-window" />
+                  <text x="59" y="44" textAnchor="middle" className="force-stage-scale-reading">
                     {formatNumber(displayedScene.pullForce, 1)} N
                   </text>
-                  <rect x="108" y="20" width="24" height="22" rx="10" className="force-stage-scale-head" />
-                  <line x1="132" y1="31" x2="154" y2="31" className="force-stage-scale-hook" />
-                  <text x="69" y="80" textAnchor="middle" className="force-svg-caption">
+                  <rect x="106" y="15" width="22" height="34" rx="11" className="force-stage-scale-head" />
+                  <line x1="128" y1="32" x2="154" y2="32" className="force-stage-scale-hook" />
+                  <text x="68" y="72" textAnchor="middle" className="force-stage-scale-label">
                     {mode === "measurement"
                       ? "弹簧测力计"
                       : mode === "manual-drag"
