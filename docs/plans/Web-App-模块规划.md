@@ -30,7 +30,7 @@
 根目录模块建议调整为：
 
 - `web-app/`：当前主 Web 前端模块，面向 PC + H5
-- `app/`：Tauri 桌面宿主模块，直接复用 `web-app/` 前端产物
+- `app/`：Electron 桌面宿主模块，直接复用 `web-app/` 前端产物
 - `ui-design-preview/`：UI 设计与交互预览模块
 - `wechat-miniprogram/`：历史路线参考，暂不作为当前主线
 - `docs/`：规划、方案、归档
@@ -203,7 +203,8 @@ web-app/
 - 作为桌面端交付层存在
 - 不维护独立页面业务源码
 - 开发态直接加载 `web-app/` 开发服务
-- 构建态直接消费 `web-app/build/client`
+- 构建态先同步 `web-app/build/client` 到 `app/dist/`
+- 打包后的 Electron 通过本地静态服务加载 `app/dist/`
 - 这样可以让 Web 与桌面端默认保持同一套前端功能
 
 ### `wechat-miniprogram/`

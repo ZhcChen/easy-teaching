@@ -15,7 +15,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: release-app-${{ github.ref_name }}
+  group: release-app-${{ github.event.inputs.release_tag || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -42,39 +42,41 @@ jobs:
           RELEASE_TAG: ${{ github.event.inputs.release_tag || github.ref_name }}
 
   build:
-    name: Build ${{ matrix.platform.name }}
+    name: Build ${{ matrix.platform.name }} ${{ matrix.platform.arch }}
     needs: validate-tag
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       fail-fast: false
       matrix:
         platform:
-          - name: macOS arm64
+          - name: macOS
             runner: macos-latest
-            rust_target: aarch64-apple-darwin
+            target_flag: --mac
+            arch: arm64
+            arch_flag: --arm64
             artifact_name: app-macos-arm64-assets
-          - name: macOS x64
+          - name: macOS
             runner: macos-15-intel
-            rust_target: x86_64-apple-darwin
+            target_flag: --mac
+            arch: x64
+            arch_flag: --x64
             artifact_name: app-macos-x64-assets
-          - name: Windows x64
+          - name: Windows
             runner: windows-latest
-            rust_target: x86_64-pc-windows-msvc
+            target_flag: --win
+            arch: x64
+            arch_flag: --x64
             artifact_name: app-windows-x64-assets
-          - name: Linux x64
+          - name: Linux
             runner: ubuntu-latest
-            rust_target: x86_64-unknown-linux-gnu
+            target_flag: --linux
+            arch: x64
+            arch_flag: --x64
             artifact_name: app-linux-x64-assets
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-
-      - name: Install Linux dependencies
-        if: matrix.platform.runner == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -84,16 +86,6 @@ jobs:
           cache-dependency-path: |
             app/package-lock.json
             web-app/package-lock.json
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.platform.rust_target }}
-
-      - name: Cache Rust build outputs
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: "./app/src-tauri -> target"
 
       - name: Install web-app dependencies
         run: npm ci --prefix web-app
@@ -105,15 +97,18 @@ jobs:
         run: npm --prefix web-app run typecheck
 
       - name: Build desktop bundles
-        run: npm --prefix app run build -- --target ${{ matrix.platform.rust_target }}
+        run: npm --prefix app run dist:ci -- ${{ matrix.platform.target_flag }} ${{ matrix.platform.arch_flag }}
         env:
-          APPLE_SIGNING_IDENTITY: ${{ contains(matrix.platform.runner, 'macos') && '-' || '' }}
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: Collect release assets
+        run: node app/scripts/collect-release-assets.mjs app/release .artifacts/release-assets
 
       - name: Upload release assets
         uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.platform.artifact_name }}
-          path: app/src-tauri/target/${{ matrix.platform.rust_target }}/release/bundle/**/*
+          path: .artifacts/release-assets/*
           if-no-files-found: error
 
   publish:
@@ -121,10 +116,23 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
       - name: Download built assets
         uses: actions/download-artifact@v8
         with:
           path: .artifacts/downloaded-assets
+
+      - name: Flatten release assets
+        run: node app/scripts/collect-release-assets.mjs .artifacts/downloaded-assets .artifacts/publish-assets
 
       - name: Create release notes
         run: |
@@ -132,7 +140,7 @@ jobs:
           Easy Teaching 桌面端发布包。
 
           - Web 前端来源：web-app
-          - 桌面宿主：Tauri app
+          - 桌面宿主：Electron app
           EOF
 
       - name: Create or update GitHub release
@@ -142,16 +150,12 @@ jobs:
         run: |
           set -euo pipefail
 
-          mapfile -d '' -t ASSET_FILES < <(find .artifacts/downloaded-assets -type f \( \
+          mapfile -d '' -t ASSET_FILES < <(find .artifacts/publish-assets -type f \( \
             -name "*.dmg" -o \
-            -name "*.app.tar.gz" -o \
-            -name "*.app.tar.gz.sig" -o \
+            -name "*.zip" -o \
             -name "*.deb" -o \
             -name "*.AppImage" -o \
-            -name "*.rpm" -o \
-            -name "*.msi" -o \
-            -name "*.exe" -o \
-            -name "*.sig" \
+            -name "*.exe" \
           \) -print0)
 
           if [[ ${#ASSET_FILES[@]} -eq 0 ]]; then

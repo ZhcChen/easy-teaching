@@ -5,9 +5,14 @@
 **/miniprogram_npm/
 **/node_modules/
 **/dist/
+**/dist-electron/
 **/build/
+!app/build/
+!app/build/**
 **/coverage/
+**/release/
 **/target/
 **/src-tauri/gen/
 **/project.private.config.json
 .playwright-mcp/
+.artifacts/

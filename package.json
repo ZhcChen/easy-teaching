@@ -6,7 +6,7 @@
     "build:web-app": "npm --prefix web-app run build",
     "typecheck:web-app": "npm --prefix web-app run typecheck",
     "dev:app": "npm --prefix app run dev",
-    "build:app": "npm --prefix app run build",
+    "build:app": "npm --prefix app run dist",
     "check:app": "npm --prefix app run check",
     "verify:app-release": "npm --prefix app run verify:release-tag"
   }

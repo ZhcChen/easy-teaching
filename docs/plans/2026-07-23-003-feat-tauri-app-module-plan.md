@@ -4,9 +4,13 @@ type: feat
 status: completed
 date: 2026-07-23
 origin: direct-user-request-2026-07-23
+superseded_by: docs/plans/2026-07-23-004-refactor-app-electron-host-plan.md
 ---
 
 # feat: Establish Tauri app module for desktop delivery
+
+> 历史阶段方案。
+> 自 2026-07-23 起，当前仓库桌面宿主已由 `Electron` 替代，见 `docs/plans/2026-07-23-004-refactor-app-electron-host-plan.md`。
 
 ## Overview
 

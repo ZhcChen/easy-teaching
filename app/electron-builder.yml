@@ -1,0 +1,40 @@
+appId: com.zhcchen.easyteaching
+productName: Easy Teaching
+asar: true
+icon: build/icons/icon
+artifactName: Easy-Teaching-${version}-${os}-${arch}.${ext}
+
+directories:
+  output: release
+
+files:
+  - dist/**
+  - dist-electron/**
+  - package.json
+
+mac:
+  category: public.app-category.education
+  identity: "-"
+  hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.inherit.plist
+  target:
+    - target: dmg
+    - target: zip
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+linux:
+  category: Education
+  executableName: easy-teaching
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
