@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 type ControlOptionItem = {
   key: string;
   label: string;
-  description: string;
+  description?: string;
   active?: boolean;
   disabled?: boolean;
   preview?: ReactNode;
@@ -36,6 +36,7 @@ export function ControlOptionGroup({
           "control-option-card",
           item.active ? "is-active" : "",
           item.preview ? "has-preview" : "",
+          !item.preview && !item.description ? "is-simple" : "",
         ]
           .filter(Boolean)
           .join(" ");
@@ -55,7 +56,9 @@ export function ControlOptionGroup({
               </span>
             ) : null}
             <strong className="control-option-title">{item.label}</strong>
-            <span className="control-option-copy">{item.description}</span>
+            {item.description ? (
+              <span className="control-option-copy">{item.description}</span>
+            ) : null}
           </button>
         );
       })}

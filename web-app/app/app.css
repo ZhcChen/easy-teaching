@@ -2569,6 +2569,18 @@ a:focus-visible {
   min-height: 126px;
 }
 
+.control-option-card.is-simple {
+  min-height: 52px;
+  justify-content: center;
+  gap: 0;
+  padding: 12px 14px;
+}
+
+.control-option-card.is-simple .control-option-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .control-option-title {
   font-size: 13px;
   line-height: 1.3;

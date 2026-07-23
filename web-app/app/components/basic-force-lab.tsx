@@ -652,10 +652,7 @@ export function BasicForceLab({
     },
   ];
 
-  const currentForce = forceRows.find((item) => item.key === activeForce) ?? forceRows[0];
   const latestRecord = runRecords[0] ?? null;
-  const comparisonRecord = runRecords[1] ?? null;
-  const recentRecords = runRecords.slice(0, 2);
   const canBreakaway = constantPullForce > metrics.staticLimit;
 
   const visibleForces = {
@@ -786,10 +783,6 @@ export function BasicForceLab({
     1,
   );
   const verticalMax = Math.max(displayedScene.weight, displayedScene.normal, 1);
-  const measurementComparisonCopy =
-    latestRecord && comparisonRecord
-      ? `与上一组相比，稳定读数变化 ${formatSignedNumber(latestRecord.kineticFriction - comparisonRecord.kineticFriction)} N。`
-      : "先完成一组测量，再切换材质、压力或摆放方式做第二组对比。";
   const currentModeLabel =
     FORCE_MODE_OPTIONS.find((item) => item.key === mode)?.label ?? "实验测量";
   const forceGuideX = forceGraph.mapTime(currentTimelineSample.timeSeconds);
@@ -892,10 +885,6 @@ export function BasicForceLab({
 
     seekExperiment(targetStep.elapsedMs);
     setActiveForce(targetStep.forceKey);
-  }
-
-  function clearRecords() {
-    setRunRecords([]);
   }
 
   return (
@@ -1067,7 +1056,6 @@ export function BasicForceLab({
                     items={SURFACE_PRESETS.map((preset) => ({
                       key: preset.key,
                       label: preset.label,
-                      description: preset.description,
                       active: surfacePreset === preset.key,
                       onClick: () => setSurfacePreset(preset.key),
                     }))}
@@ -1076,85 +1064,15 @@ export function BasicForceLab({
                 </ControlPanelSection>
 
                 <ControlPanelSection title="摆放方式" hint="验证面积是否进入公式">
-              <ControlOptionGroup
-                items={CONTACT_AREAS.map((item) => ({
-                  key: item.key,
-                  label: item.label,
-                  description: item.description,
-                  active: contactArea === item.key,
-                  preview: (
-                    <span className={`control-option-preview is-${item.key}`}>
-                      <span />
-                    </span>
-                  ),
-                  onClick: () => setContactArea(item.key),
-                }))}
-                columns={3}
+                  <ControlOptionGroup
+                    items={CONTACT_AREAS.map((item) => ({
+                      key: item.key,
+                      label: item.label,
+                      active: contactArea === item.key,
+                      onClick: () => setContactArea(item.key),
+                    }))}
+                    columns={3}
                   />
-                </ControlPanelSection>
-
-                <ControlPanelSection
-                  title="当前结论"
-                  hint={mode === "measurement" ? "重点看稳定读数和对比结果" : "重点看是否起动，以及位移 / 速度变化"}
-                >
-                  <p className="force-inline-copy">{currentForce.description}</p>
-                  <p className="force-inline-copy">{displayedScene.summary}</p>
-                  <p className="force-inline-copy">{displayedScene.motionHint}</p>
-                  <p className="force-inline-copy">{experimentStatus.formula}</p>
-
-                  {mode === "measurement" ? (
-                    <div className="force-stage-records">
-                      <div className="force-stage-records-head">
-                        <p className="surface-eyebrow">最近对比</p>
-                        {runRecords.length > 1 ? (
-                          <button type="button" className="force-text-button" onClick={clearRecords}>
-                            清空记录
-                          </button>
-                        ) : null}
-                      </div>
-
-                      <p className="force-stage-empty">{measurementComparisonCopy}</p>
-
-                      {recentRecords.length > 0 ? (
-                        <div className="force-stage-record-list is-sidebar">
-                          {recentRecords.map((record, index) => (
-                            <article key={record.id} className="force-stage-record-card">
-                              <div className="force-stage-record-head">
-                                <strong>{index === 0 ? "当前结果" : "上一组结果"}</strong>
-                                <StatusPill>{formatNumber(record.kineticFriction, 1)} N</StatusPill>
-                              </div>
-                              <div className="force-stage-record-meta">
-                                <span>{record.surfaceLabel}</span>
-                                <span>压力 {formatNumber(record.pressure, 1)} N</span>
-                                <span>{record.contactAreaLabel}</span>
-                              </div>
-                            </article>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <div className="force-insight-grid force-insight-grid-compact">
-                      <article className="force-insight-card">
-                        <span className="force-insight-label">恒定拉力</span>
-                        <strong className="force-insight-value">{formatNumber(constantPullForce, 1)} N</strong>
-                      </article>
-                      <article className="force-insight-card">
-                        <span className="force-insight-label">合力</span>
-                        <strong className="force-insight-value">{formatNumber(displayedScene.netForce, 2)} N</strong>
-                      </article>
-                      <article className="force-insight-card">
-                        <span className="force-insight-label">加速度</span>
-                        <strong className="force-insight-value">{formatNumber(displayedScene.acceleration, 2)} m/s²</strong>
-                      </article>
-                      <article className="force-insight-card">
-                        <span className="force-insight-label">位移 / 速度</span>
-                        <strong className="force-insight-value">
-                          {formatNumber(displayedScene.displacement, 2)} m · {formatNumber(displayedScene.velocity, 2)} m/s
-                        </strong>
-                      </article>
-                    </div>
-                  )}
                 </ControlPanelSection>
               </div>
             </>
@@ -2825,11 +2743,6 @@ function getSuggestedForceForPhase(phase: ExperimentPhase): ForceKey {
     default:
       return "gravity";
   }
-}
-
-function formatSignedNumber(value: number) {
-  const prefix = value > 0 ? "+" : "";
-  return `${prefix}${formatNumber(value, 1)}`;
 }
 
 function lerp(start: number, end: number, progress: number) {
