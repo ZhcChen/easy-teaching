@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { BasicForceThreeStage } from "./basic-force-three-stage";
 import { ControlButton } from "./control-button";
 import { ControlChipGroup } from "./control-chip-group";
-import { ControlOptionGroup } from "./control-option-group";
 import { ControlPanelSection } from "./control-panel-section";
 import { ControlRange } from "./control-range";
 import { ControlStatusBar } from "./control-status-bar";
@@ -1052,7 +1051,7 @@ export function BasicForceLab({
                 </ControlPanelSection>
 
                 <ControlPanelSection title="接触材质" hint="改变摩擦系数 μ">
-                  <ControlOptionGroup
+                  <ControlChipGroup
                     items={SURFACE_PRESETS.map((preset) => ({
                       key: preset.key,
                       label: preset.label,
@@ -1064,7 +1063,7 @@ export function BasicForceLab({
                 </ControlPanelSection>
 
                 <ControlPanelSection title="摆放方式" hint="验证面积是否进入公式">
-                  <ControlOptionGroup
+                  <ControlChipGroup
                     items={CONTACT_AREAS.map((item) => ({
                       key: item.key,
                       label: item.label,
