@@ -179,17 +179,17 @@ const FORCE_VIEW_STORAGE_KEY = "easy-teaching.basic-force.view-mode";
 const FORCE_PANEL_COLLAPSED_STORAGE_KEY = "easy-teaching.basic-force.panel-collapsed";
 const FORCE_SVG_STAGE = {
   width: 1280,
-  height: 760,
+  height: 960,
   panelX: 72,
-  panelY: 72,
+  panelY: 92,
   panelWidth: 1136,
-  scenePanelHeight: 236,
-  sceneGroundY: 282,
+  scenePanelHeight: 252,
+  sceneGroundY: 308,
   sceneLeft: 132,
   sceneRight: 1098,
-  graphY: 344,
+  graphY: 370,
   graphGap: 24,
-  graphHeight: 346,
+  graphHeight: 560,
 };
 const FORCE_VIEW_OPTIONS = [
   {
@@ -2620,7 +2620,7 @@ function computeStageLayout({
   const graphWidth = (panelWidth - graphGap) / 2;
   const groundY = FORCE_SVG_STAGE.sceneGroundY;
   const springX = FORCE_SVG_STAGE.sceneRight - 176;
-  const springY = 186;
+  const springY = groundY - 96;
   const ropeEndX = springX + 154;
   const blockWidth = contactAreaMeta.blockWidth;
   const blockHeight = contactAreaMeta.blockHeight;
