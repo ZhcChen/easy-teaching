@@ -67,12 +67,24 @@ jobs:
             arch: x64
             arch_flag: --x64
             artifact_name: app-windows-x64-assets
+          - name: Windows
+            runner: windows-11-arm
+            target_flag: --win
+            arch: arm64
+            arch_flag: --arm64
+            artifact_name: app-windows-arm64-assets
           - name: Linux
             runner: ubuntu-latest
             target_flag: --linux
             arch: x64
             arch_flag: --x64
             artifact_name: app-linux-x64-assets
+          - name: Linux
+            runner: ubuntu-24.04-arm
+            target_flag: --linux
+            arch: arm64
+            arch_flag: --arm64
+            artifact_name: app-linux-arm64-assets
 
     steps:
       - name: Checkout
@@ -96,6 +108,9 @@ jobs:
       - name: Typecheck web-app
         run: npm --prefix web-app run typecheck
 
+      - name: Check Electron host
+        run: npm --prefix app run check
+
       - name: Build desktop bundles
         run: npm --prefix app run dist:ci -- ${{ matrix.platform.target_flag }} ${{ matrix.platform.arch_flag }}
         env:
@@ -118,6 +133,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -134,18 +151,16 @@ jobs:
       - name: Flatten release assets
         run: node app/scripts/collect-release-assets.mjs .artifacts/downloaded-assets .artifacts/publish-assets
 
-      - name: Create release notes
-        run: |
-          cat <<'EOF' > .artifacts/release-notes.md
-          Easy Teaching 桌面端发布包。
-
-          - Web 前端来源：web-app
-          - 桌面宿主：Electron app
-          EOF
+      - name: Generate release notes
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.inputs.release_tag || github.ref_name }}
+        run: node app/scripts/generate-release-notes.mjs "${RELEASE_TAG}" "${GITHUB_REPOSITORY}" .artifacts/publish-assets .artifacts/release-notes.md
 
       - name: Create or update GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
           RELEASE_TAG: ${{ github.event.inputs.release_tag || github.ref_name }}
         run: |
           set -euo pipefail
