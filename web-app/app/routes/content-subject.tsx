@@ -71,6 +71,7 @@ export default function ContentSubjectPage({ params }: Route.ComponentProps) {
           {subject.topics.map((topic) => {
             const modeClass = getTopicModeClass(topic.mode);
             const themeClass = getTopicThemeClass(topic.id);
+            const modeBadges = getTopicModeBadges(topic.mode);
 
             return (
               <Link
@@ -87,8 +88,11 @@ export default function ContentSubjectPage({ params }: Route.ComponentProps) {
 
                 <div className="entry-card-top topic-tech-top">
                   <div className="entry-card-badges">
-                    <span className="entry-badge">{topic.mode}</span>
-                    <span className="entry-badge is-soft">{topic.status}</span>
+                    {modeBadges.map((badge) => (
+                      <span key={badge.label} className={`entry-badge${badge.soft ? " is-soft" : ""}`}>
+                        {badge.label}
+                      </span>
+                    ))}
                   </div>
                   <span className="entry-card-arrow">进入页面</span>
                 </div>
@@ -128,6 +132,17 @@ function getTopicModeClass(mode: string) {
   }
 
   return "is-2d";
+}
+
+function getTopicModeBadges(mode: string) {
+  if (mode === "2D / 3D") {
+    return [
+      { label: "2D", soft: false },
+      { label: "3D", soft: true },
+    ];
+  }
+
+  return [{ label: mode, soft: false }];
 }
 
 function getTopicThemeClass(topicId: string) {

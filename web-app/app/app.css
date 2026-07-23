@@ -1308,9 +1308,9 @@ a:focus-visible {
 .topic-tech-card {
   --topic-accent: #4f88ff;
   --topic-accent-soft: rgba(79, 136, 255, 0.16);
-  min-height: 248px;
-  gap: 14px;
-  padding: 20px;
+  min-height: 216px;
+  gap: 12px;
+  padding: 18px;
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--surface-strong) 95%, transparent) 0%, color-mix(in srgb, var(--surface-soft) 88%, transparent) 100%);
 }
@@ -1367,10 +1367,10 @@ a:focus-visible {
 
 .topic-tech-orbits {
   position: absolute;
-  right: 18px;
-  bottom: 18px;
-  width: 76px;
-  height: 76px;
+  right: 16px;
+  bottom: 16px;
+  width: 72px;
+  height: 72px;
   opacity: 0.84;
   pointer-events: none;
 }
