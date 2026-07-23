@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
+import { BasicForceThreeStage } from "./basic-force-three-stage";
 import { ControlButton } from "./control-button";
 import { ControlOptionGroup } from "./control-option-group";
 import { ControlPanelSection } from "./control-panel-section";
 import { ControlRange } from "./control-range";
 import { ControlStatusBar } from "./control-status-bar";
 import { StatusPill } from "./status-pill";
+import { VisualModeSwitch } from "./visual-mode-switch";
 import type { TeachingTopic } from "../data/teaching-catalog";
 
 type ForceKey = "gravity" | "normal" | "pull" | "friction" | "net";
@@ -14,6 +16,7 @@ type Tone = "balanced" | "warning" | "active";
 type SurfacePresetKey = "smooth-board" | "wood-board" | "cloth" | "towel";
 type ContactAreaKey = "flat" | "side" | "upright";
 type ExperimentPhase = "idle" | "ramping" | "breakaway" | "uniform" | "complete";
+type ForceViewMode = "2d" | "3d";
 
 type BasicForceLabProps = {
   topic: TeachingTopic;
@@ -135,6 +138,20 @@ const GRAVITY = 9.8;
 const RAMP_DURATION_MS = 1500;
 const BREAKAWAY_DURATION_MS = 900;
 const UNIFORM_DURATION_MS = 1800;
+const FORCE_VIEW_STORAGE_KEY = "easy-teaching.basic-force.view-mode";
+const FORCE_PANEL_COLLAPSED_STORAGE_KEY = "easy-teaching.basic-force.panel-collapsed";
+const FORCE_VIEW_OPTIONS = [
+  {
+    key: "2d",
+    label: "2D",
+    title: "2D 受力解析",
+  },
+  {
+    key: "3d",
+    label: "3D",
+    title: "3D 实验场景",
+  },
+] as const;
 
 const SURFACE_PRESETS: SurfacePreset[] = [
   {
@@ -224,6 +241,9 @@ export function BasicForceLab({
   onToggleFullscreen,
   fullscreenRef,
 }: BasicForceLabProps) {
+  const [viewMode, setViewMode] = useState<ForceViewMode>(readStoredForceViewMode);
+  const [isControlPanelCollapsed, setIsControlPanelCollapsed] =
+    useState(readStoredForcePanelCollapsed);
   const [pressure, setPressure] = useState(DEFAULT_VALUES.pressure);
   const [surfacePreset, setSurfacePreset] = useState<SurfacePresetKey>(DEFAULT_VALUES.surfacePreset);
   const [contactArea, setContactArea] = useState<ContactAreaKey>(DEFAULT_VALUES.contactArea);
@@ -235,6 +255,8 @@ export function BasicForceLab({
   const [runRecords, setRunRecords] = useState<ExperimentRecord[]>([]);
   const hasMountedRef = useRef(false);
   const lastRecordedRunRef = useRef(0);
+  const playbackFrameRef = useRef<number | null>(null);
+  const playbackElapsedRef = useRef(0);
 
   const surfacePresetMeta =
     SURFACE_PRESETS.find((item) => item.key === surfacePreset) ?? SURFACE_PRESETS[1];
@@ -266,18 +288,32 @@ export function BasicForceLab({
   const totalExperimentMs = RAMP_DURATION_MS + BREAKAWAY_DURATION_MS + UNIFORM_DURATION_MS;
 
   useEffect(() => {
+    playbackElapsedRef.current = experimentElapsedMs;
+  }, [experimentElapsedMs]);
+
+  useEffect(() => {
     if (!isExperimentRunning) {
+      playbackFrameRef.current = null;
       return;
     }
 
     let animationFrameId = 0;
-    const startTime = performance.now() - experimentElapsedMs;
 
     const tick = (timestamp: number) => {
-      const nextElapsedMs = Math.min(timestamp - startTime, totalExperimentMs);
+      if (playbackFrameRef.current === null) {
+        playbackFrameRef.current = timestamp;
+        animationFrameId = window.requestAnimationFrame(tick);
+        return;
+      }
+
+      const deltaMs = timestamp - playbackFrameRef.current;
+      playbackFrameRef.current = timestamp;
+      const nextElapsedMs = Math.min(playbackElapsedRef.current + deltaMs, totalExperimentMs);
+      playbackElapsedRef.current = nextElapsedMs;
       setExperimentElapsedMs(nextElapsedMs);
 
       if (nextElapsedMs >= totalExperimentMs) {
+        playbackFrameRef.current = null;
         setIsExperimentRunning(false);
         return;
       }
@@ -290,7 +326,7 @@ export function BasicForceLab({
     return () => {
       window.cancelAnimationFrame(animationFrameId);
     };
-  }, [experimentElapsedMs, isExperimentRunning, totalExperimentMs]);
+  }, [isExperimentRunning, totalExperimentMs]);
 
   const hasPlaybackStarted = hasExperimentRun || isExperimentRunning || experimentElapsedMs > 0;
 
@@ -348,6 +384,25 @@ export function BasicForceLab({
     surfacePresetMeta.label,
     totalExperimentMs,
   ]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem(FORCE_VIEW_STORAGE_KEY, viewMode);
+  }, [viewMode]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem(
+      FORCE_PANEL_COLLAPSED_STORAGE_KEY,
+      isControlPanelCollapsed ? "1" : "0",
+    );
+  }, [isControlPanelCollapsed]);
 
   const forceRows: ForceRow[] = [
     {
@@ -546,134 +601,169 @@ export function BasicForceLab({
   }
 
   return (
-    <section ref={fullscreenRef} className="visual-shell force-lab-shell">
-      <div className="force-lab-layout">
-        <aside className="force-control-panel">
-          <div className="force-control-header">
-            <div className="force-control-title-block">
-              <h4 className="force-control-title">控制面板</h4>
-              <p className="force-control-copy">先改变量，再播放实验。</p>
+    <section ref={fullscreenRef} className="visual-shell force-lab-shell basic-force-lab-shell">
+      <div
+        className={
+          isControlPanelCollapsed
+            ? "force-lab-layout basic-force-lab-layout is-collapsed"
+            : "force-lab-layout basic-force-lab-layout"
+        }
+      >
+        <aside
+          className={
+            isControlPanelCollapsed
+              ? "force-control-panel basic-force-control-panel is-collapsed"
+              : "force-control-panel basic-force-control-panel"
+          }
+        >
+          {isControlPanelCollapsed ? (
+            <div className="force-panel-collapsed-shell">
+              <button
+                type="button"
+                className="force-panel-toggle is-collapsed-only"
+                onClick={() => setIsControlPanelCollapsed(false)}
+                aria-label="展开控制面板"
+                title="展开控制面板"
+              >
+                <PanelChevronIcon collapsed />
+              </button>
             </div>
-          </div>
-
-          <div className="force-control-scroll">
-            <ControlPanelSection title="实验控制" hint="先预测，再播放，再对比" accent>
-              <ControlStatusBar
-                items={[
-                  <StatusPill key="state" tone={displayedScene.stateTone}>
-                    {displayedScene.stateLabel}
-                  </StatusPill>,
-                  <StatusPill key="mode">{displayedScene.frictionModeLabel}</StatusPill>,
-                  <StatusPill key="limit">
-                    f静,max {formatNumber(metrics.staticLimit, 1)} N
-                  </StatusPill>,
-                ]}
-              />
-
-              <div className="force-action-grid">
-                <ControlButton
-                  variant="primary"
-                  onClick={() => {
-                    if (isExperimentRunning) {
-                      pauseExperiment();
-                      return;
-                    }
-
-                    if (hasPartialPlayback) {
-                      resumeExperiment();
-                      return;
-                    }
-
-                    startExperiment();
-                  }}
+          ) : (
+            <>
+              <div className="force-control-header">
+                <div className="force-control-title-block">
+                  <h4 className="force-control-title">控制面板</h4>
+                  <p className="force-control-copy">先改变量，再播放实验。</p>
+                </div>
+                <button
+                  type="button"
+                  className="force-panel-toggle"
+                  onClick={() => setIsControlPanelCollapsed(true)}
+                  aria-label="收起控制面板"
+                  title="收起控制面板"
                 >
-                  {primaryActionLabel}
-                </ControlButton>
-                <ControlButton onClick={startExperiment}>
-                  从头播放
-                </ControlButton>
-                <ControlButton onClick={resetDefaults}>
-                  恢复默认
-                </ControlButton>
+                  <PanelChevronIcon collapsed={false} />
+                </button>
               </div>
 
-              <div className="force-walkthrough-steps is-panel">
-                {phaseSteps.map((step, index) => (
-                  <button
-                    key={step.phase}
-                    type="button"
-                    className={activePhase === step.phase ? "force-step-chip is-active" : "force-step-chip"}
-                    onClick={() => jumpToPhase(step.phase)}
-                  >
-                    <span className="force-step-chip-index">{index + 1}</span>
-                    <span>{step.label}</span>
-                  </button>
-                ))}
-              </div>
+              <div className="force-control-scroll basic-force-control-scroll">
+                <ControlPanelSection title="实验控制" hint="先预测，再播放，再对比" accent>
+                  <ControlStatusBar
+                    items={[
+                      <StatusPill key="state" tone={displayedScene.stateTone}>
+                        {displayedScene.stateLabel}
+                      </StatusPill>,
+                      <StatusPill key="mode">{displayedScene.frictionModeLabel}</StatusPill>,
+                      <StatusPill key="limit">
+                        f静,max {formatNumber(metrics.staticLimit, 1)} N
+                      </StatusPill>,
+                    ]}
+                  />
 
-              <ControlRange
-                id="force-experiment-progress"
-                label="实验时间轴"
-                min={0}
-                max={totalExperimentMs}
-                step={10}
-                value={hasPlaybackStarted ? experimentElapsedMs : 0}
-                valueFormatter={() => `${Math.round((experimentStatus.progress || 0) * 100)}%`}
-                onChange={seekExperiment}
-              />
-            </ControlPanelSection>
+                  <div className="force-action-grid">
+                    <ControlButton
+                      variant="primary"
+                      onClick={() => {
+                        if (isExperimentRunning) {
+                          pauseExperiment();
+                          return;
+                        }
 
-            <ControlPanelSection title="研究目标" hint="只观察三个教学变量">
-              <div className="force-highlight-row is-panel">
-                {OBJECTIVES.map((item) => (
-                  <span key={item.title} className="force-highlight-chip">
-                    {item.title}
-                  </span>
-                ))}
-              </div>
+                        if (hasPartialPlayback) {
+                          resumeExperiment();
+                          return;
+                        }
 
-              <p className="force-inline-copy">{displayedScene.summary}</p>
-              <p className="force-inline-copy">{displayedScene.motionHint}</p>
-            </ControlPanelSection>
+                        startExperiment();
+                      }}
+                    >
+                      {primaryActionLabel}
+                    </ControlButton>
+                    <ControlButton onClick={startExperiment}>
+                      从头播放
+                    </ControlButton>
+                    <ControlButton onClick={resetDefaults}>
+                      恢复默认
+                    </ControlButton>
+                  </div>
 
-            <ControlPanelSection title="压力 / 正压力" hint="直接改变 N 的大小">
-              <ControlRange
-                id="force-pressure"
-                label="当前压力"
-                unit="N"
-                min={2}
-                max={10}
-                step={0.5}
-                value={pressure}
-                onChange={setPressure}
-              />
+                  <div className="force-walkthrough-steps is-panel">
+                    {phaseSteps.map((step, index) => (
+                      <button
+                        key={step.phase}
+                        type="button"
+                        className={activePhase === step.phase ? "force-step-chip is-active" : "force-step-chip"}
+                        onClick={() => jumpToPhase(step.phase)}
+                      >
+                        <span className="force-step-chip-index">{index + 1}</span>
+                        <span>{step.label}</span>
+                      </button>
+                    ))}
+                  </div>
 
-              <div className="force-insight-grid force-insight-grid-compact">
-                <article className="force-insight-card">
-                  <span className="force-insight-label">等效质量</span>
-                  <strong className="force-insight-value">{formatNumber(metrics.massEquivalent, 2)} kg</strong>
-                </article>
-                <article className="force-insight-card">
-                  <span className="force-insight-label">理论滑动摩擦</span>
-                  <strong className="force-insight-value">{formatNumber(metrics.kineticFriction, 1)} N</strong>
-                </article>
-              </div>
-            </ControlPanelSection>
+                  <ControlRange
+                    id="force-experiment-progress"
+                    label="实验时间轴"
+                    min={0}
+                    max={totalExperimentMs}
+                    step={10}
+                    value={hasPlaybackStarted ? experimentElapsedMs : 0}
+                    valueFormatter={() => `${Math.round((experimentStatus.progress || 0) * 100)}%`}
+                    onChange={seekExperiment}
+                  />
+                </ControlPanelSection>
 
-            <ControlPanelSection title="接触材质" hint="改变摩擦系数 μ">
-              <ControlOptionGroup
-                items={SURFACE_PRESETS.map((preset) => ({
-                  key: preset.key,
-                  label: preset.label,
-                  description: preset.description,
-                  active: surfacePreset === preset.key,
-                  onClick: () => setSurfacePreset(preset.key),
-                }))}
-                columns={2}
-              />
-            </ControlPanelSection>
+                <ControlPanelSection title="研究目标" hint="只观察三个教学变量">
+                  <div className="force-highlight-row is-panel">
+                    {OBJECTIVES.map((item) => (
+                      <span key={item.title} className="force-highlight-chip">
+                        {item.title}
+                      </span>
+                    ))}
+                  </div>
 
-            <ControlPanelSection title="摆放方式" hint="验证面积是否进入公式">
+                  <p className="force-inline-copy">{displayedScene.summary}</p>
+                  <p className="force-inline-copy">{displayedScene.motionHint}</p>
+                </ControlPanelSection>
+
+                <ControlPanelSection title="压力 / 正压力" hint="直接改变 N 的大小">
+                  <ControlRange
+                    id="force-pressure"
+                    label="当前压力"
+                    unit="N"
+                    min={2}
+                    max={10}
+                    step={0.5}
+                    value={pressure}
+                    onChange={setPressure}
+                  />
+
+                  <div className="force-insight-grid force-insight-grid-compact">
+                    <article className="force-insight-card">
+                      <span className="force-insight-label">等效质量</span>
+                      <strong className="force-insight-value">{formatNumber(metrics.massEquivalent, 2)} kg</strong>
+                    </article>
+                    <article className="force-insight-card">
+                      <span className="force-insight-label">理论滑动摩擦</span>
+                      <strong className="force-insight-value">{formatNumber(metrics.kineticFriction, 1)} N</strong>
+                    </article>
+                  </div>
+                </ControlPanelSection>
+
+                <ControlPanelSection title="接触材质" hint="改变摩擦系数 μ">
+                  <ControlOptionGroup
+                    items={SURFACE_PRESETS.map((preset) => ({
+                      key: preset.key,
+                      label: preset.label,
+                      description: preset.description,
+                      active: surfacePreset === preset.key,
+                      onClick: () => setSurfacePreset(preset.key),
+                    }))}
+                    columns={2}
+                  />
+                </ControlPanelSection>
+
+                <ControlPanelSection title="摆放方式" hint="验证面积是否进入公式">
               <ControlOptionGroup
                 items={CONTACT_AREAS.map((item) => ({
                   key: item.key,
@@ -730,11 +820,19 @@ export function BasicForceLab({
                 ) : null}
               </div>
             </ControlPanelSection>
-          </div>
+              </div>
+            </>
+          )}
         </aside>
 
         <div className="force-lab-main">
-          <div className="visual-canvas force-stage-canvas">
+          <div
+            className={
+              viewMode === "3d"
+                ? "visual-canvas force-stage-canvas is-3d-mode"
+                : "visual-canvas force-stage-canvas"
+            }
+          >
             <button
               type="button"
               onClick={() => {
@@ -746,247 +844,284 @@ export function BasicForceLab({
             >
               {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
             </button>
+            <VisualModeSwitch
+              className="force-stage-view-switch"
+              value={viewMode}
+              options={FORCE_VIEW_OPTIONS}
+              onChange={(nextValue) => setViewMode(nextValue as ForceViewMode)}
+            />
             <div className="visual-grid-layer" />
             <div className="visual-glow visual-glow-a" />
             <div className="visual-glow visual-glow-b" />
 
-            <svg
-              viewBox={`0 0 ${stage.width} ${stage.height}`}
-              className="force-stage-svg"
-              role="img"
-              aria-label="滑动摩擦实验可视化示意图"
-            >
-              <defs>
-                <ArrowMarker id="force-arrow-gravity" color={FORCE_COLORS.gravity} />
-                <ArrowMarker id="force-arrow-normal" color={FORCE_COLORS.normal} />
-                <ArrowMarker id="force-arrow-pull" color={FORCE_COLORS.pull} />
-                <ArrowMarker id="force-arrow-friction" color={FORCE_COLORS.friction} />
-                <ArrowMarker id="force-arrow-net" color={FORCE_COLORS.net} />
-              </defs>
+            {viewMode === "2d" ? (
+              <svg
+                viewBox={`0 0 ${stage.width} ${stage.height}`}
+                className="force-stage-svg"
+                role="img"
+                aria-label="滑动摩擦实验可视化示意图"
+              >
+                <defs>
+                  <ArrowMarker id="force-arrow-gravity" color={FORCE_COLORS.gravity} />
+                  <ArrowMarker id="force-arrow-normal" color={FORCE_COLORS.normal} />
+                  <ArrowMarker id="force-arrow-pull" color={FORCE_COLORS.pull} />
+                  <ArrowMarker id="force-arrow-friction" color={FORCE_COLORS.friction} />
+                  <ArrowMarker id="force-arrow-net" color={FORCE_COLORS.net} />
+                </defs>
 
-              <rect
-                x="50"
-                y={stage.groundY - 10}
-                width={stage.width - 100}
-                height="24"
-                rx="12"
-                className="force-stage-surface-strip"
-                fill={surfacePresetMeta.strip}
-                stroke={surfacePresetMeta.accent}
-                strokeOpacity="0.4"
-              />
+                <rect
+                  x="50"
+                  y={stage.groundY - 10}
+                  width={stage.width - 100}
+                  height="24"
+                  rx="12"
+                  className="force-stage-surface-strip"
+                  fill={surfacePresetMeta.strip}
+                  stroke={surfacePresetMeta.accent}
+                  strokeOpacity="0.4"
+                />
 
-              {buildSurfaceTexture({
-                width: stage.width,
-                groundY: stage.groundY,
-                accent: surfacePresetMeta.accent,
-                roughness: surfacePresetMeta.roughness,
-              })}
+                {buildSurfaceTexture({
+                  width: stage.width,
+                  groundY: stage.groundY,
+                  accent: surfacePresetMeta.accent,
+                  roughness: surfacePresetMeta.roughness,
+                })}
 
-              <line
-                x1="42"
-                y1={stage.groundY}
-                x2={stage.width - 48}
-                y2={stage.groundY}
-                className="force-stage-ground"
-              />
-              <text x="62" y={stage.groundY - 18} className="force-svg-caption">
-                {surfacePresetMeta.label}
-              </text>
-              <text x="62" y={stage.groundY + 44} className="force-svg-caption">
-                {contactAreaMeta.label} · 压力 {formatNumber(pressure, 1)} N
-              </text>
-
-              <g className="force-stage-trail">
                 <line
-                  x1={stage.startCenterX}
-                  y1={stage.groundY + 30}
-                  x2={stage.centerX}
-                  y2={stage.groundY + 30}
+                  x1="42"
+                  y1={stage.groundY}
+                  x2={stage.width - 48}
+                  y2={stage.groundY}
+                  className="force-stage-ground"
                 />
-                <circle cx={stage.startCenterX} cy={stage.groundY + 30} r="5" />
-                <text x={stage.startCenterX - 20} y={stage.groundY + 54} className="force-svg-caption">
-                  起点
+                <text x="62" y={stage.groundY - 18} className="force-svg-caption">
+                  {surfacePresetMeta.label}
                 </text>
-              </g>
-
-              <g transform={`translate(${stage.springX}, ${stage.springY})`}>
-                <rect width="138" height="62" rx="18" className="force-stage-scale-body" />
-                <rect x="18" y="16" width="84" height="14" rx="7" className="force-stage-scale-track" />
-                <rect
-                  x="18"
-                  y="16"
-                  width={84 * displayedScene.readingRatio}
-                  height="14"
-                  rx="7"
-                  className="force-stage-scale-fill"
-                  fill={surfacePresetMeta.accent}
-                />
-                <rect x="18" y="36" width="84" height="12" rx="6" className="force-stage-scale-window" />
-                <text x="60" y="46" textAnchor="middle" className="force-stage-scale-reading">
-                  {formatNumber(displayedScene.pullForce, 1)} N
-                </text>
-                <rect x="108" y="20" width="24" height="22" rx="10" className="force-stage-scale-head" />
-                <line x1="132" y1="31" x2="154" y2="31" className="force-stage-scale-hook" />
-                <text x="69" y="80" textAnchor="middle" className="force-svg-caption">
-                  弹簧测力计
-                </text>
-              </g>
-
-              <line
-                x1={stage.ropeStartX}
-                y1={stage.centerY}
-                x2={stage.ropeEndX}
-                y2={stage.centerY}
-                className="force-stage-rope"
-              />
-
-              <ellipse
-                cx={stage.centerX}
-                cy={stage.groundY + 12}
-                rx={stage.blockWidth * 0.7}
-                ry="18"
-                className="force-stage-shadow"
-              />
-
-              <g transform={`translate(${stage.blockX}, ${stage.blockY})`}>
-                <rect
-                  width={stage.blockWidth}
-                  height={stage.blockHeight}
-                  rx="22"
-                  className={isExperimentRunning ? "force-stage-block is-focused" : "force-stage-block"}
-                />
-                <rect
-                  x="14"
-                  y="14"
-                  width={stage.blockWidth - 28}
-                  height={stage.blockHeight - 28}
-                  rx="16"
-                  className={isExperimentRunning ? "force-stage-block-inner is-focused" : "force-stage-block-inner"}
-                />
-                <text
-                  x={stage.blockWidth / 2}
-                  y={stage.blockHeight / 2 - 8}
-                  textAnchor="middle"
-                  className="force-svg-title"
-                >
-                  木块
-                </text>
-                <text
-                  x={stage.blockWidth / 2}
-                  y={stage.blockHeight / 2 + 18}
-                  textAnchor="middle"
-                  className="force-svg-copy"
-                >
-                  {contactAreaMeta.label}
+                <text x="62" y={stage.groundY + 44} className="force-svg-caption">
+                  {contactAreaMeta.label} · 压力 {formatNumber(pressure, 1)} N
                 </text>
 
-                {stage.weightSlots.map((slot, index) => (
-                  <g key={`${slot.x}-${slot.y}-${index}`} transform={`translate(${slot.x}, ${slot.y})`}>
-                    <rect width="30" height="18" rx="6" className="force-stage-weight" />
-                    <rect x="8" y="-6" width="14" height="7" rx="3.5" className="force-stage-weight-top" />
-                  </g>
-                ))}
-              </g>
+                <g className="force-stage-trail">
+                  <line
+                    x1={stage.startCenterX}
+                    y1={stage.groundY + 30}
+                    x2={stage.centerX}
+                    y2={stage.groundY + 30}
+                  />
+                  <circle cx={stage.startCenterX} cy={stage.groundY + 30} r="5" />
+                  <text x={stage.startCenterX - 20} y={stage.groundY + 54} className="force-svg-caption">
+                    起点
+                  </text>
+                </g>
 
-              {visibleForces.gravity ? (
-                <ForceVector
-                  id="force-arrow-gravity"
-                  color={FORCE_COLORS.gravity}
-                  label="G"
-                  magnitude={displayedScene.weight}
-                  direction="down"
-                  anchorX={stage.centerX}
-                  anchorY={stage.centerY + 18}
-                  length={scaleArrow(displayedScene.weight, verticalMax)}
-                  isActive={activeForce === "gravity"}
-                  onActivate={() => setActiveForce("gravity")}
+                <g transform={`translate(${stage.springX}, ${stage.springY})`}>
+                  <rect width="138" height="62" rx="18" className="force-stage-scale-body" />
+                  <rect x="18" y="16" width="84" height="14" rx="7" className="force-stage-scale-track" />
+                  <rect
+                    x="18"
+                    y="16"
+                    width={84 * displayedScene.readingRatio}
+                    height="14"
+                    rx="7"
+                    className="force-stage-scale-fill"
+                    fill={surfacePresetMeta.accent}
+                  />
+                  <rect x="18" y="36" width="84" height="12" rx="6" className="force-stage-scale-window" />
+                  <text x="60" y="46" textAnchor="middle" className="force-stage-scale-reading">
+                    {formatNumber(displayedScene.pullForce, 1)} N
+                  </text>
+                  <rect x="108" y="20" width="24" height="22" rx="10" className="force-stage-scale-head" />
+                  <line x1="132" y1="31" x2="154" y2="31" className="force-stage-scale-hook" />
+                  <text x="69" y="80" textAnchor="middle" className="force-svg-caption">
+                    弹簧测力计
+                  </text>
+                </g>
+
+                <line
+                  x1={stage.ropeStartX}
+                  y1={stage.centerY}
+                  x2={stage.ropeEndX}
+                  y2={stage.centerY}
+                  className="force-stage-rope"
                 />
-              ) : null}
 
-              {visibleForces.normal ? (
-                <ForceVector
-                  id="force-arrow-normal"
-                  color={FORCE_COLORS.normal}
-                  label="N"
-                  magnitude={displayedScene.normal}
-                  direction="up"
-                  anchorX={stage.centerX}
-                  anchorY={stage.centerY - 18}
-                  length={scaleArrow(displayedScene.normal, verticalMax)}
-                  isActive={activeForce === "normal"}
-                  onActivate={() => setActiveForce("normal")}
+                <ellipse
+                  cx={stage.centerX}
+                  cy={stage.groundY + 12}
+                  rx={stage.blockWidth * 0.7}
+                  ry="18"
+                  className="force-stage-shadow"
                 />
-              ) : null}
 
-              {visibleForces.pull ? (
-                <ForceVector
-                  id="force-arrow-pull"
-                  color={FORCE_COLORS.pull}
-                  label="F"
-                  magnitude={displayedScene.pullForce}
-                  direction="right"
-                  anchorX={stage.blockX + stage.blockWidth}
-                  anchorY={stage.centerY - 6}
-                  length={scaleArrow(displayedScene.pullForce, horizontalMax)}
-                  isActive={activeForce === "pull"}
-                  onActivate={() => setActiveForce("pull")}
-                />
-              ) : null}
+                <g transform={`translate(${stage.blockX}, ${stage.blockY})`}>
+                  <rect
+                    width={stage.blockWidth}
+                    height={stage.blockHeight}
+                    rx="22"
+                    className={isExperimentRunning ? "force-stage-block is-focused" : "force-stage-block"}
+                  />
+                  <rect
+                    x="14"
+                    y="14"
+                    width={stage.blockWidth - 28}
+                    height={stage.blockHeight - 28}
+                    rx="16"
+                    className={isExperimentRunning ? "force-stage-block-inner is-focused" : "force-stage-block-inner"}
+                  />
+                  <text
+                    x={stage.blockWidth / 2}
+                    y={stage.blockHeight / 2 - 8}
+                    textAnchor="middle"
+                    className="force-svg-title"
+                  >
+                    木块
+                  </text>
+                  <text
+                    x={stage.blockWidth / 2}
+                    y={stage.blockHeight / 2 + 18}
+                    textAnchor="middle"
+                    className="force-svg-copy"
+                  >
+                    {contactAreaMeta.label}
+                  </text>
 
-              {visibleForces.friction ? (
-                <ForceVector
-                  id="force-arrow-friction"
-                  color={FORCE_COLORS.friction}
-                  label="f"
-                  magnitude={displayedScene.frictionForce}
-                  direction="left"
-                  anchorX={stage.blockX}
-                  anchorY={stage.centerY + 28}
-                  length={scaleArrow(displayedScene.frictionForce, horizontalMax)}
-                  isActive={activeForce === "friction"}
-                  onActivate={() => setActiveForce("friction")}
-                />
-              ) : null}
+                  {stage.weightSlots.map((slot, index) => (
+                    <g key={`${slot.x}-${slot.y}-${index}`} transform={`translate(${slot.x}, ${slot.y})`}>
+                      <rect width="30" height="18" rx="6" className="force-stage-weight" />
+                      <rect x="8" y="-6" width="14" height="7" rx="3.5" className="force-stage-weight-top" />
+                    </g>
+                  ))}
+                </g>
 
-              {visibleForces.net ? (
-                Math.abs(displayedScene.netForce) < 0.01 ? (
-                  <g className="force-balance-badge">
-                    <rect
-                      x={stage.centerX - 88}
-                      y={stage.blockY - 78}
-                      width="176"
-                      height="34"
-                      rx="17"
-                    />
-                    <text
-                      x={stage.centerX}
-                      y={stage.blockY - 56}
-                      textAnchor="middle"
-                      className="force-balance-copy"
-                    >
-                      {displayedScene.phase === "uniform" || displayedScene.phase === "complete"
-                        ? "匀速阶段：F拉 = f"
-                        : "当前合力 = 0"}
-                    </text>
-                  </g>
-                ) : (
+                {visibleForces.gravity ? (
                   <ForceVector
-                    id="force-arrow-net"
-                    color={FORCE_COLORS.net}
-                    label="R"
-                    magnitude={Math.abs(displayedScene.netForce)}
+                    id="force-arrow-gravity"
+                    color={FORCE_COLORS.gravity}
+                    label="G"
+                    magnitude={displayedScene.weight}
+                    direction="down"
+                    anchorX={stage.centerX}
+                    anchorY={stage.centerY + 18}
+                    length={scaleArrow(displayedScene.weight, verticalMax)}
+                    isActive={activeForce === "gravity"}
+                    onActivate={() => setActiveForce("gravity")}
+                  />
+                ) : null}
+
+                {visibleForces.normal ? (
+                  <ForceVector
+                    id="force-arrow-normal"
+                    color={FORCE_COLORS.normal}
+                    label="N"
+                    magnitude={displayedScene.normal}
+                    direction="up"
+                    anchorX={stage.centerX}
+                    anchorY={stage.centerY - 18}
+                    length={scaleArrow(displayedScene.normal, verticalMax)}
+                    isActive={activeForce === "normal"}
+                    onActivate={() => setActiveForce("normal")}
+                  />
+                ) : null}
+
+                {visibleForces.pull ? (
+                  <ForceVector
+                    id="force-arrow-pull"
+                    color={FORCE_COLORS.pull}
+                    label="F"
+                    magnitude={displayedScene.pullForce}
                     direction="right"
                     anchorX={stage.blockX + stage.blockWidth}
-                    anchorY={stage.blockY - 26}
-                    length={scaleArrow(Math.abs(displayedScene.netForce), horizontalMax)}
-                    isActive={activeForce === "net"}
-                    onActivate={() => setActiveForce("net")}
+                    anchorY={stage.centerY - 6}
+                    length={scaleArrow(displayedScene.pullForce, horizontalMax)}
+                    isActive={activeForce === "pull"}
+                    onActivate={() => setActiveForce("pull")}
                   />
-                )
-              ) : null}
-            </svg>
-            <div className="force-stage-overlay is-top-left">
+                ) : null}
+
+                {visibleForces.friction ? (
+                  <ForceVector
+                    id="force-arrow-friction"
+                    color={FORCE_COLORS.friction}
+                    label="f"
+                    magnitude={displayedScene.frictionForce}
+                    direction="left"
+                    anchorX={stage.blockX}
+                    anchorY={stage.centerY + 28}
+                    length={scaleArrow(displayedScene.frictionForce, horizontalMax)}
+                    isActive={activeForce === "friction"}
+                    onActivate={() => setActiveForce("friction")}
+                  />
+                ) : null}
+
+                {visibleForces.net ? (
+                  Math.abs(displayedScene.netForce) < 0.01 ? (
+                    <g className="force-balance-badge">
+                      <rect
+                        x={stage.centerX - 88}
+                        y={stage.blockY - 78}
+                        width="176"
+                        height="34"
+                        rx="17"
+                      />
+                      <text
+                        x={stage.centerX}
+                        y={stage.blockY - 56}
+                        textAnchor="middle"
+                        className="force-balance-copy"
+                      >
+                        {displayedScene.phase === "uniform" || displayedScene.phase === "complete"
+                          ? "匀速阶段：F拉 = f"
+                          : "当前合力 = 0"}
+                      </text>
+                    </g>
+                  ) : (
+                    <ForceVector
+                      id="force-arrow-net"
+                      color={FORCE_COLORS.net}
+                      label="R"
+                      magnitude={Math.abs(displayedScene.netForce)}
+                      direction="right"
+                      anchorX={stage.blockX + stage.blockWidth}
+                      anchorY={stage.blockY - 26}
+                      length={scaleArrow(Math.abs(displayedScene.netForce), horizontalMax)}
+                      isActive={activeForce === "net"}
+                      onActivate={() => setActiveForce("net")}
+                    />
+                  )
+                ) : null}
+              </svg>
+            ) : (
+              <BasicForceThreeStage
+                activeForce={activeForce}
+                contactArea={{
+                  key: contactArea,
+                  label: contactAreaMeta.label,
+                  blockWidth: contactAreaMeta.blockWidth,
+                  blockHeight: contactAreaMeta.blockHeight,
+                }}
+                isExperimentRunning={isExperimentRunning}
+                pressure={pressure}
+                scene={{
+                  frictionForce: displayedScene.frictionForce,
+                  kineticFriction: displayedScene.kineticFriction,
+                  netForce: displayedScene.netForce,
+                  normal: displayedScene.normal,
+                  phase: displayedScene.phase,
+                  pullForce: displayedScene.pullForce,
+                  readingRatio: displayedScene.readingRatio,
+                  travelProgress: displayedScene.travelProgress,
+                  weight: displayedScene.weight,
+                }}
+                surface={{
+                  accent: surfacePresetMeta.accent,
+                  label: surfacePresetMeta.label,
+                  roughness: surfacePresetMeta.roughness,
+                }}
+                visibleForces={visibleForces}
+              />
+            )}
+            <div className={viewMode === "3d" ? "force-stage-overlay is-top-left is-3d-view" : "force-stage-overlay is-top-left"}>
               <div className="force-stage-hud-card">
                 <div className="force-stage-hud-head">
                   <span className="force-stage-hud-title">{experimentStatus.label}</span>
@@ -999,6 +1134,7 @@ export function BasicForceLab({
                   <span className="force-stage-chip">{surfacePresetMeta.label}</span>
                   <span className="force-stage-chip">{contactAreaMeta.label}</span>
                   <span className="force-stage-chip">压力 {formatNumber(pressure, 1)} N</span>
+                  {viewMode === "3d" ? <span className="force-stage-chip">左拖旋转 · 滚轮缩放</span> : null}
                 </div>
               </div>
             </div>
@@ -1051,6 +1187,24 @@ export function BasicForceLab({
       </div>
     </section>
   );
+}
+
+function readStoredForceViewMode(): ForceViewMode {
+  if (typeof window === "undefined") {
+    return "2d";
+  }
+
+  return window.localStorage.getItem(FORCE_VIEW_STORAGE_KEY) === "3d"
+    ? "3d"
+    : "2d";
+}
+
+function readStoredForcePanelCollapsed() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.localStorage.getItem(FORCE_PANEL_COLLAPSED_STORAGE_KEY) === "1";
 }
 
 type ForceVectorProps = {

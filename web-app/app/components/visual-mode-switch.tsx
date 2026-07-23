@@ -8,7 +8,7 @@ type VisualModeOption = {
 
 type VisualModeSwitchProps = {
   value: string;
-  options: VisualModeOption[];
+  options: ReadonlyArray<VisualModeOption>;
   className?: string;
   onChange: (nextValue: string) => void;
 };

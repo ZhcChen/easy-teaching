@@ -55,7 +55,7 @@ export const teachingStages: TeachingStage[] = [
             summary: "把拉力、摩擦力和受力平衡放到同一实验里，让变化过程一眼看懂。",
             stageId: "junior",
             subjectId: "physics",
-            mode: "2D",
+            mode: "2D / 3D",
             status: "优先开发",
             tags: ["拉力", "摩擦", "平衡"],
             highlights: ["支持分阶段实验播放", "同步观察拉力与摩擦变化", "适合课堂实验讲解"],

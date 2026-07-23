@@ -1923,6 +1923,17 @@ a:focus-visible {
   gap: 10px;
 }
 
+.basic-force-lab-layout {
+  transition:
+    grid-template-columns 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    gap 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.basic-force-lab-layout.is-collapsed {
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+}
+
 .force-explorer-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.65fr) minmax(320px, 380px);
@@ -1980,6 +1991,22 @@ a:focus-visible {
   background: transparent;
   box-shadow: none;
   backdrop-filter: none;
+}
+
+.basic-force-control-panel {
+  gap: 12px;
+  padding: 14px;
+  border-radius: 20px;
+}
+
+.basic-force-control-panel.is-collapsed {
+  width: 44px;
+  max-width: 44px;
+  gap: 0;
+}
+
+.basic-force-control-panel.is-collapsed .force-panel-collapsed-shell {
+  width: 44px;
 }
 
 .force-control-panel.is-collapsed::before {
@@ -2873,6 +2900,25 @@ html[data-theme="dark"] .force-state-pill.is-active {
   min-height: clamp(620px, calc(100vh - 140px), 860px);
 }
 
+.force-stage-canvas.is-3d-mode {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(103, 198, 255, 0.16) 0%, transparent 28%),
+    radial-gradient(circle at 78% 72%, rgba(93, 226, 177, 0.12) 0%, transparent 24%),
+    linear-gradient(180deg, #07111f 0%, #091828 40%, #050b12 100%);
+}
+
+.force-stage-canvas.is-3d-mode .visual-grid-layer {
+  opacity: 0;
+}
+
+.force-stage-canvas.is-3d-mode .visual-glow-a {
+  opacity: 0.18;
+}
+
+.force-stage-canvas.is-3d-mode .visual-glow-b {
+  display: none;
+}
+
 .force-stage-svg {
   position: relative;
   z-index: 1;
@@ -2880,6 +2926,27 @@ html[data-theme="dark"] .force-state-pill.is-active {
   width: 100%;
   height: 100%;
   min-height: clamp(620px, calc(100vh - 140px), 860px);
+}
+
+.force-stage-3d-layer {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  cursor: grab;
+  touch-action: none;
+}
+
+.force-stage-3d-layer canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+}
+
+.force-stage-3d-layer.is-dragging {
+  cursor: grabbing;
 }
 
 .force-stage-ground {
@@ -3073,10 +3140,26 @@ html[data-theme="dark"] .force-state-pill.is-active {
   max-width: min(320px, calc(100% - 28px));
 }
 
+.motion-stage-view-switch,
+.force-stage-view-switch {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 3;
+}
+
+.force-stage-view-switch .visual-mode-track {
+  min-width: 90px;
+}
+
 .force-stage-overlay.is-top-left {
   top: 16px;
   left: 16px;
   width: min(300px, calc(100% - 28px));
+}
+
+.force-stage-overlay.is-top-left.is-3d-view {
+  top: 64px;
 }
 
 .force-stage-overlay.is-bottom-left {
@@ -4809,6 +4892,10 @@ html[data-theme="dark"] .force-state-pill.is-active {
     width: min(280px, calc(100% - 24px));
   }
 
+  .force-stage-overlay.is-top-left.is-3d-view {
+    top: 60px;
+  }
+
   .force-stage-overlay.is-bottom-left {
     bottom: 12px;
     left: 12px;
@@ -5031,12 +5118,21 @@ html[data-theme="dark"] .force-state-pill.is-active {
     top: 12px;
   }
 
+  .force-stage-overlay.is-top-left.is-3d-view {
+    top: 60px;
+  }
+
   .force-stage-overlay.is-bottom-left {
     bottom: 136px;
   }
 
   .force-stage-overlay.is-bottom-right {
     bottom: 12px;
+  }
+
+  .force-stage-view-switch {
+    top: 12px;
+    left: 12px;
   }
 
   .force-stage-chip-grid {
