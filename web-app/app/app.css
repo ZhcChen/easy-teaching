@@ -3141,11 +3141,11 @@ html[data-theme="dark"] .force-state-pill.is-active {
 }
 
 .force-stage-overlay.is-top-center {
-  top: 16px;
+  top: 12px;
   left: 50%;
   z-index: 3;
-  width: min(760px, calc(100% - 220px));
-  max-width: none;
+  width: fit-content;
+  max-width: calc(100% - 188px);
   transform: translateX(-50%);
 }
 
@@ -4941,8 +4941,9 @@ html[data-theme="dark"] .force-state-pill.is-active {
   }
 
   .force-stage-overlay.is-top-center {
-    top: 12px;
-    width: min(620px, calc(100% - 168px));
+    top: 10px;
+    width: fit-content;
+    max-width: calc(100% - 144px);
   }
 
   .force-stage-overlay.is-top-left {

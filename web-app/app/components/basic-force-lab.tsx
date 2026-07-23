@@ -180,16 +180,16 @@ const FORCE_PANEL_COLLAPSED_STORAGE_KEY = "easy-teaching.basic-force.panel-colla
 const FORCE_SVG_STAGE = {
   width: 1280,
   height: 960,
-  panelX: 72,
-  panelY: 92,
-  panelWidth: 1136,
-  scenePanelHeight: 252,
-  sceneGroundY: 308,
-  sceneLeft: 132,
-  sceneRight: 1098,
-  graphY: 370,
+  panelX: 24,
+  panelY: 110,
+  panelWidth: 1232,
+  scenePanelHeight: 264,
+  sceneGroundY: 328,
+  sceneLeft: 92,
+  sceneRight: 1188,
+  graphY: 394,
   graphGap: 24,
-  graphHeight: 560,
+  graphHeight: 534,
 };
 const FORCE_VIEW_OPTIONS = [
   {
@@ -2787,7 +2787,7 @@ function getLabelMetrics(
   }
 
   if (direction === "up") {
-    return { x: anchorX - width / 2, y: endY - 38, width };
+    return { x: anchorX - width / 2, y: endY - 20, width };
   }
 
   return { x: anchorX - width / 2, y: endY + 10, width };
