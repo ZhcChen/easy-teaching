@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+  type RefObject,
+} from "react";
 
 import { BasicForceThreeStage } from "./basic-force-three-stage";
 import { ControlButton } from "./control-button";
@@ -16,7 +23,7 @@ type MotionState = "rest" | "threshold" | "sliding";
 type Tone = "balanced" | "warning" | "active";
 type SurfacePresetKey = "smooth-board" | "wood-board" | "cloth" | "towel";
 type ContactAreaKey = "flat" | "side" | "upright";
-type ForceExperimentMode = "measurement" | "constant-pull";
+type ForceExperimentMode = "measurement" | "constant-pull" | "manual-drag";
 type ExperimentPhase =
   | "idle"
   | "ramping"
@@ -142,6 +149,8 @@ type StageLayout = {
   blockHeight: number;
   centerX: number;
   centerY: number;
+  startX: number;
+  maxTravel: number;
   travel: number;
   startCenterX: number;
   springX: number;
@@ -177,6 +186,11 @@ const FORCE_GRAPH_SAMPLE_COUNT = 72;
 const FORCE_GRAPH_PADDING = { top: 48, right: 48, bottom: 34, left: 48 };
 const FORCE_VIEW_STORAGE_KEY = "easy-teaching.basic-force.view-mode";
 const FORCE_PANEL_COLLAPSED_STORAGE_KEY = "easy-teaching.basic-force.panel-collapsed";
+const MANUAL_MAX_PULL_FORCE = 8;
+const MANUAL_MAX_DISTANCE_METERS = 3.2;
+const MANUAL_TIMELINE_MAX_MS = 8000;
+const MANUAL_MIN_TIMELINE_SECONDS = 2.7;
+const MANUAL_SPEED_THRESHOLD = 0.04;
 const FORCE_SVG_STAGE = {
   minWidth: 1280,
   maxWidth: 1720,
@@ -212,6 +226,11 @@ const FORCE_MODE_OPTIONS = [
     key: "constant-pull",
     label: "恒力拉动",
     title: "直接给定恒定拉力，观察合力、加速度、速度和位移变化。",
+  },
+  {
+    key: "manual-drag",
+    label: "手动拖动",
+    title: "直接在 2D 画布里拖动木块，用拖动速度观察受力和轨迹变化。",
   },
 ] as const;
 
@@ -302,14 +321,30 @@ export function BasicForceLab({
   const [experimentElapsedMs, setExperimentElapsedMs] = useState(0);
   const [currentRunId, setCurrentRunId] = useState(0);
   const [runRecords, setRunRecords] = useState<ExperimentRecord[]>([]);
+  const [manualIsRecording, setManualIsRecording] = useState(false);
+  const [manualIsDragging, setManualIsDragging] = useState(false);
+  const [manualSeries, setManualSeries] = useState<ForceTimelineSample[]>(() => [
+    createIdleForceSample(),
+  ]);
   const hasMountedRef = useRef(false);
   const lastRecordedRunRef = useRef(0);
   const playbackFrameRef = useRef<number | null>(null);
   const playbackElapsedRef = useRef(0);
   const stageCanvasRef = useRef<HTMLDivElement | null>(null);
+  const forceStageSvgRef = useRef<SVGSVGElement | null>(null);
   const [stageFrameAspect, setStageFrameAspect] = useState(
     FORCE_SVG_STAGE.minWidth / FORCE_SVG_STAGE.height,
   );
+  const manualDragRef = useRef({
+    active: false,
+    pointerId: -1,
+    pointerOffsetX: 0,
+    startAtMs: 0,
+    lastAtMs: 0,
+    lastDisplacement: 0,
+    lastVelocity: 0,
+    lastTravelProgress: 0,
+  });
 
   const surfacePresetMeta =
     SURFACE_PRESETS.find((item) => item.key === surfacePreset) ?? SURFACE_PRESETS[1];
@@ -336,12 +371,34 @@ export function BasicForceLab({
     setIsExperimentRunning(false);
     setExperimentElapsedMs(0);
     setActiveForce("gravity");
+    setManualIsRecording(false);
+    setManualIsDragging(false);
+    setManualSeries([createIdleForceSample()]);
+    manualDragRef.current = {
+      active: false,
+      pointerId: -1,
+      pointerOffsetX: 0,
+      startAtMs: 0,
+      lastAtMs: 0,
+      lastDisplacement: 0,
+      lastVelocity: 0,
+      lastTravelProgress: 0,
+    };
   }, [constantPullForce, contactArea, mode, pressure, surfacePreset]);
 
+  useEffect(() => {
+    if (mode === "manual-drag" && viewMode !== "2d") {
+      setViewMode("2d");
+    }
+  }, [mode, viewMode]);
+
+  const isManualMode = mode === "manual-drag";
   const totalExperimentMs =
     mode === "measurement"
       ? RAMP_DURATION_MS + BREAKAWAY_DURATION_MS + UNIFORM_DURATION_MS
-      : CONSTANT_PULL_STARTUP_MS + CONSTANT_PULL_DURATION_MS;
+      : mode === "constant-pull"
+        ? CONSTANT_PULL_STARTUP_MS + CONSTANT_PULL_DURATION_MS
+        : MANUAL_TIMELINE_MAX_MS;
 
   useEffect(() => {
     playbackElapsedRef.current = experimentElapsedMs;
@@ -382,7 +439,7 @@ export function BasicForceLab({
   }, []);
 
   useEffect(() => {
-    if (!isExperimentRunning) {
+    if (isManualMode || !isExperimentRunning) {
       playbackFrameRef.current = null;
       return;
     }
@@ -416,42 +473,39 @@ export function BasicForceLab({
     return () => {
       window.cancelAnimationFrame(animationFrameId);
     };
-  }, [isExperimentRunning, totalExperimentMs]);
+  }, [isExperimentRunning, isManualMode, totalExperimentMs]);
 
-  const hasPlaybackStarted = hasExperimentRun || isExperimentRunning || experimentElapsedMs > 0;
-
-  const displayedScene = useMemo(
+  const autoHasPlaybackStarted = hasExperimentRun || isExperimentRunning || experimentElapsedMs > 0;
+  const autoDisplayedScene = useMemo(
     () =>
       computeExperimentScene({
-        mode,
+        mode: mode === "measurement" ? "measurement" : "constant-pull",
         metrics,
-        hasPlaybackStarted,
+        hasPlaybackStarted: autoHasPlaybackStarted,
         experimentElapsedMs,
         totalExperimentMs,
         constantPullForce,
       }),
-    [constantPullForce, experimentElapsedMs, hasPlaybackStarted, metrics, mode, totalExperimentMs],
+    [autoHasPlaybackStarted, constantPullForce, experimentElapsedMs, metrics, mode, totalExperimentMs],
   );
-
-  const currentTimelineSample = useMemo<ForceTimelineSample>(
+  const autoCurrentTimelineSample = useMemo<ForceTimelineSample>(
     () => ({
       timeMs: experimentElapsedMs,
       timeSeconds: experimentElapsedMs / 1000,
-      phase: displayedScene.phase,
-      pullForce: displayedScene.pullForce,
-      frictionForce: displayedScene.frictionForce,
-      netForce: displayedScene.netForce,
-      displacement: displayedScene.displacement,
-      velocity: displayedScene.velocity,
-      acceleration: displayedScene.acceleration,
+      phase: autoDisplayedScene.phase,
+      pullForce: autoDisplayedScene.pullForce,
+      frictionForce: autoDisplayedScene.frictionForce,
+      netForce: autoDisplayedScene.netForce,
+      displacement: autoDisplayedScene.displacement,
+      velocity: autoDisplayedScene.velocity,
+      acceleration: autoDisplayedScene.acceleration,
     }),
-    [displayedScene, experimentElapsedMs],
+    [autoDisplayedScene, experimentElapsedMs],
   );
-
-  const timelineSeries = useMemo(
+  const autoTimelineSeries = useMemo(
     () =>
       buildForceTimelineSeries({
-        mode,
+        mode: mode === "measurement" ? "measurement" : "constant-pull",
         metrics,
         totalExperimentMs,
         constantPullForce,
@@ -459,15 +513,44 @@ export function BasicForceLab({
       }),
     [constantPullForce, metrics, mode, totalExperimentMs],
   );
-
-  const playedTimelineSeries = useMemo(
+  const autoPlayedTimelineSeries = useMemo(
     () =>
       buildPlayedForceSeries({
-        series: timelineSeries,
-        currentSample: currentTimelineSample,
+        series: autoTimelineSeries,
+        currentSample: autoCurrentTimelineSample,
       }),
-    [currentTimelineSample, timelineSeries],
+    [autoCurrentTimelineSample, autoTimelineSeries],
   );
+
+  const manualCurrentTimelineSample = manualSeries[manualSeries.length - 1] ?? createIdleForceSample();
+  const manualTimelineSeries =
+    manualSeries.length === 0 ? [createIdleForceSample()] : manualSeries;
+  const manualHasPlaybackStarted =
+    manualTimelineSeries.length > 1 || manualCurrentTimelineSample.timeMs > 0;
+  const manualDurationSeconds = useMemo(() => {
+    const latestSeconds = manualCurrentTimelineSample.timeSeconds;
+    return Math.min(
+      MANUAL_TIMELINE_MAX_MS / 1000,
+      Math.max(MANUAL_MIN_TIMELINE_SECONDS, Math.ceil(latestSeconds * 10) / 10),
+    );
+  }, [manualCurrentTimelineSample.timeSeconds]);
+  const manualDisplayedScene = useMemo(
+    () =>
+      buildManualExperimentScene({
+        metrics,
+        sample: manualCurrentTimelineSample,
+        isRecording: manualIsRecording,
+      }),
+    [manualCurrentTimelineSample, manualIsRecording, metrics],
+  );
+
+  const hasPlaybackStarted = isManualMode ? manualHasPlaybackStarted : autoHasPlaybackStarted;
+  const displayedScene = isManualMode ? manualDisplayedScene : autoDisplayedScene;
+  const currentTimelineSample = isManualMode
+    ? manualCurrentTimelineSample
+    : autoCurrentTimelineSample;
+  const timelineSeries = isManualMode ? manualTimelineSeries : autoTimelineSeries;
+  const playedTimelineSeries = isManualMode ? manualTimelineSeries : autoPlayedTimelineSeries;
 
   const stage = useMemo(
     () =>
@@ -480,24 +563,28 @@ export function BasicForceLab({
     [contactAreaMeta, displayedScene.travelProgress, pressure, stageFrameAspect],
   );
 
-  const progress = hasPlaybackStarted ? clamp01(experimentElapsedMs / totalExperimentMs) : 0;
-  const durationSeconds = totalExperimentMs / 1000;
+  const progress = isManualMode
+    ? clamp01(manualCurrentTimelineSample.timeMs / MANUAL_TIMELINE_MAX_MS)
+    : hasPlaybackStarted
+      ? clamp01(experimentElapsedMs / totalExperimentMs)
+      : 0;
+  const durationSeconds = isManualMode ? manualDurationSeconds : totalExperimentMs / 1000;
   const graphTimeTicks = Array.from({ length: 5 }, (_, index) =>
     (durationSeconds * index) / 4,
   );
   const forceDomain = Math.max(
     metrics.staticLimit,
     metrics.kineticFriction,
-    constantPullForce,
+    isManualMode ? manualCurrentTimelineSample.pullForce : constantPullForce,
     ...timelineSeries.map((sample) => Math.max(sample.pullForce, sample.frictionForce, Math.abs(sample.netForce))),
     1,
   );
   const displacementDomain = Math.max(
-    0.5,
+    isManualMode ? 0.8 : 0.5,
     ...timelineSeries.map((sample) => sample.displacement * 1.08),
   );
   const velocityDomain = Math.max(
-    0.4,
+    isManualMode ? 0.6 : 0.4,
     ...timelineSeries.map((sample) => sample.velocity * 1.12),
   );
   const forceGraph = useMemo(
@@ -662,6 +749,8 @@ export function BasicForceLab({
           ? displayedScene.phase === "idle"
             ? "开始实验后，测力计会缓慢增大拉力，直到木块开始滑动。"
             : `当前测力计读数 ${formatNumber(displayedScene.pullForce, 1)} N。匀速阶段的稳定读数，就是本次测得的滑动摩擦力。`
+          : mode === "manual-drag"
+            ? `当前由手动拖动产生的等效拉力约为 ${formatNumber(displayedScene.pullForce, 1)} N。拖动越快，拉力和下方图表抬升得越明显。`
           : `当前恒定拉力固定为 ${formatNumber(constantPullForce, 1)} N。只要它超过最大静摩擦，木块就会持续加速。`,
     },
     {
@@ -672,6 +761,8 @@ export function BasicForceLab({
       description:
         mode === "measurement"
           ? `当前处于${displayedScene.frictionModeLabel}，摩擦力大小 ${formatNumber(displayedScene.frictionForce, 1)} N。真正记录实验数据时，使用的是匀速阶段的动摩擦 ${formatNumber(displayedScene.kineticFriction, 1)} N。`
+          : mode === "manual-drag"
+            ? `当前处于${displayedScene.frictionModeLabel}，摩擦力约为 ${formatNumber(displayedScene.frictionForce, 1)} N。轻拖时主要表现为静摩擦，拖动起来后会转成稳定动摩擦。`
           : `当前处于${displayedScene.frictionModeLabel}，摩擦力大小 ${formatNumber(displayedScene.frictionForce, 1)} N。若恒力不足，它会作为静摩擦完全抵消拉力；一旦滑动，就近似保持在动摩擦 ${formatNumber(displayedScene.kineticFriction, 1)} N。`,
     },
     {
@@ -686,6 +777,8 @@ export function BasicForceLab({
             : "当前合力为 0，木块要么静止，要么保持匀速。"
           : mode === "measurement"
             ? `突破静摩擦时出现瞬时合力 ${formatNumber(displayedScene.netForce, 2)} N，因此木块开始从静止转入滑动。`
+            : mode === "manual-drag"
+              ? `手动拖动时，合力 ${formatNumber(displayedScene.netForce, 2)} N 会随着拖动速度实时变化。它越大，速度曲线抬升越快。`
             : `当前合力 ${formatNumber(displayedScene.netForce, 2)} N。它越大，加速度越大，速度与位移曲线抬升得越明显。`,
     },
   ];
@@ -696,22 +789,41 @@ export function BasicForceLab({
   const visibleForces = {
     gravity: true,
     normal: true,
-    pull: hasPlaybackStarted,
-    friction: hasPlaybackStarted,
-    net: hasPlaybackStarted,
+    pull: isManualMode ? manualHasPlaybackStarted : hasPlaybackStarted,
+    friction: isManualMode ? manualHasPlaybackStarted : hasPlaybackStarted,
+    net: isManualMode
+      ? manualHasPlaybackStarted && Math.abs(manualCurrentTimelineSample.netForce) >= 0.01
+      : hasPlaybackStarted,
   };
 
-  const experimentStatus = getExperimentStatus({
-    mode,
-    hasPlaybackStarted,
-    displayedScene,
-    metrics,
-    progress,
-    constantPullForce,
-  });
-  const activePhase = hasPlaybackStarted ? displayedScene.phase : "idle";
+  const experimentStatus = isManualMode
+    ? getManualExperimentStatus({
+        metrics,
+        sample: manualCurrentTimelineSample,
+        isRecording: manualIsRecording,
+        hasSamples: manualHasPlaybackStarted,
+      })
+    : getExperimentStatus({
+        mode: mode === "measurement" ? "measurement" : "constant-pull",
+        hasPlaybackStarted,
+        displayedScene,
+        metrics,
+        progress,
+        constantPullForce,
+      });
+  const activePhase = isManualMode
+    ? !manualHasPlaybackStarted
+      ? "idle"
+      : manualIsRecording
+        ? displayedScene.isMoving
+          ? "accelerating"
+          : "idle"
+        : "complete"
+    : hasPlaybackStarted
+      ? displayedScene.phase
+      : "idle";
   const hasPartialPlayback =
-    experimentElapsedMs > 0 && experimentElapsedMs < totalExperimentMs;
+    !isManualMode && experimentElapsedMs > 0 && experimentElapsedMs < totalExperimentMs;
   const phaseSteps =
     mode === "measurement"
       ? [
@@ -751,6 +863,30 @@ export function BasicForceLab({
             forceKey: "friction" as const,
           },
         ]
+      : mode === "manual-drag"
+        ? [
+            {
+              phase: "idle" as const,
+              label: "先判断",
+              detail: "先点击开始记录",
+              elapsedMs: 0,
+              forceKey: "gravity" as const,
+            },
+            {
+              phase: "accelerating" as const,
+              label: "拖动观察",
+              detail: "用拖动速度带出受力变化",
+              elapsedMs: manualCurrentTimelineSample.timeMs,
+              forceKey: "pull" as const,
+            },
+            {
+              phase: "complete" as const,
+              label: "完成判断",
+              detail: "停止后对比图表变化",
+              elapsedMs: manualCurrentTimelineSample.timeMs,
+              forceKey: "friction" as const,
+            },
+          ]
       : canBreakaway
         ? [
             {
@@ -802,16 +938,22 @@ export function BasicForceLab({
               label: "完成判断",
               detail: "确认不会起动",
               elapsedMs: totalExperimentMs,
-              forceKey: "friction" as const,
-            },
-          ];
-  const primaryActionLabel = isExperimentRunning
-    ? "暂停实验"
-    : hasPartialPlayback
-      ? "继续播放"
-      : hasPlaybackStarted
-        ? "重新播放"
-        : "开始实验";
+            forceKey: "friction" as const,
+          },
+        ];
+  const primaryActionLabel = isManualMode
+    ? manualIsRecording
+      ? "停止记录"
+      : manualHasPlaybackStarted
+        ? "重新记录"
+        : "开始记录"
+    : isExperimentRunning
+      ? "暂停实验"
+      : hasPartialPlayback
+        ? "继续播放"
+        : hasPlaybackStarted
+          ? "重新播放"
+          : "开始实验";
 
   const horizontalMax = Math.max(
     metrics.breakawayForce,
@@ -823,6 +965,8 @@ export function BasicForceLab({
   const verticalMax = Math.max(displayedScene.weight, displayedScene.normal, 1);
   const currentModeLabel =
     FORCE_MODE_OPTIONS.find((item) => item.key === mode)?.label ?? "实验测量";
+  const forceViewOptions =
+    isManualMode ? FORCE_VIEW_OPTIONS.filter((item) => item.key === "2d") : FORCE_VIEW_OPTIONS;
   const forceGuideX = forceGraph.mapTime(currentTimelineSample.timeSeconds);
   const thresholdLineY = forceGraph.mapValue(metrics.staticLimit);
   const currentPullPoint = {
@@ -847,6 +991,22 @@ export function BasicForceLab({
     y: velocityGraph.mapValue(currentTimelineSample.velocity),
   };
 
+  function resetManualRecordingState() {
+    setManualIsRecording(false);
+    setManualIsDragging(false);
+    setManualSeries([createIdleForceSample()]);
+    manualDragRef.current = {
+      active: false,
+      pointerId: -1,
+      pointerOffsetX: 0,
+      startAtMs: 0,
+      lastAtMs: 0,
+      lastDisplacement: 0,
+      lastVelocity: 0,
+      lastTravelProgress: 0,
+    };
+  }
+
   function resetDefaults() {
     setMode(DEFAULT_VALUES.mode);
     setPressure(DEFAULT_VALUES.pressure);
@@ -857,9 +1017,32 @@ export function BasicForceLab({
     setHasExperimentRun(false);
     setIsExperimentRunning(false);
     setExperimentElapsedMs(0);
+    resetManualRecordingState();
   }
 
   function startExperiment() {
+    if (mode === "manual-drag") {
+      const now = performance.now();
+      setHasExperimentRun(false);
+      setIsExperimentRunning(false);
+      setExperimentElapsedMs(0);
+      setActiveForce("gravity");
+      setManualIsRecording(true);
+      setManualIsDragging(false);
+      setManualSeries([createIdleForceSample()]);
+      manualDragRef.current = {
+        active: false,
+        pointerId: -1,
+        pointerOffsetX: 0,
+        startAtMs: now,
+        lastAtMs: now,
+        lastDisplacement: 0,
+        lastVelocity: 0,
+        lastTravelProgress: 0,
+      };
+      return;
+    }
+
     setHasExperimentRun(true);
     setIsExperimentRunning(true);
     setExperimentElapsedMs(0);
@@ -868,10 +1051,20 @@ export function BasicForceLab({
   }
 
   function pauseExperiment() {
+    if (mode === "manual-drag") {
+      finishManualDrag(performance.now(), true);
+      return;
+    }
+
     setIsExperimentRunning(false);
   }
 
   function resumeExperiment() {
+    if (mode === "manual-drag") {
+      startExperiment();
+      return;
+    }
+
     if (experimentElapsedMs <= 0 || experimentElapsedMs >= totalExperimentMs) {
       startExperiment();
       return;
@@ -888,6 +1081,10 @@ export function BasicForceLab({
   }
 
   function seekExperiment(nextElapsedMs: number) {
+    if (mode === "manual-drag") {
+      return;
+    }
+
     const clampedElapsedMs = Math.max(0, Math.min(totalExperimentMs, nextElapsedMs));
 
     setIsExperimentRunning(false);
@@ -916,6 +1113,15 @@ export function BasicForceLab({
   }
 
   function jumpToPhase(phase: ExperimentPhase) {
+    if (mode === "manual-drag") {
+      if (phase === "idle") {
+        resetManualRecordingState();
+        setActiveForce("gravity");
+      }
+
+      return;
+    }
+
     const targetStep = phaseSteps.find((item) => item.phase === phase);
     if (!targetStep) {
       return;
@@ -923,6 +1129,199 @@ export function BasicForceLab({
 
     seekExperiment(targetStep.elapsedMs);
     setActiveForce(targetStep.forceKey);
+  }
+
+  function appendManualSample(nextSample: ForceTimelineSample) {
+    setManualSeries((previous) => {
+      const nextSeries = previous.length === 0 ? [createIdleForceSample()] : [...previous];
+      const lastSample = nextSeries[nextSeries.length - 1];
+
+      if (lastSample && Math.abs(lastSample.timeMs - nextSample.timeMs) <= 16) {
+        nextSeries[nextSeries.length - 1] = nextSample;
+      } else {
+        nextSeries.push(nextSample);
+      }
+
+      return nextSeries.slice(-200);
+    });
+  }
+
+  function finishManualDrag(timestampMs: number, shouldStopRecording: boolean) {
+    if (!isManualMode) {
+      return;
+    }
+
+    const dragState = manualDragRef.current;
+    if (!manualIsRecording && !dragState.active) {
+      return;
+    }
+
+    const elapsedMs =
+      dragState.startAtMs > 0
+        ? clamp(timestampMs - dragState.startAtMs, 0, MANUAL_TIMELINE_MAX_MS)
+        : manualCurrentTimelineSample.timeMs;
+    const stopSample: ForceTimelineSample = {
+      timeMs: elapsedMs,
+      timeSeconds: elapsedMs / 1000,
+      phase: elapsedMs > 0 ? "complete" : "idle",
+      pullForce: 0,
+      frictionForce: 0,
+      netForce: 0,
+      displacement: dragState.lastDisplacement,
+      velocity: 0,
+      acceleration: 0,
+    };
+
+    appendManualSample(stopSample);
+    setManualIsDragging(false);
+    manualDragRef.current = {
+      ...dragState,
+      active: false,
+      pointerId: -1,
+      lastAtMs: timestampMs,
+      lastVelocity: 0,
+    };
+
+    if (shouldStopRecording) {
+      setManualIsRecording(false);
+      setActiveForce("friction");
+    }
+  }
+
+  function handleManualPointerDown(event: ReactPointerEvent<SVGGElement>) {
+    if (!isManualMode || !manualIsRecording) {
+      return;
+    }
+
+    const svgNode = forceStageSvgRef.current;
+    if (!svgNode) {
+      return;
+    }
+
+    const rect = svgNode.getBoundingClientRect();
+    const pointerX = ((event.clientX - rect.left) / rect.width) * stage.width;
+    const now = performance.now();
+
+    manualDragRef.current = {
+      active: true,
+      pointerId: event.pointerId,
+      pointerOffsetX: pointerX - stage.blockX,
+      startAtMs: manualDragRef.current.startAtMs || now,
+      lastAtMs: now,
+      lastDisplacement: currentTimelineSample.displacement,
+      lastVelocity: currentTimelineSample.velocity,
+      lastTravelProgress: displayedScene.travelProgress,
+    };
+
+    svgNode.setPointerCapture?.(event.pointerId);
+    setManualIsDragging(true);
+  }
+
+  function handleManualPointerMove(event: ReactPointerEvent<SVGSVGElement>) {
+    if (!isManualMode || !manualIsRecording || !manualDragRef.current.active) {
+      return;
+    }
+
+    const svgNode = forceStageSvgRef.current;
+    if (!svgNode) {
+      return;
+    }
+
+    const rect = svgNode.getBoundingClientRect();
+    if (rect.width <= 0) {
+      return;
+    }
+
+    const pointerX = ((event.clientX - rect.left) / rect.width) * stage.width;
+    const nextBlockX = clamp(
+      pointerX - manualDragRef.current.pointerOffsetX,
+      stage.startX,
+      stage.startX + stage.maxTravel,
+    );
+    const nextTravelProgress = clamp01(
+      stage.maxTravel <= 0 ? 0 : (nextBlockX - stage.startX) / stage.maxTravel,
+    );
+    const forwardTravelProgress = Math.max(
+      manualDragRef.current.lastTravelProgress,
+      nextTravelProgress,
+    );
+    const nextDisplacement = forwardTravelProgress * MANUAL_MAX_DISTANCE_METERS;
+    const now = performance.now();
+    const deltaSeconds = Math.max((now - manualDragRef.current.lastAtMs) / 1000, 1 / 120);
+    const rawVelocity =
+      (nextDisplacement - manualDragRef.current.lastDisplacement) / deltaSeconds;
+    const velocity =
+      Math.abs(rawVelocity) < MANUAL_SPEED_THRESHOLD
+        ? 0
+        : manualDragRef.current.lastVelocity * 0.24 + rawVelocity * 0.76;
+    const acceleration =
+      velocity === 0
+        ? 0
+        : (velocity - manualDragRef.current.lastVelocity) / deltaSeconds;
+
+    let pullForce = 0;
+    let frictionForce = 0;
+    let netForce = 0;
+    let phase: ExperimentPhase = "idle";
+
+    if (velocity <= 0) {
+      pullForce = clamp(
+        (forwardTravelProgress / 0.16) * metrics.staticLimit,
+        0,
+        metrics.staticLimit,
+      );
+      frictionForce = pullForce;
+      phase = forwardTravelProgress > 0.01 ? "ramping" : "idle";
+    } else {
+      frictionForce = metrics.kineticFriction;
+      pullForce = clamp(
+        frictionForce +
+          velocity * 1.45 +
+          Math.max(0, acceleration) * metrics.massEquivalent * 0.42,
+        frictionForce,
+        MANUAL_MAX_PULL_FORCE,
+      );
+      netForce = Math.max(0, pullForce - frictionForce);
+      phase = acceleration > 0.08 ? "accelerating" : "uniform";
+    }
+
+    const elapsedMs = clamp(now - manualDragRef.current.startAtMs, 0, MANUAL_TIMELINE_MAX_MS);
+    const nextSample: ForceTimelineSample = {
+      timeMs: elapsedMs,
+      timeSeconds: elapsedMs / 1000,
+      phase,
+      pullForce,
+      frictionForce,
+      netForce,
+      displacement: nextDisplacement,
+      velocity,
+      acceleration,
+    };
+
+    appendManualSample(nextSample);
+    manualDragRef.current = {
+      ...manualDragRef.current,
+      lastAtMs: now,
+      lastDisplacement: nextDisplacement,
+      lastVelocity: velocity,
+      lastTravelProgress: forwardTravelProgress,
+    };
+    setActiveForce(
+      netForce > 0.04 ? "net" : velocity > MANUAL_SPEED_THRESHOLD ? "pull" : "friction",
+    );
+
+    if (elapsedMs >= MANUAL_TIMELINE_MAX_MS) {
+      finishManualDrag(now, true);
+    }
+  }
+
+  function handleManualPointerUp(event: ReactPointerEvent<SVGSVGElement>) {
+    if (!isManualMode || !manualDragRef.current.active) {
+      return;
+    }
+
+    event.currentTarget.releasePointerCapture?.(manualDragRef.current.pointerId);
+    finishManualDrag(performance.now(), false);
   }
 
   return (
@@ -974,7 +1373,7 @@ export function BasicForceLab({
               <div className="force-control-scroll basic-force-control-scroll">
                 <ControlPanelSection title="实验控制" hint="先预测，再播放，再对比" accent>
                   <ControlChipGroup
-                    columns={2}
+                    columns={3}
                     size="dense"
                     items={FORCE_MODE_OPTIONS.map((item) => ({
                       key: item.key,
@@ -998,6 +1397,12 @@ export function BasicForceLab({
                     />
                   ) : null}
 
+                  {mode === "manual-drag" ? (
+                    <p className="force-inline-copy">
+                      先点开始记录，再到右侧 2D 实验区拖动木块。拖动越快，拉力、合力和下方图表变化越明显。
+                    </p>
+                  ) : null}
+
                   <ControlStatusBar
                     items={[
                       <StatusPill key="state" tone={displayedScene.stateTone}>
@@ -1006,34 +1411,51 @@ export function BasicForceLab({
                       <StatusPill key="mode">{displayedScene.frictionModeLabel}</StatusPill>,
                       mode === "measurement" ? (
                         <StatusPill key="limit">f静,max {formatNumber(metrics.staticLimit, 1)} N</StatusPill>
+                      ) : mode === "manual-drag" ? (
+                        <StatusPill key="manual">拖动画布</StatusPill>
                       ) : (
                         <StatusPill key="pull">F恒 {formatNumber(constantPullForce, 1)} N</StatusPill>
                       ),
                     ]}
                   />
 
-                  <ControlRange
-                    id="force-experiment-progress"
-                    label="实验时间轴"
-                    min={0}
-                    max={totalExperimentMs}
-                    step={10}
-                    value={hasPlaybackStarted ? experimentElapsedMs : 0}
-                    valueFormatter={(value) => `${formatNumber(value / 1000, 1)} s`}
-                    onChange={seekExperiment}
-                  />
+                  {mode === "manual-drag" ? (
+                    <ControlRange
+                      id="force-manual-progress"
+                      label="记录时长"
+                      unit="s"
+                      min={0}
+                      max={MANUAL_TIMELINE_MAX_MS / 1000}
+                      step={0.1}
+                      value={Math.min(manualCurrentTimelineSample.timeSeconds, MANUAL_TIMELINE_MAX_MS / 1000)}
+                      valueFormatter={(value) => `${formatNumber(value, 1)} s`}
+                      disabled
+                      onChange={() => {}}
+                    />
+                  ) : (
+                    <ControlRange
+                      id="force-experiment-progress"
+                      label="实验时间轴"
+                      min={0}
+                      max={totalExperimentMs}
+                      step={10}
+                      value={hasPlaybackStarted ? experimentElapsedMs : 0}
+                      valueFormatter={(value) => `${formatNumber(value / 1000, 1)} s`}
+                      onChange={seekExperiment}
+                    />
+                  )}
 
-                  <div className="force-action-grid">
+                  <div className="motion-action-row">
                     <ControlButton
                       variant="primary"
-                      className="force-action-primary"
+                      size="compact"
                       onClick={() => {
-                        if (isExperimentRunning) {
+                        if (manualIsRecording || isExperimentRunning) {
                           pauseExperiment();
                           return;
                         }
 
-                        if (hasPartialPlayback) {
+                        if (!isManualMode && hasPartialPlayback) {
                           resumeExperiment();
                           return;
                         }
@@ -1043,11 +1465,8 @@ export function BasicForceLab({
                     >
                       {primaryActionLabel}
                     </ControlButton>
-                    <ControlButton size="compact" onClick={startExperiment}>
-                      从头播放
-                    </ControlButton>
                     <ControlButton size="compact" onClick={resetDefaults}>
-                      恢复默认
+                      重置
                     </ControlButton>
                   </div>
                 </ControlPanelSection>
@@ -1127,7 +1546,7 @@ export function BasicForceLab({
             <VisualModeSwitch
               className="force-stage-view-switch"
               value={viewMode}
-              options={FORCE_VIEW_OPTIONS}
+              options={forceViewOptions}
               onChange={(nextValue) => setViewMode(nextValue as ForceViewMode)}
             />
             <ControlStepGroup
@@ -1148,10 +1567,18 @@ export function BasicForceLab({
 
             {viewMode === "2d" ? (
               <svg
+                ref={forceStageSvgRef}
                 viewBox={`0 0 ${stage.width} ${stage.height}`}
-                className="force-stage-svg"
+                className={
+                  manualIsRecording
+                    ? "force-stage-svg is-manual-ready"
+                    : "force-stage-svg"
+                }
                 role="img"
                 aria-label="滑动摩擦实验可视化示意图"
+                onPointerMove={handleManualPointerMove}
+                onPointerUp={handleManualPointerUp}
+                onPointerLeave={handleManualPointerUp}
               >
                 <defs>
                   <ArrowMarker id="force-arrow-gravity" color={FORCE_COLORS.gravity} />
@@ -1292,7 +1719,11 @@ export function BasicForceLab({
                   <rect x="108" y="20" width="24" height="22" rx="10" className="force-stage-scale-head" />
                   <line x1="132" y1="31" x2="154" y2="31" className="force-stage-scale-hook" />
                   <text x="69" y="80" textAnchor="middle" className="force-svg-caption">
-                    {mode === "measurement" ? "弹簧测力计" : "恒力输入端"}
+                    {mode === "measurement"
+                      ? "弹簧测力计"
+                      : mode === "manual-drag"
+                        ? "手动拉动端"
+                        : "恒力输入端"}
                   </text>
                 </g>
 
@@ -1312,7 +1743,17 @@ export function BasicForceLab({
                   className="force-stage-shadow"
                 />
 
-                <g transform={`translate(${stage.blockX}, ${stage.blockY})`}>
+                <g
+                  transform={`translate(${stage.blockX}, ${stage.blockY})`}
+                  className={
+                    isManualMode
+                      ? manualIsDragging
+                        ? "force-stage-block-group is-manual-drag is-dragging"
+                        : "force-stage-block-group is-manual-drag"
+                      : "force-stage-block-group"
+                  }
+                  onPointerDown={handleManualPointerDown}
+                >
                   <rect
                     width={stage.blockWidth}
                     height={stage.blockHeight}
@@ -2155,6 +2596,130 @@ function getExperimentStatus({
   }
 }
 
+function createIdleForceSample(): ForceTimelineSample {
+  return {
+    timeMs: 0,
+    timeSeconds: 0,
+    phase: "idle",
+    pullForce: 0,
+    frictionForce: 0,
+    netForce: 0,
+    displacement: 0,
+    velocity: 0,
+    acceleration: 0,
+  };
+}
+
+function getManualExperimentStatus({
+  metrics,
+  sample,
+  isRecording,
+  hasSamples,
+}: {
+  metrics: ExperimentMetrics;
+  sample: ForceTimelineSample;
+  isRecording: boolean;
+  hasSamples: boolean;
+}): ExperimentStatus {
+  if (!hasSamples) {
+    return {
+      phase: "idle",
+      label: "等待手动拖动",
+      badge: "待记录",
+      description: "点击开始记录后，直接在 2D 实验区拖动木块，用拖动速度观察力值和图表变化。",
+      formula: `参考阈值：f静,max = ${formatNumber(metrics.staticLimit, 1)} N，f动 = ${formatNumber(metrics.kineticFriction, 1)} N`,
+      progress: 0,
+    };
+  }
+
+  if (isRecording) {
+    return {
+      phase: sample.phase,
+      label: sample.velocity > MANUAL_SPEED_THRESHOLD ? "手动拖动中" : "准备发力",
+      badge: sample.velocity > MANUAL_SPEED_THRESHOLD ? "实时记录" : "轻推观察",
+      description:
+        sample.velocity > MANUAL_SPEED_THRESHOLD
+          ? "当前拖动速度已经带出明显受力变化，下方曲线会实时记录拉力、摩擦力、合力、位移和速度。"
+          : "先轻轻拉动，观察静摩擦如何抵消拉力；继续加快拖动，木块就会进入滑动。",
+      formula: `当前：F ≈ ${formatNumber(sample.pullForce, 1)} N，f ≈ ${formatNumber(sample.frictionForce, 1)} N，R ≈ ${formatNumber(sample.netForce, 2)} N`,
+      progress: clamp01(sample.timeMs / MANUAL_TIMELINE_MAX_MS),
+    };
+  }
+
+  return {
+    phase: "complete",
+    label: "已完成记录",
+    badge: "可对比图表",
+    description: "可以重新记录一组新的拖动，再对比不同拖动速度下的受力、位移和速度曲线。",
+    formula: `终点：s = ${formatNumber(sample.displacement, 2)} m，v = ${formatNumber(sample.velocity, 2)} m/s`,
+    progress: clamp01(sample.timeMs / MANUAL_TIMELINE_MAX_MS),
+  };
+}
+
+function buildManualExperimentScene({
+  metrics,
+  sample,
+  isRecording,
+}: {
+  metrics: ExperimentMetrics;
+  sample: ForceTimelineSample;
+  isRecording: boolean;
+}): ExperimentScene {
+  const isMoving = sample.velocity > MANUAL_SPEED_THRESHOLD;
+  const phase =
+    sample.timeMs <= 0
+      ? "idle"
+      : !isRecording
+        ? "complete"
+        : isMoving
+          ? sample.acceleration > 0.08
+            ? "accelerating"
+            : "uniform"
+          : sample.pullForce > 0
+            ? "ramping"
+            : "idle";
+
+  return {
+    phase,
+    weight: metrics.weight,
+    normal: metrics.normal,
+    pullForce: sample.pullForce,
+    frictionForce: sample.frictionForce,
+    netForce: sample.netForce,
+    acceleration: sample.acceleration,
+    staticLimit: metrics.staticLimit,
+    kineticFriction: metrics.kineticFriction,
+    frictionModeLabel: isMoving
+      ? "手动滑动"
+      : sample.pullForce > 0
+        ? "静摩擦响应"
+        : "等待拖动",
+    stateLabel: !isRecording
+      ? sample.timeMs > 0
+        ? "记录暂停"
+        : "等待记录"
+      : isMoving
+        ? "拖动中"
+        : "轻推观察",
+    stateTone: !isRecording ? "balanced" : isMoving ? "active" : "warning",
+    motionState: isMoving ? "sliding" : "rest",
+    isMoving,
+    summary: isMoving
+      ? "拖动速度越快，拉力和合力变化越明显，下方图表会实时记录。"
+      : "先轻推木块，观察静摩擦如何随手动输入一起变化。",
+    motionHint: isMoving
+      ? "继续拖动可对比不同速度下的曲线抬升速度。"
+      : "当拖动速度更大时，木块会更容易进入滑动状态。",
+    travelProgress:
+      MANUAL_MAX_DISTANCE_METERS <= 0
+        ? 0
+        : clamp01(sample.displacement / MANUAL_MAX_DISTANCE_METERS),
+    readingRatio: clamp01(sample.pullForce / Math.max(MANUAL_MAX_PULL_FORCE, metrics.breakawayForce)),
+    displacement: sample.displacement,
+    velocity: sample.velocity,
+  };
+}
+
 function computeExperimentMetrics({
   pressure,
   muStatic,
@@ -2710,6 +3275,8 @@ function computeStageLayout({
     blockHeight,
     centerX,
     centerY,
+    startX,
+    maxTravel,
     travel,
     startCenterX: startX + blockWidth / 2,
     springX,

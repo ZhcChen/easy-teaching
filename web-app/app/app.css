@@ -2872,6 +2872,18 @@ html[data-theme="dark"] .force-state-pill.is-active {
   min-height: inherit;
 }
 
+.force-stage-svg.is-manual-ready {
+  touch-action: none;
+}
+
+.force-stage-block-group.is-manual-drag {
+  cursor: grab;
+}
+
+.force-stage-block-group.is-manual-drag.is-dragging {
+  cursor: grabbing;
+}
+
 .force-stage-3d-layer {
   position: relative;
   z-index: 1;
