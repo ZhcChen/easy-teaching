@@ -183,12 +183,12 @@ const FORCE_SVG_STAGE = {
   height: 960,
   panelX: 24,
   panelY: 110,
-  scenePanelHeight: 264,
-  sceneGroundY: 328,
+  scenePanelHeight: 236,
+  sceneGroundY: 312,
   sceneInset: 92,
-  graphY: 394,
+  graphY: 404,
   graphGap: 24,
-  graphHeight: 534,
+  graphHeight: 522,
 };
 const FORCE_VIEW_OPTIONS = [
   {
@@ -2771,7 +2771,7 @@ function scaleArrow(magnitude: number, maxMagnitude: number) {
     return 0;
   }
 
-  return 50 + (magnitude / maxMagnitude) * 82;
+  return 44 + (magnitude / maxMagnitude) * 74;
 }
 
 function getSuggestedForceForPhase(phase: ExperimentPhase): ForceKey {
@@ -2837,7 +2837,7 @@ function getLabelMetrics(
     return { x: anchorX - width / 2, y: endY - 20, width };
   }
 
-  return { x: anchorX - width / 2, y: endY + 10, width };
+  return { x: anchorX - width / 2, y: endY - 14, width };
 }
 
 function getPillWidth(label: string) {
