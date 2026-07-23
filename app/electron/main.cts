@@ -32,7 +32,10 @@ function resolveRendererEntry() {
 }
 
 function resolveDevIconPath() {
-  return path.resolve(__dirname, "../build/icons/icon.png");
+  return path.resolve(
+    __dirname,
+    "../../shared-assets/brand/logo/logo-mark-512.png"
+  );
 }
 
 function resolveStaticDistDir() {

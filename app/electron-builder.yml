@@ -1,7 +1,7 @@
 appId: com.zhcchen.easyteaching
 productName: Easy Teaching
 asar: true
-icon: build/icons/icon
+icon: ../shared-assets/brand/logo/logo-mark.svg
 artifactName: Easy-Teaching-${version}-${os}-${arch}.${ext}
 
 directories:
