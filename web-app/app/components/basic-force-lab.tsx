@@ -178,15 +178,14 @@ const FORCE_GRAPH_PADDING = { top: 48, right: 48, bottom: 34, left: 48 };
 const FORCE_VIEW_STORAGE_KEY = "easy-teaching.basic-force.view-mode";
 const FORCE_PANEL_COLLAPSED_STORAGE_KEY = "easy-teaching.basic-force.panel-collapsed";
 const FORCE_SVG_STAGE = {
-  width: 1280,
+  minWidth: 1280,
+  maxWidth: 1720,
   height: 960,
   panelX: 24,
   panelY: 110,
-  panelWidth: 1232,
   scenePanelHeight: 264,
   sceneGroundY: 328,
-  sceneLeft: 92,
-  sceneRight: 1188,
+  sceneInset: 92,
   graphY: 394,
   graphGap: 24,
   graphHeight: 534,
@@ -307,6 +306,10 @@ export function BasicForceLab({
   const lastRecordedRunRef = useRef(0);
   const playbackFrameRef = useRef<number | null>(null);
   const playbackElapsedRef = useRef(0);
+  const stageCanvasRef = useRef<HTMLDivElement | null>(null);
+  const [stageFrameAspect, setStageFrameAspect] = useState(
+    FORCE_SVG_STAGE.minWidth / FORCE_SVG_STAGE.height,
+  );
 
   const surfacePresetMeta =
     SURFACE_PRESETS.find((item) => item.key === surfacePreset) ?? SURFACE_PRESETS[1];
@@ -343,6 +346,40 @@ export function BasicForceLab({
   useEffect(() => {
     playbackElapsedRef.current = experimentElapsedMs;
   }, [experimentElapsedMs]);
+
+  useEffect(() => {
+    const node = stageCanvasRef.current;
+
+    if (!node || typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const updateStageFrameAspect = () => {
+      const { width, height } = node.getBoundingClientRect();
+
+      if (width <= 0 || height <= 0) {
+        return;
+      }
+
+      const nextAspect = width / height;
+
+      setStageFrameAspect((currentAspect) =>
+        Math.abs(currentAspect - nextAspect) >= 0.02 ? nextAspect : currentAspect,
+      );
+    };
+
+    updateStageFrameAspect();
+
+    const observer = new ResizeObserver(() => {
+      updateStageFrameAspect();
+    });
+
+    observer.observe(node);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     if (!isExperimentRunning) {
@@ -438,8 +475,9 @@ export function BasicForceLab({
         contactAreaMeta,
         travelProgress: displayedScene.travelProgress,
         pressure,
+        frameAspect: stageFrameAspect,
       }),
-    [contactAreaMeta, displayedScene.travelProgress, pressure],
+    [contactAreaMeta, displayedScene.travelProgress, pressure, stageFrameAspect],
   );
 
   const progress = hasPlaybackStarted ? clamp01(experimentElapsedMs / totalExperimentMs) : 0;
@@ -1068,6 +1106,7 @@ export function BasicForceLab({
 
         <div className="force-lab-main">
           <div
+            ref={stageCanvasRef}
             className={
               viewMode === "3d"
                 ? "visual-canvas force-stage-canvas is-3d-mode"
@@ -2603,28 +2642,36 @@ function computeStageLayout({
   contactAreaMeta,
   travelProgress,
   pressure,
+  frameAspect,
 }: {
   contactAreaMeta: ContactAreaPreset;
   travelProgress: number;
   pressure: number;
+  frameAspect: number;
 }): StageLayout {
-  const width = FORCE_SVG_STAGE.width;
+  const width = clamp(
+    Math.round(FORCE_SVG_STAGE.height * Math.max(frameAspect, FORCE_SVG_STAGE.minWidth / FORCE_SVG_STAGE.height)),
+    FORCE_SVG_STAGE.minWidth,
+    FORCE_SVG_STAGE.maxWidth,
+  );
   const height = FORCE_SVG_STAGE.height;
   const panelX = FORCE_SVG_STAGE.panelX;
   const panelY = FORCE_SVG_STAGE.panelY;
-  const panelWidth = FORCE_SVG_STAGE.panelWidth;
+  const panelWidth = width - panelX * 2;
   const scenePanelHeight = FORCE_SVG_STAGE.scenePanelHeight;
   const graphY = FORCE_SVG_STAGE.graphY;
   const graphGap = FORCE_SVG_STAGE.graphGap;
   const graphHeight = FORCE_SVG_STAGE.graphHeight;
   const graphWidth = (panelWidth - graphGap) / 2;
   const groundY = FORCE_SVG_STAGE.sceneGroundY;
-  const springX = FORCE_SVG_STAGE.sceneRight - 176;
+  const sceneLeft = FORCE_SVG_STAGE.sceneInset;
+  const sceneRight = width - FORCE_SVG_STAGE.sceneInset;
+  const springX = sceneRight - 176;
   const springY = groundY - 96;
   const ropeEndX = springX + 154;
   const blockWidth = contactAreaMeta.blockWidth;
   const blockHeight = contactAreaMeta.blockHeight;
-  const startX = FORCE_SVG_STAGE.sceneLeft + 118;
+  const startX = sceneLeft + 118;
   const maxTravel = Math.max(180, ropeEndX - startX - blockWidth - 72);
   const travel = maxTravel * travelProgress;
   const blockX = startX + travel;
