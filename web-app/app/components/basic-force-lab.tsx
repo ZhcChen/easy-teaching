@@ -179,17 +179,17 @@ const FORCE_VIEW_STORAGE_KEY = "easy-teaching.basic-force.view-mode";
 const FORCE_PANEL_COLLAPSED_STORAGE_KEY = "easy-teaching.basic-force.panel-collapsed";
 const FORCE_SVG_STAGE = {
   width: 1280,
-  height: 860,
+  height: 760,
   panelX: 72,
   panelY: 72,
   panelWidth: 1136,
-  scenePanelHeight: 274,
-  sceneGroundY: 304,
+  scenePanelHeight: 236,
+  sceneGroundY: 282,
   sceneLeft: 132,
   sceneRight: 1098,
-  graphY: 392,
+  graphY: 344,
   graphGap: 24,
-  graphHeight: 328,
+  graphHeight: 346,
 };
 const FORCE_VIEW_OPTIONS = [
   {
@@ -1166,7 +1166,7 @@ export function BasicForceLab({
             className={
               viewMode === "3d"
                 ? "visual-canvas force-stage-canvas is-3d-mode"
-                : "visual-canvas force-stage-canvas"
+                : "visual-canvas force-stage-canvas is-2d-mode"
             }
           >
             <button
@@ -1213,41 +1213,58 @@ export function BasicForceLab({
                   rx="28"
                   className="motion-stage-panel-shell"
                 />
-                <text x={stage.panelX + 28} y={stage.panelY + 34} className="motion-stage-panel-title">
-                  实验示意
-                  <tspan className="motion-stage-panel-note-inline">
-                    （{mode === "measurement" ? "上方观察受力变化，下方同步看曲线。" : "恒定拉力输入后，直接观察位移与速度响应。"}）
-                  </tspan>
+                <text x={stage.panelX + 28} y={stage.panelY + 36} className="force-scene-inline-title">
+                  {experimentStatus.label}
                 </text>
-                <text x={stage.panelX + 28} y={stage.panelY + 60} className="motion-stage-panel-copy">
-                  {mode === "measurement"
-                    ? "先慢慢增大拉力，突破最大静摩擦后，再观察稳定动摩擦读数。"
-                    : "比较恒定拉力与最大静摩擦，判断木块是否起动，并看加速过程。"}
-                </text>
-                <text
-                  x={stage.panelX + stage.panelWidth - 28}
-                  y={stage.panelY + 34}
-                  textAnchor="end"
-                  className="force-svg-caption"
-                >
-                  {surfacePresetMeta.label} · {contactAreaMeta.label}
-                </text>
-                <text
-                  x={stage.panelX + stage.panelWidth - 28}
-                  y={stage.panelY + 58}
-                  textAnchor="end"
-                  className="motion-stage-value-callout"
-                >
-                  s = {formatNumber(displayedScene.displacement, 2)} m · v = {formatNumber(displayedScene.velocity, 2)} m/s
-                </text>
-                <text
-                  x={stage.panelX + stage.panelWidth - 28}
-                  y={stage.panelY + 80}
-                  textAnchor="end"
-                  className="force-svg-caption"
-                >
-                  F = {formatNumber(displayedScene.pullForce, 1)} N · f = {formatNumber(displayedScene.frictionForce, 1)} N · R = {formatNumber(displayedScene.netForce, 2)} N
-                </text>
+                <g transform={`translate(${stage.panelX + 184}, ${stage.panelY + 18})`}>
+                  <rect width="116" height="30" rx="15" className="force-scene-inline-badge" />
+                  <text x="58" y="20" textAnchor="middle" className="force-scene-inline-badge-copy">
+                    {experimentStatus.badge}
+                  </text>
+                </g>
+                <g transform={`translate(${stage.panelX + 28}, ${stage.panelY + 60})`}>
+                  <rect width="284" height="6" rx="3" className="force-scene-inline-progress-track" />
+                  <rect
+                    width={284 * experimentStatus.progress}
+                    height="6"
+                    rx="3"
+                    className="force-scene-inline-progress-fill"
+                  />
+                </g>
+                {(() => {
+                  const chipLabels = [
+                    surfacePresetMeta.label,
+                    contactAreaMeta.label,
+                    `压力 ${formatNumber(pressure, 1)} N`,
+                  ];
+                  let cursorX = stage.panelX + 28;
+
+                  return chipLabels.map((label) => {
+                    const width = getPillWidth(label);
+                    const node = (
+                      <g key={label} transform={`translate(${cursorX}, ${stage.panelY + 84})`}>
+                        <rect width={width} height="28" rx="14" className="force-scene-inline-pill" />
+                        <text x={width / 2} y="18" textAnchor="middle" className="force-scene-inline-pill-copy">
+                          {label}
+                        </text>
+                      </g>
+                    );
+                    cursorX += width + 10;
+                    return node;
+                  });
+                })()}
+                <g transform={`translate(${stage.panelX + stage.panelWidth - 254}, ${stage.panelY + 24})`}>
+                  <rect width="226" height="76" rx="18" className="force-scene-metric-card" />
+                  <text x="18" y="26" className="force-scene-metric-line">
+                    s = {formatNumber(displayedScene.displacement, 2)} m · v = {formatNumber(displayedScene.velocity, 2)} m/s
+                  </text>
+                  <text x="18" y="48" className="force-scene-metric-line">
+                    F = {formatNumber(displayedScene.pullForce, 1)} N · f = {formatNumber(displayedScene.frictionForce, 1)} N
+                  </text>
+                  <text x="18" y="70" className="force-scene-metric-line is-accent">
+                    R = {formatNumber(displayedScene.netForce, 2)} N · a = {formatNumber(displayedScene.acceleration, 2)} m/s²
+                  </text>
+                </g>
 
                 <rect
                   x={stage.panelX + 28}
@@ -1439,45 +1456,19 @@ export function BasicForceLab({
                   />
                 ) : null}
 
-                {visibleForces.net ? (
-                  Math.abs(displayedScene.netForce) < 0.01 ? (
-                    <g className="force-balance-badge">
-                      <rect
-                        x={stage.centerX - 88}
-                        y={stage.blockY - 78}
-                        width="176"
-                        height="34"
-                        rx="17"
-                      />
-                      <text
-                        x={stage.centerX}
-                        y={stage.blockY - 56}
-                        textAnchor="middle"
-                        className="force-balance-copy"
-                      >
-                        {mode === "measurement"
-                          ? displayedScene.phase === "uniform" || displayedScene.phase === "complete"
-                            ? "匀速阶段：F拉 = f"
-                            : "当前合力 = 0"
-                          : displayedScene.phase === "stuck"
-                            ? "未起动：F恒 = f静"
-                            : "当前合力 = 0"}
-                      </text>
-                    </g>
-                  ) : (
-                    <ForceVector
-                      id="force-arrow-net"
-                      color={FORCE_COLORS.net}
-                      label="R"
-                      magnitude={Math.abs(displayedScene.netForce)}
-                      direction="right"
-                      anchorX={stage.blockX + stage.blockWidth}
-                      anchorY={stage.blockY - 26}
-                      length={scaleArrow(Math.abs(displayedScene.netForce), horizontalMax)}
-                      isActive={activeForce === "net"}
-                      onActivate={() => setActiveForce("net")}
-                    />
-                  )
+                {visibleForces.net && Math.abs(displayedScene.netForce) >= 0.01 ? (
+                  <ForceVector
+                    id="force-arrow-net"
+                    color={FORCE_COLORS.net}
+                    label="R"
+                    magnitude={Math.abs(displayedScene.netForce)}
+                    direction="right"
+                    anchorX={stage.blockX + stage.blockWidth}
+                    anchorY={stage.blockY - 26}
+                    length={scaleArrow(Math.abs(displayedScene.netForce), horizontalMax)}
+                    isActive={activeForce === "net"}
+                    onActivate={() => setActiveForce("net")}
+                  />
                 ) : null}
 
                 <rect
@@ -1782,27 +1773,27 @@ export function BasicForceLab({
                 visibleForces={visibleForces}
               />
             )}
-            <div className="force-stage-overlay is-top-left">
-              <div className="force-stage-hud-card">
-                <div className="force-stage-hud-head">
-                  <span className="force-stage-hud-title">{experimentStatus.label}</span>
-                  <StatusPill tone={displayedScene.stateTone}>{experimentStatus.badge}</StatusPill>
-                </div>
-                <div className="force-stage-progress-inline">
-                  <span style={{ width: `${experimentStatus.progress * 100}%` }} />
-                </div>
-                <div className="force-stage-chip-row">
-                  <span className="force-stage-chip">{currentModeLabel}</span>
-                  <span className="force-stage-chip">{surfacePresetMeta.label}</span>
-                  <span className="force-stage-chip">{contactAreaMeta.label}</span>
-                  <span className="force-stage-chip">压力 {formatNumber(pressure, 1)} N</span>
-                  {viewMode === "3d" ? <span className="force-stage-chip">左拖旋转 · 滚轮缩放</span> : null}
-                </div>
-              </div>
-            </div>
-
             {viewMode === "3d" ? (
               <>
+                <div className="force-stage-overlay is-top-left">
+                  <div className="force-stage-hud-card">
+                    <div className="force-stage-hud-head">
+                      <span className="force-stage-hud-title">{experimentStatus.label}</span>
+                      <StatusPill tone={displayedScene.stateTone}>{experimentStatus.badge}</StatusPill>
+                    </div>
+                    <div className="force-stage-progress-inline">
+                      <span style={{ width: `${experimentStatus.progress * 100}%` }} />
+                    </div>
+                    <div className="force-stage-chip-row">
+                      <span className="force-stage-chip">{currentModeLabel}</span>
+                      <span className="force-stage-chip">{surfacePresetMeta.label}</span>
+                      <span className="force-stage-chip">{contactAreaMeta.label}</span>
+                      <span className="force-stage-chip">压力 {formatNumber(pressure, 1)} N</span>
+                      <span className="force-stage-chip">左拖旋转 · 滚轮缩放</span>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="force-stage-overlay is-bottom-left">
                   <div className="force-stage-chip-grid">
                     {forceRows.map((item) => (
@@ -2888,6 +2879,10 @@ function getLabelMetrics(
   }
 
   return { x: anchorX - width / 2, y: endY + 10, width };
+}
+
+function getPillWidth(label: string) {
+  return Math.max(54, label.length * 12 + 22);
 }
 
 function formatNumber(value: number, digits: number) {

@@ -2897,10 +2897,15 @@ html[data-theme="dark"] .force-state-pill.is-active {
 .force-stage-canvas {
   display: flex;
   flex: 1;
-  min-height: clamp(620px, calc(100vh - 140px), 860px);
+  min-height: clamp(560px, calc(100vh - 190px), 740px);
+}
+
+.force-stage-canvas.is-2d-mode {
+  min-height: clamp(560px, calc(100vh - 190px), 740px);
 }
 
 .force-stage-canvas.is-3d-mode {
+  min-height: clamp(620px, calc(100vh - 140px), 860px);
   background:
     radial-gradient(circle at 18% 18%, rgba(103, 198, 255, 0.16) 0%, transparent 28%),
     radial-gradient(circle at 78% 72%, rgba(93, 226, 177, 0.12) 0%, transparent 24%),
@@ -2925,7 +2930,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
   display: block;
   width: 100%;
   height: 100%;
-  min-height: clamp(620px, calc(100vh - 140px), 860px);
+  min-height: inherit;
 }
 
 .force-stage-3d-layer {
@@ -3045,6 +3050,61 @@ html[data-theme="dark"] .force-state-pill.is-active {
   fill: rgba(83, 129, 188, 0.74);
 }
 
+.force-scene-inline-title {
+  fill: var(--canvas-text);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.force-scene-inline-badge {
+  fill: rgba(10, 47, 39, 0.88);
+  stroke: rgba(93, 226, 177, 0.32);
+  stroke-width: 1.4;
+}
+
+.force-scene-inline-badge-copy {
+  fill: #5de2b1;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.force-scene-inline-progress-track {
+  fill: rgba(255, 255, 255, 0.08);
+}
+
+.force-scene-inline-progress-fill {
+  fill: var(--brand-strong);
+}
+
+.force-scene-inline-pill {
+  fill: rgba(7, 17, 31, 0.46);
+  stroke: rgba(138, 190, 255, 0.12);
+  stroke-width: 1.2;
+}
+
+.force-scene-inline-pill-copy {
+  fill: var(--canvas-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.force-scene-metric-card {
+  fill: rgba(7, 17, 31, 0.62);
+  stroke: rgba(138, 190, 255, 0.16);
+  stroke-width: 1.2;
+}
+
+.force-scene-metric-line {
+  fill: var(--canvas-copy);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.force-scene-metric-line.is-accent {
+  fill: var(--canvas-text);
+}
+
 .force-vector-hit {
   stroke: transparent;
   stroke-width: 22;
@@ -3063,17 +3123,6 @@ html[data-theme="dark"] .force-state-pill.is-active {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.02em;
-}
-
-.force-balance-badge rect {
-  fill: rgba(7, 17, 31, 0.92);
-  stroke: rgba(192, 132, 252, 0.54);
-}
-
-.force-balance-copy {
-  fill: #eadcff;
-  font-size: 13px;
-  font-weight: 700;
 }
 
 .force-stage-panel {
