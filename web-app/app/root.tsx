@@ -103,8 +103,8 @@ function LayoutShell({ children }: { children: ReactNode }) {
               </nav>
 
               <div className="topbar-actions">
-                <LanguageToggle />
                 <ThemeToggle />
+                <LanguageToggle />
               </div>
             </div>
           </header>
