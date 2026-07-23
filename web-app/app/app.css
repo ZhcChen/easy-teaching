@@ -3153,13 +3153,13 @@ html[data-theme="dark"] .force-state-pill.is-active {
 }
 
 .force-stage-overlay.is-top-left {
-  top: 16px;
+  top: 62px;
   left: 16px;
-  width: min(300px, calc(100% - 28px));
+  width: min(340px, calc(100% - 28px));
 }
 
 .force-stage-overlay.is-top-left.is-3d-view {
-  top: 64px;
+  top: 62px;
 }
 
 .force-stage-overlay.is-bottom-left {
@@ -4887,13 +4887,13 @@ html[data-theme="dark"] .force-state-pill.is-active {
   }
 
   .force-stage-overlay.is-top-left {
-    top: 12px;
+    top: 58px;
     left: 12px;
-    width: min(280px, calc(100% - 24px));
+    width: min(300px, calc(100% - 24px));
   }
 
   .force-stage-overlay.is-top-left.is-3d-view {
-    top: 60px;
+    top: 58px;
   }
 
   .force-stage-overlay.is-bottom-left {
@@ -5115,11 +5115,11 @@ html[data-theme="dark"] .force-state-pill.is-active {
   }
 
   .force-stage-overlay.is-top-left {
-    top: 12px;
+    top: 58px;
   }
 
   .force-stage-overlay.is-top-left.is-3d-view {
-    top: 60px;
+    top: 58px;
   }
 
   .force-stage-overlay.is-bottom-left {

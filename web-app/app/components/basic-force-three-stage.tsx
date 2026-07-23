@@ -4,7 +4,14 @@ type ThreeModule = typeof import("three");
 
 type ForceKey = "gravity" | "normal" | "pull" | "friction" | "net";
 type ContactAreaKey = "flat" | "side" | "upright";
-type ExperimentPhase = "idle" | "ramping" | "breakaway" | "uniform" | "complete";
+type ExperimentPhase =
+  | "idle"
+  | "ramping"
+  | "breakaway"
+  | "uniform"
+  | "stuck"
+  | "accelerating"
+  | "complete";
 
 type BasicForceThreeStageProps = {
   activeForce: ForceKey;

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
 import { BasicForceThreeStage } from "./basic-force-three-stage";
 import { ControlButton } from "./control-button";
+import { ControlChipGroup } from "./control-chip-group";
 import { ControlOptionGroup } from "./control-option-group";
 import { ControlPanelSection } from "./control-panel-section";
 import { ControlRange } from "./control-range";
@@ -15,7 +16,15 @@ type MotionState = "rest" | "threshold" | "sliding";
 type Tone = "balanced" | "warning" | "active";
 type SurfacePresetKey = "smooth-board" | "wood-board" | "cloth" | "towel";
 type ContactAreaKey = "flat" | "side" | "upright";
-type ExperimentPhase = "idle" | "ramping" | "breakaway" | "uniform" | "complete";
+type ForceExperimentMode = "measurement" | "constant-pull";
+type ExperimentPhase =
+  | "idle"
+  | "ramping"
+  | "breakaway"
+  | "uniform"
+  | "stuck"
+  | "accelerating"
+  | "complete";
 type ForceViewMode = "2d" | "3d";
 
 type BasicForceLabProps = {
@@ -31,6 +40,18 @@ type ForceRow = {
   value: number;
   color: string;
   description: string;
+};
+
+type ForceTimelineSample = {
+  timeMs: number;
+  timeSeconds: number;
+  phase: ExperimentPhase;
+  pullForce: number;
+  frictionForce: number;
+  netForce: number;
+  displacement: number;
+  velocity: number;
+  acceleration: number;
 };
 
 type SurfacePreset = {
@@ -81,6 +102,8 @@ type ExperimentScene = {
   motionHint: string;
   travelProgress: number;
   readingRatio: number;
+  displacement: number;
+  velocity: number;
 };
 
 type ExperimentStatus = {
@@ -104,6 +127,14 @@ type ExperimentRecord = {
 type StageLayout = {
   width: number;
   height: number;
+  panelX: number;
+  panelY: number;
+  panelWidth: number;
+  scenePanelHeight: number;
+  graphY: number;
+  graphWidth: number;
+  graphHeight: number;
+  graphGap: number;
   groundY: number;
   blockX: number;
   blockY: number;
@@ -129,7 +160,9 @@ const FORCE_COLORS: Record<ForceKey, string> = {
 };
 
 const DEFAULT_VALUES = {
+  mode: "measurement" as ForceExperimentMode,
   pressure: 4,
+  constantPullForce: 1.2,
   surfacePreset: "wood-board" as SurfacePresetKey,
   contactArea: "flat" as ContactAreaKey,
 };
@@ -138,8 +171,26 @@ const GRAVITY = 9.8;
 const RAMP_DURATION_MS = 1500;
 const BREAKAWAY_DURATION_MS = 900;
 const UNIFORM_DURATION_MS = 1800;
+const CONSTANT_PULL_STARTUP_MS = 320;
+const CONSTANT_PULL_DURATION_MS = 2400;
+const FORCE_GRAPH_SAMPLE_COUNT = 72;
+const FORCE_GRAPH_PADDING = { top: 48, right: 48, bottom: 34, left: 48 };
 const FORCE_VIEW_STORAGE_KEY = "easy-teaching.basic-force.view-mode";
 const FORCE_PANEL_COLLAPSED_STORAGE_KEY = "easy-teaching.basic-force.panel-collapsed";
+const FORCE_SVG_STAGE = {
+  width: 1280,
+  height: 860,
+  panelX: 72,
+  panelY: 72,
+  panelWidth: 1136,
+  scenePanelHeight: 274,
+  sceneGroundY: 304,
+  sceneLeft: 132,
+  sceneRight: 1098,
+  graphY: 392,
+  graphGap: 24,
+  graphHeight: 328,
+};
 const FORCE_VIEW_OPTIONS = [
   {
     key: "2d",
@@ -150,6 +201,18 @@ const FORCE_VIEW_OPTIONS = [
     key: "3d",
     label: "3D",
     title: "3D 实验场景",
+  },
+] as const;
+const FORCE_MODE_OPTIONS = [
+  {
+    key: "measurement",
+    label: "实验测量",
+    title: "逐步增大拉力，观察最大静摩擦与稳定动摩擦。",
+  },
+  {
+    key: "constant-pull",
+    label: "恒力拉动",
+    title: "直接给定恒定拉力，观察合力、加速度、速度和位移变化。",
   },
 ] as const;
 
@@ -220,31 +283,18 @@ const CONTACT_AREAS: ContactAreaPreset[] = [
   },
 ];
 
-const OBJECTIVES = [
-  {
-    title: "压力影响",
-    detail: "压力越大，动摩擦力越大，公式里直接体现在 N 的变化上。",
-  },
-  {
-    title: "材质影响",
-    detail: "接触面越粗糙，摩擦系数越大，测力计稳定读数越高。",
-  },
-  {
-    title: "面积无关",
-    detail: "把木块正放、侧放、竖放，只改变形状，不进入公式。",
-  },
-];
-
 export function BasicForceLab({
   topic,
   isFullscreen,
   onToggleFullscreen,
   fullscreenRef,
 }: BasicForceLabProps) {
+  const [mode, setMode] = useState<ForceExperimentMode>(DEFAULT_VALUES.mode);
   const [viewMode, setViewMode] = useState<ForceViewMode>(readStoredForceViewMode);
   const [isControlPanelCollapsed, setIsControlPanelCollapsed] =
     useState(readStoredForcePanelCollapsed);
   const [pressure, setPressure] = useState(DEFAULT_VALUES.pressure);
+  const [constantPullForce, setConstantPullForce] = useState(DEFAULT_VALUES.constantPullForce);
   const [surfacePreset, setSurfacePreset] = useState<SurfacePresetKey>(DEFAULT_VALUES.surfacePreset);
   const [contactArea, setContactArea] = useState<ContactAreaKey>(DEFAULT_VALUES.contactArea);
   const [activeForce, setActiveForce] = useState<ForceKey>("gravity");
@@ -283,9 +333,12 @@ export function BasicForceLab({
     setIsExperimentRunning(false);
     setExperimentElapsedMs(0);
     setActiveForce("gravity");
-  }, [contactArea, pressure, surfacePreset]);
+  }, [constantPullForce, contactArea, mode, pressure, surfacePreset]);
 
-  const totalExperimentMs = RAMP_DURATION_MS + BREAKAWAY_DURATION_MS + UNIFORM_DURATION_MS;
+  const totalExperimentMs =
+    mode === "measurement"
+      ? RAMP_DURATION_MS + BREAKAWAY_DURATION_MS + UNIFORM_DURATION_MS
+      : CONSTANT_PULL_STARTUP_MS + CONSTANT_PULL_DURATION_MS;
 
   useEffect(() => {
     playbackElapsedRef.current = experimentElapsedMs;
@@ -333,12 +386,50 @@ export function BasicForceLab({
   const displayedScene = useMemo(
     () =>
       computeExperimentScene({
+        mode,
         metrics,
         hasPlaybackStarted,
         experimentElapsedMs,
         totalExperimentMs,
+        constantPullForce,
       }),
-    [experimentElapsedMs, hasPlaybackStarted, metrics, totalExperimentMs],
+    [constantPullForce, experimentElapsedMs, hasPlaybackStarted, metrics, mode, totalExperimentMs],
+  );
+
+  const currentTimelineSample = useMemo<ForceTimelineSample>(
+    () => ({
+      timeMs: experimentElapsedMs,
+      timeSeconds: experimentElapsedMs / 1000,
+      phase: displayedScene.phase,
+      pullForce: displayedScene.pullForce,
+      frictionForce: displayedScene.frictionForce,
+      netForce: displayedScene.netForce,
+      displacement: displayedScene.displacement,
+      velocity: displayedScene.velocity,
+      acceleration: displayedScene.acceleration,
+    }),
+    [displayedScene, experimentElapsedMs],
+  );
+
+  const timelineSeries = useMemo(
+    () =>
+      buildForceTimelineSeries({
+        mode,
+        metrics,
+        totalExperimentMs,
+        constantPullForce,
+        segments: FORCE_GRAPH_SAMPLE_COUNT,
+      }),
+    [constantPullForce, metrics, mode, totalExperimentMs],
+  );
+
+  const playedTimelineSeries = useMemo(
+    () =>
+      buildPlayedForceSeries({
+        series: timelineSeries,
+        currentSample: currentTimelineSample,
+      }),
+    [currentTimelineSample, timelineSeries],
   );
 
   const stage = useMemo(
@@ -351,8 +442,111 @@ export function BasicForceLab({
     [contactAreaMeta, displayedScene.travelProgress, pressure],
   );
 
+  const progress = hasPlaybackStarted ? clamp01(experimentElapsedMs / totalExperimentMs) : 0;
+  const durationSeconds = totalExperimentMs / 1000;
+  const graphTimeTicks = Array.from({ length: 5 }, (_, index) =>
+    (durationSeconds * index) / 4,
+  );
+  const forceDomain = Math.max(
+    metrics.staticLimit,
+    metrics.kineticFriction,
+    constantPullForce,
+    ...timelineSeries.map((sample) => Math.max(sample.pullForce, sample.frictionForce, Math.abs(sample.netForce))),
+    1,
+  );
+  const displacementDomain = Math.max(
+    0.5,
+    ...timelineSeries.map((sample) => sample.displacement * 1.08),
+  );
+  const velocityDomain = Math.max(
+    0.4,
+    ...timelineSeries.map((sample) => sample.velocity * 1.12),
+  );
+  const forceGraph = useMemo(
+    () =>
+      buildForceGraphGeometry({
+        series: timelineSeries,
+        playedSeries: playedTimelineSeries,
+        width: stage.graphWidth,
+        height: stage.graphHeight,
+        x: stage.panelX,
+        y: stage.graphY,
+        duration: durationSeconds,
+        minValue: 0,
+        maxValue: forceDomain,
+        mapValue: (sample) => sample.pullForce,
+      }),
+    [durationSeconds, forceDomain, playedTimelineSeries, stage.graphHeight, stage.graphWidth, stage.graphY, stage.panelX, timelineSeries],
+  );
+  const frictionGraph = useMemo(
+    () =>
+      buildForceGraphGeometry({
+        series: timelineSeries,
+        playedSeries: playedTimelineSeries,
+        width: stage.graphWidth,
+        height: stage.graphHeight,
+        x: stage.panelX,
+        y: stage.graphY,
+        duration: durationSeconds,
+        minValue: 0,
+        maxValue: forceDomain,
+        mapValue: (sample) => sample.frictionForce,
+      }),
+    [durationSeconds, forceDomain, playedTimelineSeries, stage.graphHeight, stage.graphWidth, stage.graphY, stage.panelX, timelineSeries],
+  );
+  const netGraph = useMemo(
+    () =>
+      buildForceGraphGeometry({
+        series: timelineSeries,
+        playedSeries: playedTimelineSeries,
+        width: stage.graphWidth,
+        height: stage.graphHeight,
+        x: stage.panelX,
+        y: stage.graphY,
+        duration: durationSeconds,
+        minValue: 0,
+        maxValue: forceDomain,
+        mapValue: (sample) => Math.max(0, sample.netForce),
+      }),
+    [durationSeconds, forceDomain, playedTimelineSeries, stage.graphHeight, stage.graphWidth, stage.graphY, stage.panelX, timelineSeries],
+  );
+  const motionGraphX = stage.panelX + stage.graphWidth + stage.graphGap;
+  const displacementGraph = useMemo(
+    () =>
+      buildForceGraphGeometry({
+        series: timelineSeries,
+        playedSeries: playedTimelineSeries,
+        width: stage.graphWidth,
+        height: stage.graphHeight,
+        x: motionGraphX,
+        y: stage.graphY,
+        duration: durationSeconds,
+        minValue: 0,
+        maxValue: displacementDomain,
+        mapValue: (sample) => sample.displacement,
+      }),
+    [displacementDomain, durationSeconds, motionGraphX, playedTimelineSeries, stage.graphHeight, stage.graphWidth, stage.graphY, timelineSeries],
+  );
+  const velocityGraph = useMemo(
+    () =>
+      buildForceGraphGeometry({
+        series: timelineSeries,
+        playedSeries: playedTimelineSeries,
+        width: stage.graphWidth,
+        height: stage.graphHeight,
+        x: motionGraphX,
+        y: stage.graphY,
+        duration: durationSeconds,
+        minValue: 0,
+        maxValue: velocityDomain,
+        mapValue: (sample) => sample.velocity,
+      }),
+    [durationSeconds, motionGraphX, playedTimelineSeries, stage.graphHeight, stage.graphWidth, stage.graphY, timelineSeries, velocityDomain],
+  );
+
   useEffect(() => {
     if (
+      mode !== "measurement" ||
       currentRunId === 0 ||
       lastRecordedRunRef.current === currentRunId ||
       isExperimentRunning ||
@@ -380,6 +574,7 @@ export function BasicForceLab({
     isExperimentRunning,
     metrics.kineticFriction,
     metrics.staticLimit,
+    mode,
     pressure,
     surfacePresetMeta.label,
     totalExperimentMs,
@@ -425,16 +620,21 @@ export function BasicForceLab({
       value: displayedScene.pullForce,
       color: FORCE_COLORS.pull,
       description:
-        displayedScene.phase === "idle"
-          ? "开始实验后，弹簧测力计会缓慢增大拉力，直到木块开始滑动。"
-          : `当前测力计读数 ${formatNumber(displayedScene.pullForce, 1)} N。匀速阶段的稳定读数，就是本次测得的滑动摩擦力。`,
+        mode === "measurement"
+          ? displayedScene.phase === "idle"
+            ? "开始实验后，测力计会缓慢增大拉力，直到木块开始滑动。"
+            : `当前测力计读数 ${formatNumber(displayedScene.pullForce, 1)} N。匀速阶段的稳定读数，就是本次测得的滑动摩擦力。`
+          : `当前恒定拉力固定为 ${formatNumber(constantPullForce, 1)} N。只要它超过最大静摩擦，木块就会持续加速。`,
     },
     {
       key: "friction",
       label: "摩擦力 f",
       value: displayedScene.frictionForce,
       color: FORCE_COLORS.friction,
-      description: `当前处于${displayedScene.frictionModeLabel}，摩擦力大小 ${formatNumber(displayedScene.frictionForce, 1)} N。真正记录实验数据时，使用的是匀速阶段的动摩擦 ${formatNumber(displayedScene.kineticFriction, 1)} N。`,
+      description:
+        mode === "measurement"
+          ? `当前处于${displayedScene.frictionModeLabel}，摩擦力大小 ${formatNumber(displayedScene.frictionForce, 1)} N。真正记录实验数据时，使用的是匀速阶段的动摩擦 ${formatNumber(displayedScene.kineticFriction, 1)} N。`
+          : `当前处于${displayedScene.frictionModeLabel}，摩擦力大小 ${formatNumber(displayedScene.frictionForce, 1)} N。若恒力不足，它会作为静摩擦完全抵消拉力；一旦滑动，就近似保持在动摩擦 ${formatNumber(displayedScene.kineticFriction, 1)} N。`,
     },
     {
       key: "net",
@@ -446,7 +646,9 @@ export function BasicForceLab({
           ? displayedScene.phase === "uniform" || displayedScene.phase === "complete"
             ? "匀速拉动阶段，拉力和摩擦力再次平衡，水平方向合力回到 0。"
             : "当前合力为 0，木块要么静止，要么保持匀速。"
-          : `突破静摩擦时出现瞬时合力 ${formatNumber(displayedScene.netForce, 2)} N，因此木块开始从静止转入滑动。`,
+          : mode === "measurement"
+            ? `突破静摩擦时出现瞬时合力 ${formatNumber(displayedScene.netForce, 2)} N，因此木块开始从静止转入滑动。`
+            : `当前合力 ${formatNumber(displayedScene.netForce, 2)} N。它越大，加速度越大，速度与位移曲线抬升得越明显。`,
     },
   ];
 
@@ -454,6 +656,7 @@ export function BasicForceLab({
   const latestRecord = runRecords[0] ?? null;
   const comparisonRecord = runRecords[1] ?? null;
   const recentRecords = runRecords.slice(0, 2);
+  const canBreakaway = constantPullForce > metrics.staticLimit;
 
   const visibleForces = {
     gravity: true,
@@ -464,50 +667,109 @@ export function BasicForceLab({
   };
 
   const experimentStatus = getExperimentStatus({
+    mode,
     hasPlaybackStarted,
     displayedScene,
     metrics,
+    progress,
+    constantPullForce,
   });
   const activePhase = hasPlaybackStarted ? displayedScene.phase : "idle";
   const hasPartialPlayback =
     experimentElapsedMs > 0 && experimentElapsedMs < totalExperimentMs;
-  const phaseSteps = [
-    {
-      phase: "idle" as const,
-      label: "先预测",
-      detail: "先看器材和变量",
-      elapsedMs: 0,
-      forceKey: "gravity" as const,
-    },
-    {
-      phase: "ramping" as const,
-      label: "拉力增大",
-      detail: "静摩擦仍在平衡",
-      elapsedMs: RAMP_DURATION_MS * 0.72,
-      forceKey: "pull" as const,
-    },
-    {
-      phase: "breakaway" as const,
-      label: "刚刚起动",
-      detail: "突破最大静摩擦",
-      elapsedMs: RAMP_DURATION_MS + BREAKAWAY_DURATION_MS * 0.55,
-      forceKey: "net" as const,
-    },
-    {
-      phase: "uniform" as const,
-      label: "匀速测量",
-      detail: "稳定读数就是结果",
-      elapsedMs: RAMP_DURATION_MS + BREAKAWAY_DURATION_MS + UNIFORM_DURATION_MS * 0.58,
-      forceKey: "friction" as const,
-    },
-    {
-      phase: "complete" as const,
-      label: "得出结论",
-      detail: "准备做下一组对比",
-      elapsedMs: totalExperimentMs,
-      forceKey: "friction" as const,
-    },
-  ];
+  const phaseSteps =
+    mode === "measurement"
+      ? [
+          {
+            phase: "idle" as const,
+            label: "先预测",
+            detail: "先看器材和变量",
+            elapsedMs: 0,
+            forceKey: "gravity" as const,
+          },
+          {
+            phase: "ramping" as const,
+            label: "拉力增大",
+            detail: "静摩擦仍在平衡",
+            elapsedMs: RAMP_DURATION_MS * 0.72,
+            forceKey: "pull" as const,
+          },
+          {
+            phase: "breakaway" as const,
+            label: "刚刚起动",
+            detail: "突破最大静摩擦",
+            elapsedMs: RAMP_DURATION_MS + BREAKAWAY_DURATION_MS * 0.55,
+            forceKey: "net" as const,
+          },
+          {
+            phase: "uniform" as const,
+            label: "匀速测量",
+            detail: "稳定读数就是结果",
+            elapsedMs: RAMP_DURATION_MS + BREAKAWAY_DURATION_MS + UNIFORM_DURATION_MS * 0.58,
+            forceKey: "friction" as const,
+          },
+          {
+            phase: "complete" as const,
+            label: "得出结论",
+            detail: "准备做下一组对比",
+            elapsedMs: totalExperimentMs,
+            forceKey: "friction" as const,
+          },
+        ]
+      : canBreakaway
+        ? [
+            {
+              phase: "idle" as const,
+              label: "先判断",
+              detail: "看恒力是否够大",
+              elapsedMs: 0,
+              forceKey: "gravity" as const,
+            },
+            {
+              phase: "breakaway" as const,
+              label: "开始起动",
+              detail: "突破最大静摩擦",
+              elapsedMs: CONSTANT_PULL_STARTUP_MS * 0.6,
+              forceKey: "net" as const,
+            },
+            {
+              phase: "accelerating" as const,
+              label: "持续加速",
+              detail: "合力保持为正",
+              elapsedMs: CONSTANT_PULL_STARTUP_MS + CONSTANT_PULL_DURATION_MS * 0.5,
+              forceKey: "net" as const,
+            },
+            {
+              phase: "complete" as const,
+              label: "完成演示",
+              detail: "速度和位移都已建立",
+              elapsedMs: totalExperimentMs,
+              forceKey: "pull" as const,
+            },
+          ]
+        : [
+            {
+              phase: "idle" as const,
+              label: "先判断",
+              detail: "看恒力是否够大",
+              elapsedMs: 0,
+              forceKey: "gravity" as const,
+            },
+            {
+              phase: "stuck" as const,
+              label: "保持静止",
+              detail: "拉力未破阈值",
+              elapsedMs: totalExperimentMs * 0.5,
+              forceKey: "friction" as const,
+            },
+            {
+              phase: "complete" as const,
+              label: "完成判断",
+              detail: "确认不会起动",
+              elapsedMs: totalExperimentMs,
+              forceKey: "friction" as const,
+            },
+          ];
   const primaryActionLabel = isExperimentRunning
     ? "暂停实验"
     : hasPartialPlayback
@@ -519,13 +781,45 @@ export function BasicForceLab({
   const horizontalMax = Math.max(
     metrics.breakawayForce,
     metrics.kineticFriction,
+    constantPullForce,
     Math.abs(displayedScene.netForce),
     1,
   );
   const verticalMax = Math.max(displayedScene.weight, displayedScene.normal, 1);
+  const measurementComparisonCopy =
+    latestRecord && comparisonRecord
+      ? `与上一组相比，稳定读数变化 ${formatSignedNumber(latestRecord.kineticFriction - comparisonRecord.kineticFriction)} N。`
+      : "先完成一组测量，再切换材质、压力或摆放方式做第二组对比。";
+  const currentModeLabel =
+    FORCE_MODE_OPTIONS.find((item) => item.key === mode)?.label ?? "实验测量";
+  const forceGuideX = forceGraph.mapTime(currentTimelineSample.timeSeconds);
+  const thresholdLineY = forceGraph.mapValue(metrics.staticLimit);
+  const currentPullPoint = {
+    x: forceGuideX,
+    y: forceGraph.mapValue(currentTimelineSample.pullForce),
+  };
+  const currentFrictionPoint = {
+    x: forceGuideX,
+    y: frictionGraph.mapValue(currentTimelineSample.frictionForce),
+  };
+  const currentNetPoint = {
+    x: forceGuideX,
+    y: netGraph.mapValue(Math.max(0, currentTimelineSample.netForce)),
+  };
+  const motionGuideX = displacementGraph.mapTime(currentTimelineSample.timeSeconds);
+  const currentDisplacementPoint = {
+    x: motionGuideX,
+    y: displacementGraph.mapValue(currentTimelineSample.displacement),
+  };
+  const currentVelocityPoint = {
+    x: motionGuideX,
+    y: velocityGraph.mapValue(currentTimelineSample.velocity),
+  };
 
   function resetDefaults() {
+    setMode(DEFAULT_VALUES.mode);
     setPressure(DEFAULT_VALUES.pressure);
+    setConstantPullForce(DEFAULT_VALUES.constantPullForce);
     setSurfacePreset(DEFAULT_VALUES.surfacePreset);
     setContactArea(DEFAULT_VALUES.contactArea);
     setActiveForce("gravity");
@@ -539,14 +833,7 @@ export function BasicForceLab({
     setIsExperimentRunning(true);
     setExperimentElapsedMs(0);
     setCurrentRunId((previous) => previous + 1);
-    setActiveForce("pull");
-  }
-
-  function stopExperiment() {
-    setIsExperimentRunning(false);
-    setHasExperimentRun(false);
-    setExperimentElapsedMs(0);
-    setActiveForce("gravity");
+    setActiveForce(mode === "measurement" ? "pull" : canBreakaway ? "net" : "friction");
   }
 
   function pauseExperiment() {
@@ -566,7 +853,7 @@ export function BasicForceLab({
       setCurrentRunId((previous) => previous + 1);
     }
 
-    setActiveForce(getSuggestedForceForElapsedMs(experimentElapsedMs, totalExperimentMs));
+    setActiveForce(getSuggestedForceForPhase(displayedScene.phase));
   }
 
   function seekExperiment(nextElapsedMs: number) {
@@ -583,7 +870,18 @@ export function BasicForceLab({
 
     setHasExperimentRun(true);
     setExperimentElapsedMs(clampedElapsedMs);
-    setActiveForce(getSuggestedForceForElapsedMs(clampedElapsedMs, totalExperimentMs));
+    setActiveForce(
+      getSuggestedForceForPhase(
+        computeExperimentScene({
+          mode,
+          metrics,
+          hasPlaybackStarted: true,
+          experimentElapsedMs: clampedElapsedMs,
+          totalExperimentMs,
+          constantPullForce,
+        }).phase,
+      ),
+    );
   }
 
   function jumpToPhase(phase: ExperimentPhase) {
@@ -648,15 +946,42 @@ export function BasicForceLab({
 
               <div className="force-control-scroll basic-force-control-scroll">
                 <ControlPanelSection title="实验控制" hint="先预测，再播放，再对比" accent>
+                  <ControlChipGroup
+                    columns={2}
+                    compact
+                    items={FORCE_MODE_OPTIONS.map((item) => ({
+                      key: item.key,
+                      label: item.label,
+                      active: mode === item.key,
+                      title: item.title,
+                      onClick: () => setMode(item.key as ForceExperimentMode),
+                    }))}
+                  />
+
+                  {mode === "constant-pull" ? (
+                    <ControlRange
+                      id="force-constant-pull"
+                      label="恒定拉力"
+                      unit="N"
+                      min={0.2}
+                      max={8}
+                      step={0.1}
+                      value={constantPullForce}
+                      onChange={setConstantPullForce}
+                    />
+                  ) : null}
+
                   <ControlStatusBar
                     items={[
                       <StatusPill key="state" tone={displayedScene.stateTone}>
                         {displayedScene.stateLabel}
                       </StatusPill>,
                       <StatusPill key="mode">{displayedScene.frictionModeLabel}</StatusPill>,
-                      <StatusPill key="limit">
-                        f静,max {formatNumber(metrics.staticLimit, 1)} N
-                      </StatusPill>,
+                      mode === "measurement" ? (
+                        <StatusPill key="limit">f静,max {formatNumber(metrics.staticLimit, 1)} N</StatusPill>
+                      ) : (
+                        <StatusPill key="pull">F恒 {formatNumber(constantPullForce, 1)} N</StatusPill>
+                      ),
                     ]}
                   />
 
@@ -708,22 +1033,9 @@ export function BasicForceLab({
                     max={totalExperimentMs}
                     step={10}
                     value={hasPlaybackStarted ? experimentElapsedMs : 0}
-                    valueFormatter={() => `${Math.round((experimentStatus.progress || 0) * 100)}%`}
+                    valueFormatter={(value) => `${formatNumber(value / 1000, 1)} s`}
                     onChange={seekExperiment}
                   />
-                </ControlPanelSection>
-
-                <ControlPanelSection title="研究目标" hint="只观察三个教学变量">
-                  <div className="force-highlight-row is-panel">
-                    {OBJECTIVES.map((item) => (
-                      <span key={item.title} className="force-highlight-chip">
-                        {item.title}
-                      </span>
-                    ))}
-                  </div>
-
-                  <p className="force-inline-copy">{displayedScene.summary}</p>
-                  <p className="force-inline-copy">{displayedScene.motionHint}</p>
                 </ControlPanelSection>
 
                 <ControlPanelSection title="压力 / 正压力" hint="直接改变 N 的大小">
@@ -778,48 +1090,72 @@ export function BasicForceLab({
                   onClick: () => setContactArea(item.key),
                 }))}
                 columns={3}
-              />
-            </ControlPanelSection>
+                  />
+                </ControlPanelSection>
 
-            <ControlPanelSection title="当前结论" hint="对比两组结果最有价值">
-              <p className="force-inline-copy">{currentForce.description}</p>
-              <p className="force-inline-copy">{experimentStatus.formula}</p>
+                <ControlPanelSection
+                  title="当前结论"
+                  hint={mode === "measurement" ? "重点看稳定读数和对比结果" : "重点看是否起动，以及位移 / 速度变化"}
+                >
+                  <p className="force-inline-copy">{currentForce.description}</p>
+                  <p className="force-inline-copy">{displayedScene.summary}</p>
+                  <p className="force-inline-copy">{displayedScene.motionHint}</p>
+                  <p className="force-inline-copy">{experimentStatus.formula}</p>
 
-              <div className="force-stage-records">
-                <div className="force-stage-records-head">
-                  <p className="surface-eyebrow">最近对比</p>
-                  {runRecords.length > 1 ? (
-                    <button type="button" className="force-text-button" onClick={clearRecords}>
-                      清空记录
-                    </button>
-                  ) : null}
-                </div>
+                  {mode === "measurement" ? (
+                    <div className="force-stage-records">
+                      <div className="force-stage-records-head">
+                        <p className="surface-eyebrow">最近对比</p>
+                        {runRecords.length > 1 ? (
+                          <button type="button" className="force-text-button" onClick={clearRecords}>
+                            清空记录
+                          </button>
+                        ) : null}
+                      </div>
 
-                <p className="force-stage-empty">
-                  {comparisonRecord
-                    ? `与上一组相比，稳定读数变化 ${formatSignedNumber(latestRecord!.kineticFriction - comparisonRecord.kineticFriction)} N。`
-                    : "先完成一组实验，再切换材质、压力或摆放方式做第二组对比。"}
-                </p>
+                      <p className="force-stage-empty">{measurementComparisonCopy}</p>
 
-                {recentRecords.length > 0 ? (
-                  <div className="force-stage-record-list is-sidebar">
-                    {recentRecords.map((record, index) => (
-                      <article key={record.id} className="force-stage-record-card">
-                        <div className="force-stage-record-head">
-                          <strong>{index === 0 ? "当前结果" : "上一组结果"}</strong>
-                          <StatusPill>{formatNumber(record.kineticFriction, 1)} N</StatusPill>
+                      {recentRecords.length > 0 ? (
+                        <div className="force-stage-record-list is-sidebar">
+                          {recentRecords.map((record, index) => (
+                            <article key={record.id} className="force-stage-record-card">
+                              <div className="force-stage-record-head">
+                                <strong>{index === 0 ? "当前结果" : "上一组结果"}</strong>
+                                <StatusPill>{formatNumber(record.kineticFriction, 1)} N</StatusPill>
+                              </div>
+                              <div className="force-stage-record-meta">
+                                <span>{record.surfaceLabel}</span>
+                                <span>压力 {formatNumber(record.pressure, 1)} N</span>
+                                <span>{record.contactAreaLabel}</span>
+                              </div>
+                            </article>
+                          ))}
                         </div>
-                        <div className="force-stage-record-meta">
-                          <span>{record.surfaceLabel}</span>
-                          <span>压力 {formatNumber(record.pressure, 1)} N</span>
-                          <span>{record.contactAreaLabel}</span>
-                        </div>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div className="force-insight-grid force-insight-grid-compact">
+                      <article className="force-insight-card">
+                        <span className="force-insight-label">恒定拉力</span>
+                        <strong className="force-insight-value">{formatNumber(constantPullForce, 1)} N</strong>
                       </article>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            </ControlPanelSection>
+                      <article className="force-insight-card">
+                        <span className="force-insight-label">合力</span>
+                        <strong className="force-insight-value">{formatNumber(displayedScene.netForce, 2)} N</strong>
+                      </article>
+                      <article className="force-insight-card">
+                        <span className="force-insight-label">加速度</span>
+                        <strong className="force-insight-value">{formatNumber(displayedScene.acceleration, 2)} m/s²</strong>
+                      </article>
+                      <article className="force-insight-card">
+                        <span className="force-insight-label">位移 / 速度</span>
+                        <strong className="force-insight-value">
+                          {formatNumber(displayedScene.displacement, 2)} m · {formatNumber(displayedScene.velocity, 2)} m/s
+                        </strong>
+                      </article>
+                    </div>
+                  )}
+                </ControlPanelSection>
               </div>
             </>
           )}
@@ -870,9 +1206,53 @@ export function BasicForceLab({
                 </defs>
 
                 <rect
-                  x="50"
+                  x={stage.panelX}
+                  y={stage.panelY}
+                  width={stage.panelWidth}
+                  height={stage.scenePanelHeight}
+                  rx="28"
+                  className="motion-stage-panel-shell"
+                />
+                <text x={stage.panelX + 28} y={stage.panelY + 34} className="motion-stage-panel-title">
+                  实验示意
+                  <tspan className="motion-stage-panel-note-inline">
+                    （{mode === "measurement" ? "上方观察受力变化，下方同步看曲线。" : "恒定拉力输入后，直接观察位移与速度响应。"}）
+                  </tspan>
+                </text>
+                <text x={stage.panelX + 28} y={stage.panelY + 60} className="motion-stage-panel-copy">
+                  {mode === "measurement"
+                    ? "先慢慢增大拉力，突破最大静摩擦后，再观察稳定动摩擦读数。"
+                    : "比较恒定拉力与最大静摩擦，判断木块是否起动，并看加速过程。"}
+                </text>
+                <text
+                  x={stage.panelX + stage.panelWidth - 28}
+                  y={stage.panelY + 34}
+                  textAnchor="end"
+                  className="force-svg-caption"
+                >
+                  {surfacePresetMeta.label} · {contactAreaMeta.label}
+                </text>
+                <text
+                  x={stage.panelX + stage.panelWidth - 28}
+                  y={stage.panelY + 58}
+                  textAnchor="end"
+                  className="motion-stage-value-callout"
+                >
+                  s = {formatNumber(displayedScene.displacement, 2)} m · v = {formatNumber(displayedScene.velocity, 2)} m/s
+                </text>
+                <text
+                  x={stage.panelX + stage.panelWidth - 28}
+                  y={stage.panelY + 80}
+                  textAnchor="end"
+                  className="force-svg-caption"
+                >
+                  F = {formatNumber(displayedScene.pullForce, 1)} N · f = {formatNumber(displayedScene.frictionForce, 1)} N · R = {formatNumber(displayedScene.netForce, 2)} N
+                </text>
+
+                <rect
+                  x={stage.panelX + 28}
                   y={stage.groundY - 10}
-                  width={stage.width - 100}
+                  width={stage.panelWidth - 56}
                   height="24"
                   rx="12"
                   className="force-stage-surface-strip"
@@ -882,23 +1262,24 @@ export function BasicForceLab({
                 />
 
                 {buildSurfaceTexture({
-                  width: stage.width,
+                  startX: stage.panelX + 24,
+                  endX: stage.panelX + stage.panelWidth - 24,
                   groundY: stage.groundY,
                   accent: surfacePresetMeta.accent,
                   roughness: surfacePresetMeta.roughness,
                 })}
 
                 <line
-                  x1="42"
+                  x1={stage.panelX + 24}
                   y1={stage.groundY}
-                  x2={stage.width - 48}
+                  x2={stage.panelX + stage.panelWidth - 24}
                   y2={stage.groundY}
                   className="force-stage-ground"
                 />
-                <text x="62" y={stage.groundY - 18} className="force-svg-caption">
+                <text x={stage.panelX + 28} y={stage.groundY - 18} className="force-svg-caption">
                   {surfacePresetMeta.label}
                 </text>
-                <text x="62" y={stage.groundY + 44} className="force-svg-caption">
+                <text x={stage.panelX + 28} y={stage.groundY + 44} className="force-svg-caption">
                   {contactAreaMeta.label} · 压力 {formatNumber(pressure, 1)} N
                 </text>
 
@@ -910,8 +1291,12 @@ export function BasicForceLab({
                     y2={stage.groundY + 30}
                   />
                   <circle cx={stage.startCenterX} cy={stage.groundY + 30} r="5" />
+                  <circle cx={stage.centerX} cy={stage.groundY + 30} r="5" className="motion-stage-origin-dot" />
                   <text x={stage.startCenterX - 20} y={stage.groundY + 54} className="force-svg-caption">
                     起点
+                  </text>
+                  <text x={stage.centerX + 10} y={stage.groundY + 54} className="force-svg-caption">
+                    {formatNumber(displayedScene.displacement, 2)} m
                   </text>
                 </g>
 
@@ -934,7 +1319,7 @@ export function BasicForceLab({
                   <rect x="108" y="20" width="24" height="22" rx="10" className="force-stage-scale-head" />
                   <line x1="132" y1="31" x2="154" y2="31" className="force-stage-scale-hook" />
                   <text x="69" y="80" textAnchor="middle" className="force-svg-caption">
-                    弹簧测力计
+                    {mode === "measurement" ? "弹簧测力计" : "恒力输入端"}
                   </text>
                 </g>
 
@@ -1070,9 +1455,13 @@ export function BasicForceLab({
                         textAnchor="middle"
                         className="force-balance-copy"
                       >
-                        {displayedScene.phase === "uniform" || displayedScene.phase === "complete"
-                          ? "匀速阶段：F拉 = f"
-                          : "当前合力 = 0"}
+                        {mode === "measurement"
+                          ? displayedScene.phase === "uniform" || displayedScene.phase === "complete"
+                            ? "匀速阶段：F拉 = f"
+                            : "当前合力 = 0"
+                          : displayedScene.phase === "stuck"
+                            ? "未起动：F恒 = f静"
+                            : "当前合力 = 0"}
                       </text>
                     </g>
                   ) : (
@@ -1090,6 +1479,278 @@ export function BasicForceLab({
                     />
                   )
                 ) : null}
+
+                <rect
+                  x={stage.panelX}
+                  y={stage.graphY}
+                  width={stage.graphWidth}
+                  height={stage.graphHeight}
+                  rx="28"
+                  className="motion-stage-graph-shell"
+                />
+                <text x={stage.panelX + 28} y={stage.graphY + 34} className="motion-stage-panel-title">
+                  受力 - 时间
+                  <tspan className="motion-stage-panel-note-inline">（拉力 / 摩擦力 / 合力）</tspan>
+                </text>
+                <g transform={`translate(${stage.panelX + stage.graphWidth - 178}, ${stage.graphY + 26})`}>
+                  {[
+                    { label: "F拉", color: FORCE_COLORS.pull, offset: 0 },
+                    { label: "f", color: FORCE_COLORS.friction, offset: 58 },
+                    { label: "R", color: FORCE_COLORS.net, offset: 108 },
+                  ].map(({ label, color, offset }) => (
+                    <g key={label} transform={`translate(${offset}, 0)`}>
+                      <circle cx="0" cy="0" r="5" fill={color} />
+                      <text x="10" y="4" className="motion-stage-graph-axis-label">
+                        {label}
+                      </text>
+                    </g>
+                  ))}
+                </g>
+
+                {Array.from({ length: 5 }).map((_, index) => {
+                  const ratio = index / 4;
+                  const y =
+                    stage.graphY +
+                    FORCE_GRAPH_PADDING.top +
+                    (stage.graphHeight - FORCE_GRAPH_PADDING.top - FORCE_GRAPH_PADDING.bottom) * ratio;
+                  const value = forceDomain * (1 - ratio);
+
+                  return (
+                    <g key={`force-grid-${index}`}>
+                      <line
+                        x1={stage.panelX + FORCE_GRAPH_PADDING.left}
+                        y1={y}
+                        x2={stage.panelX + stage.graphWidth - FORCE_GRAPH_PADDING.right}
+                        y2={y}
+                        className="motion-stage-graph-grid"
+                      />
+                      <text
+                        x={stage.panelX + 18}
+                        y={y + 4}
+                        textAnchor="start"
+                        className="motion-stage-graph-axis-label"
+                      >
+                        {formatNumber(value, 1)}
+                      </text>
+                    </g>
+                  );
+                })}
+
+                {graphTimeTicks.map((tickValue, index) => {
+                  const x = forceGraph.mapTime(tickValue);
+
+                  return (
+                    <g key={`force-time-${index}`}>
+                      <line
+                        x1={x}
+                        y1={stage.graphY + FORCE_GRAPH_PADDING.top}
+                        x2={x}
+                        y2={stage.graphY + stage.graphHeight - FORCE_GRAPH_PADDING.bottom}
+                        className="motion-stage-graph-grid"
+                      />
+                      <text
+                        x={x}
+                        y={stage.graphY + stage.graphHeight - 10}
+                        textAnchor="middle"
+                        className="motion-stage-graph-axis-label"
+                      >
+                        {formatTimeLabel(tickValue)}
+                      </text>
+                    </g>
+                  );
+                })}
+
+                <line
+                  x1={stage.panelX + FORCE_GRAPH_PADDING.left}
+                  y1={thresholdLineY}
+                  x2={stage.panelX + stage.graphWidth - FORCE_GRAPH_PADDING.right}
+                  y2={thresholdLineY}
+                  className="motion-stage-stop-line"
+                />
+                <text
+                  x={stage.panelX + stage.graphWidth - FORCE_GRAPH_PADDING.right - 6}
+                  y={thresholdLineY - 10}
+                  textAnchor="end"
+                  className="motion-stage-stop-label"
+                >
+                  f静,max
+                </text>
+
+                <polyline
+                  points={forceGraph.fullPolyline}
+                  className="motion-stage-graph-line is-muted"
+                  style={{ stroke: FORCE_COLORS.pull }}
+                />
+                <polyline
+                  points={forceGraph.playedPolyline}
+                  className="motion-stage-graph-line"
+                  style={{ stroke: FORCE_COLORS.pull }}
+                />
+                <polyline
+                  points={frictionGraph.fullPolyline}
+                  className="motion-stage-graph-line is-muted"
+                  style={{ stroke: FORCE_COLORS.friction }}
+                />
+                <polyline
+                  points={frictionGraph.playedPolyline}
+                  className="motion-stage-graph-line"
+                  style={{ stroke: FORCE_COLORS.friction }}
+                />
+                <polyline
+                  points={netGraph.fullPolyline}
+                  className="motion-stage-graph-line is-muted"
+                  style={{ stroke: FORCE_COLORS.net }}
+                />
+                <polyline
+                  points={netGraph.playedPolyline}
+                  className="motion-stage-graph-line"
+                  style={{ stroke: FORCE_COLORS.net }}
+                />
+                <line
+                  x1={forceGuideX}
+                  y1={stage.graphY + FORCE_GRAPH_PADDING.top}
+                  x2={forceGuideX}
+                  y2={stage.graphY + stage.graphHeight - FORCE_GRAPH_PADDING.bottom}
+                  className="motion-stage-guide-line is-chart"
+                />
+                <circle cx={currentPullPoint.x} cy={currentPullPoint.y} r="5.5" fill={FORCE_COLORS.pull} className="motion-stage-graph-point" />
+                <circle cx={currentFrictionPoint.x} cy={currentFrictionPoint.y} r="5.5" fill={FORCE_COLORS.friction} className="motion-stage-graph-point" />
+                <circle cx={currentNetPoint.x} cy={currentNetPoint.y} r="5.5" fill={FORCE_COLORS.net} className="motion-stage-graph-point" />
+
+                <rect
+                  x={motionGraphX}
+                  y={stage.graphY}
+                  width={stage.graphWidth}
+                  height={stage.graphHeight}
+                  rx="28"
+                  className="motion-stage-graph-shell"
+                />
+                <text x={motionGraphX + 28} y={stage.graphY + 34} className="motion-stage-panel-title">
+                  位移 / 速度 - 时间
+                  <tspan className="motion-stage-panel-note-inline">（左轴位移，右轴速度）</tspan>
+                </text>
+                <g transform={`translate(${motionGraphX + stage.graphWidth - 126}, ${stage.graphY + 26})`}>
+                  {[
+                    { label: "位移", color: "#7bc1ff", offset: 0 },
+                    { label: "速度", color: "#5de2b1", offset: 72 },
+                  ].map(({ label, color, offset }) => (
+                    <g key={label} transform={`translate(${offset}, 0)`}>
+                      <circle cx="0" cy="0" r="5" fill={color} />
+                      <text x="10" y="4" className="motion-stage-graph-axis-label">
+                        {label}
+                      </text>
+                    </g>
+                  ))}
+                </g>
+
+                {Array.from({ length: 5 }).map((_, index) => {
+                  const ratio = index / 4;
+                  const y =
+                    stage.graphY +
+                    FORCE_GRAPH_PADDING.top +
+                    (stage.graphHeight - FORCE_GRAPH_PADDING.top - FORCE_GRAPH_PADDING.bottom) * ratio;
+                  const displacementValue = displacementDomain * (1 - ratio);
+                  const velocityValue = velocityDomain * (1 - ratio);
+
+                  return (
+                    <g key={`motion-grid-${index}`}>
+                      <line
+                        x1={motionGraphX + FORCE_GRAPH_PADDING.left}
+                        y1={y}
+                        x2={motionGraphX + stage.graphWidth - FORCE_GRAPH_PADDING.right}
+                        y2={y}
+                        className="motion-stage-graph-grid"
+                      />
+                      <text
+                        x={motionGraphX + 18}
+                        y={y + 4}
+                        textAnchor="start"
+                        className="motion-stage-graph-axis-label"
+                      >
+                        {formatNumber(displacementValue, 1)}
+                      </text>
+                      <text
+                        x={motionGraphX + stage.graphWidth - 18}
+                        y={y + 4}
+                        textAnchor="end"
+                        className="motion-stage-graph-axis-label"
+                      >
+                        {formatNumber(velocityValue, 1)}
+                      </text>
+                    </g>
+                  );
+                })}
+
+                {graphTimeTicks.map((tickValue, index) => {
+                  const x = displacementGraph.mapTime(tickValue);
+
+                  return (
+                    <g key={`motion-time-${index}`}>
+                      <line
+                        x1={x}
+                        y1={stage.graphY + FORCE_GRAPH_PADDING.top}
+                        x2={x}
+                        y2={stage.graphY + stage.graphHeight - FORCE_GRAPH_PADDING.bottom}
+                        className="motion-stage-graph-grid"
+                      />
+                      <text
+                        x={x}
+                        y={stage.graphY + stage.graphHeight - 10}
+                        textAnchor="middle"
+                        className="motion-stage-graph-axis-label"
+                      >
+                        {formatTimeLabel(tickValue)}
+                      </text>
+                    </g>
+                  );
+                })}
+
+                <path
+                  d={displacementGraph.fullAreaPath}
+                  className="motion-stage-graph-area"
+                  fill="rgba(123, 193, 255, 0.18)"
+                />
+                <polyline
+                  points={displacementGraph.fullPolyline}
+                  className="motion-stage-graph-line is-muted"
+                  style={{ stroke: "#7bc1ff" }}
+                />
+                <polyline
+                  points={displacementGraph.playedPolyline}
+                  className="motion-stage-graph-line"
+                  style={{ stroke: "#7bc1ff" }}
+                />
+                <polyline
+                  points={velocityGraph.fullPolyline}
+                  className="motion-stage-graph-line is-secondary-muted"
+                  style={{ stroke: "#5de2b1" }}
+                />
+                <polyline
+                  points={velocityGraph.playedPolyline}
+                  className="motion-stage-graph-line is-secondary"
+                  style={{ stroke: "#5de2b1" }}
+                />
+                <line
+                  x1={motionGuideX}
+                  y1={stage.graphY + FORCE_GRAPH_PADDING.top}
+                  x2={motionGuideX}
+                  y2={stage.graphY + stage.graphHeight - FORCE_GRAPH_PADDING.bottom}
+                  className="motion-stage-guide-line is-chart"
+                />
+                <circle
+                  cx={currentDisplacementPoint.x}
+                  cy={currentDisplacementPoint.y}
+                  r="6"
+                  className="motion-stage-graph-point"
+                  fill="#7bc1ff"
+                />
+                <circle
+                  cx={currentVelocityPoint.x}
+                  cy={currentVelocityPoint.y}
+                  r="6"
+                  className="motion-stage-graph-point is-secondary"
+                  fill="#5de2b1"
+                />
               </svg>
             ) : (
               <BasicForceThreeStage
@@ -1121,7 +1782,7 @@ export function BasicForceLab({
                 visibleForces={visibleForces}
               />
             )}
-            <div className={viewMode === "3d" ? "force-stage-overlay is-top-left is-3d-view" : "force-stage-overlay is-top-left"}>
+            <div className="force-stage-overlay is-top-left">
               <div className="force-stage-hud-card">
                 <div className="force-stage-hud-head">
                   <span className="force-stage-hud-title">{experimentStatus.label}</span>
@@ -1131,6 +1792,7 @@ export function BasicForceLab({
                   <span style={{ width: `${experimentStatus.progress * 100}%` }} />
                 </div>
                 <div className="force-stage-chip-row">
+                  <span className="force-stage-chip">{currentModeLabel}</span>
                   <span className="force-stage-chip">{surfacePresetMeta.label}</span>
                   <span className="force-stage-chip">{contactAreaMeta.label}</span>
                   <span className="force-stage-chip">压力 {formatNumber(pressure, 1)} N</span>
@@ -1139,49 +1801,67 @@ export function BasicForceLab({
               </div>
             </div>
 
-            <div className="force-stage-overlay is-bottom-left">
-              <div className="force-stage-chip-grid">
-                {forceRows.map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    className={item.key === activeForce ? "force-stage-force-pill is-active" : "force-stage-force-pill"}
-                    onClick={() => setActiveForce(item.key)}
-                  >
-                    <span className="force-stage-force-pill-head">
-                      <span
-                        className="force-legend-swatch"
-                        style={{ backgroundColor: item.color }}
-                        aria-hidden="true"
-                      />
-                      <span>{item.label}</span>
-                    </span>
-                    <strong>{formatNumber(item.value, 1)} N</strong>
-                  </button>
-                ))}
-              </div>
-            </div>
+            {viewMode === "3d" ? (
+              <>
+                <div className="force-stage-overlay is-bottom-left">
+                  <div className="force-stage-chip-grid">
+                    {forceRows.map((item) => (
+                      <button
+                        key={item.key}
+                        type="button"
+                        className={item.key === activeForce ? "force-stage-force-pill is-active" : "force-stage-force-pill"}
+                        onClick={() => setActiveForce(item.key)}
+                      >
+                        <span className="force-stage-force-pill-head">
+                          <span
+                            className="force-legend-swatch"
+                            style={{ backgroundColor: item.color }}
+                            aria-hidden="true"
+                          />
+                          <span>{item.label}</span>
+                        </span>
+                        <strong>{formatNumber(item.value, 1)} N</strong>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="force-stage-overlay is-bottom-right">
-              <div className="force-stage-hud-card is-tight">
-                <div className="force-stage-chip-row">
-                  <span className="force-stage-chip">μs {formatNumber(surfacePresetMeta.muStatic, 2)}</span>
-                  <span className="force-stage-chip">μk {formatNumber(surfacePresetMeta.muKinetic, 2)}</span>
+                <div className="force-stage-overlay is-bottom-right">
+                  <div className="force-stage-hud-card is-tight">
+                    <div className="force-stage-chip-row">
+                      <span className="force-stage-chip">μs {formatNumber(surfacePresetMeta.muStatic, 2)}</span>
+                      <span className="force-stage-chip">μk {formatNumber(surfacePresetMeta.muKinetic, 2)}</span>
+                      {mode === "constant-pull" ? (
+                        <span className="force-stage-chip">F恒 {formatNumber(constantPullForce, 1)} N</span>
+                      ) : null}
+                    </div>
+                    <div className="force-stage-chip-row">
+                      <span className="force-stage-chip">s {formatNumber(displayedScene.displacement, 2)} m</span>
+                      <span className="force-stage-chip">v {formatNumber(displayedScene.velocity, 2)} m/s</span>
+                      <span className="force-stage-chip">a {formatNumber(displayedScene.acceleration, 2)} m/s²</span>
+                    </div>
+                    <div className="force-stage-result-pill">
+                      <strong>
+                        {mode === "measurement"
+                          ? latestRecord
+                            ? `${formatNumber(latestRecord.kineticFriction, 1)} N`
+                            : "等待稳定读数"
+                          : `${formatNumber(displayedScene.netForce, 2)} N`}
+                      </strong>
+                      <span>
+                        {mode === "measurement"
+                          ? latestRecord
+                            ? `${latestRecord.surfaceLabel} · 压力 ${formatNumber(latestRecord.pressure, 1)} N · ${latestRecord.contactAreaLabel}`
+                            : "完成一次实验后记录匀速阶段读数"
+                          : canBreakaway
+                            ? `恒定拉力已超过静摩擦阈值，当前木块持续加速前进。`
+                            : `恒定拉力未超过最大静摩擦，木块保持静止。`}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="force-stage-chip-row">
-                  <span className="force-stage-chip">f静,max {formatNumber(metrics.staticLimit, 1)} N</span>
-                  <span className="force-stage-chip">稳定 {formatNumber(metrics.kineticFriction, 1)} N</span>
-                </div>
-                <div className="force-stage-result-pill">
-                  <strong>{latestRecord ? `${formatNumber(latestRecord.kineticFriction, 1)} N` : "等待实验"}</strong>
-                  <span>
-                    {latestRecord
-                      ? `${latestRecord.surfaceLabel} · 压力 ${formatNumber(latestRecord.pressure, 1)} N · ${latestRecord.contactAreaLabel}`
-                      : "完成一次实验后记录结果"}
-                  </span>
-                </div>
-              </div>
-            </div>
+              </>
+            ) : null}
           </div>
         </div>
       </div>
@@ -1378,66 +2058,154 @@ function CollapseIcon() {
 }
 
 function getExperimentStatus({
+  mode,
   hasPlaybackStarted,
   displayedScene,
   metrics,
+  progress,
+  constantPullForce,
 }: {
+  mode: ForceExperimentMode;
   hasPlaybackStarted: boolean;
   displayedScene: ExperimentScene;
   metrics: ExperimentMetrics;
+  progress: number;
+  constantPullForce: number;
 }): ExperimentStatus {
   if (!hasPlaybackStarted) {
+    if (mode === "measurement") {
+      return {
+        phase: "idle",
+        label: "等待开始实验",
+        badge: "待播放",
+        description: "点击开始后，先慢慢增大拉力，再观察突破静摩擦后的稳定读数。",
+        formula: `预测：f = μkN = ${formatNumber(metrics.kineticFriction / metrics.normal, 2)} × ${formatNumber(metrics.normal, 1)} = ${formatNumber(metrics.kineticFriction, 1)} N`,
+        progress: 0,
+      };
+    }
+
+    const predictedNetForce = Math.max(0, constantPullForce - metrics.kineticFriction);
+    const predictedAcceleration = predictedNetForce / metrics.massEquivalent;
+
     return {
       phase: "idle",
-      label: "等待开始实验",
-      badge: "待播放",
-      description: "点击“开始实验”后，测力计会先缓慢增大拉力，直到突破最大静摩擦，然后自动进入匀速拉动并给出测量结果。",
-      formula: `预测：f = μkN = ${formatNumber(metrics.kineticFriction / metrics.normal, 2)} × ${formatNumber(metrics.normal, 1)} = ${formatNumber(metrics.kineticFriction, 1)} N`,
+      label: "等待开始演示",
+      badge: constantPullForce > metrics.staticLimit ? "可起动" : "拉力不足",
+      description:
+        constantPullForce > metrics.staticLimit
+          ? "这组恒定拉力已经超过最大静摩擦，播放后会直接进入起动和加速。"
+          : "这组恒定拉力还不够大，播放后会保持静止，用来对比静摩擦阈值。",
+      formula:
+        constantPullForce > metrics.staticLimit
+          ? `预测：R = F恒 - f动 = ${formatNumber(constantPullForce, 1)} - ${formatNumber(metrics.kineticFriction, 1)} = ${formatNumber(predictedNetForce, 2)} N，a = ${formatNumber(predictedAcceleration, 2)} m/s²`
+          : `预测：F恒 = ${formatNumber(constantPullForce, 1)} N ≤ f静,max = ${formatNumber(metrics.staticLimit, 1)} N，木块不会起动`,
       progress: 0,
     };
   }
 
-  if (displayedScene.phase === "ramping") {
-    return {
-      phase: "ramping",
-      label: "拉力逐步增大",
-      badge: "准备起动",
-      description: `当前读数 ${formatNumber(displayedScene.pullForce, 1)} N。木块还没有滑动，静摩擦会始终等大反向抵消拉力，直到逼近最大静摩擦 ${formatNumber(metrics.staticLimit, 1)} N。`,
-      formula: `静止阶段：F拉 = f静 ≤ f静,max = μsN = ${formatNumber(metrics.staticLimit, 1)} N`,
-      progress: 0.34,
-    };
+  if (mode === "measurement") {
+    switch (displayedScene.phase) {
+      case "ramping":
+        return {
+          phase: "ramping",
+          label: "拉力逐步增大",
+          badge: "准备起动",
+          description: `当前读数 ${formatNumber(displayedScene.pullForce, 1)} N。木块还没滑动，静摩擦会持续抵消拉力，直到逼近 ${formatNumber(metrics.staticLimit, 1)} N。`,
+          formula: `静止阶段：F拉 = f静 ≤ f静,max = ${formatNumber(metrics.staticLimit, 1)} N`,
+          progress,
+        };
+      case "breakaway":
+        return {
+          phase: "breakaway",
+          label: "刚突破静摩擦",
+          badge: "开始滑动",
+          description: "拉力第一次超过最大静摩擦，木块由静止转入滑动，速度开始建立。",
+          formula: `起动瞬间：F拉 > f静,max，当前合力 ${formatNumber(displayedScene.netForce, 2)} N`,
+          progress,
+        };
+      case "uniform":
+        return {
+          phase: "uniform",
+          label: "正在匀速测量",
+          badge: "稳定读数",
+          description: `木块已经进入匀速滑动，当前稳定读数 ${formatNumber(metrics.kineticFriction, 1)} N，就是本次测得的滑动摩擦力。`,
+          formula: `匀速阶段：F拉 = f = μkN = ${formatNumber(metrics.kineticFriction / metrics.normal, 2)} × ${formatNumber(metrics.normal, 1)} = ${formatNumber(metrics.kineticFriction, 1)} N`,
+          progress,
+        };
+      case "complete":
+        return {
+          phase: "complete",
+          label: "实验完成",
+          badge: "已记录结果",
+          description: "稳定读数已经建立，可以继续切换材质、压力或摆放方式，观察对结果的影响。",
+          formula: `结论：滑动摩擦力 ${formatNumber(metrics.kineticFriction, 1)} N，接触面积不进入公式 f = μkN`,
+          progress: 1,
+        };
+      default:
+        return {
+          phase: displayedScene.phase,
+          label: "等待开始实验",
+          badge: "待播放",
+          description: "先观察器材和变量，再开始实验。",
+          formula: `预测：f = μkN = ${formatNumber(metrics.kineticFriction / metrics.normal, 2)} × ${formatNumber(metrics.normal, 1)} = ${formatNumber(metrics.kineticFriction, 1)} N`,
+          progress,
+        };
+    }
   }
 
-  if (displayedScene.phase === "breakaway") {
-    return {
-      phase: "breakaway",
-      label: "刚突破静摩擦",
-      badge: "开始滑动",
-      description: `这一瞬间拉力已经大于最大静摩擦，木块从静止变为滑动。随后摩擦会从静摩擦切换为动摩擦，测力计读数也会回落到稳定值。`,
-      formula: `起动瞬间：F拉 > f静,max，当前合力 ${formatNumber(displayedScene.netForce, 2)} N`,
-      progress: 0.62,
-    };
+  switch (displayedScene.phase) {
+    case "stuck":
+      return {
+        phase: "stuck",
+        label: "木块保持静止",
+        badge: "拉力不足",
+        description: "恒定拉力还没有超过最大静摩擦，木块不会起动，位移和速度都保持为 0。",
+        formula: `F恒 = ${formatNumber(constantPullForce, 1)} N ≤ f静,max = ${formatNumber(metrics.staticLimit, 1)} N，当前 R = 0`,
+        progress,
+      };
+    case "breakaway":
+      return {
+        phase: "breakaway",
+        label: "木块开始起动",
+        badge: "突破阈值",
+        description: "恒定拉力已经超过静摩擦阈值，木块刚开始启动，下方曲线会从这里抬升。",
+        formula: `R = F恒 - f动 = ${formatNumber(constantPullForce, 1)} - ${formatNumber(metrics.kineticFriction, 1)} = ${formatNumber(displayedScene.netForce, 2)} N`,
+        progress,
+      };
+    case "accelerating":
+      return {
+        phase: "accelerating",
+        label: "木块持续加速",
+        badge: "合力为正",
+        description: "此时恒定拉力和动摩擦都基本稳定，所以合力近似恒定，加速度也近似恒定。",
+        formula: `a = R / m = ${formatNumber(displayedScene.netForce, 2)} / ${formatNumber(metrics.massEquivalent, 2)} = ${formatNumber(displayedScene.acceleration, 2)} m/s²`,
+        progress,
+      };
+    case "complete":
+      return {
+        phase: "complete",
+        label: constantPullForce > metrics.staticLimit ? "演示完成" : "完成判断",
+        badge: constantPullForce > metrics.staticLimit ? "已建立轨迹" : "确认静止",
+        description:
+          constantPullForce > metrics.staticLimit
+            ? "这组恒定拉力下的速度与位移轨迹已经形成，可以继续调整拉力做对比。"
+            : "这组恒定拉力无法突破最大静摩擦，结果是保持静止。",
+        formula:
+          constantPullForce > metrics.staticLimit
+            ? `终点：s = ${formatNumber(displayedScene.displacement, 2)} m，v = ${formatNumber(displayedScene.velocity, 2)} m/s`
+            : `结论：F恒 = ${formatNumber(constantPullForce, 1)} N 仍小于 f静,max = ${formatNumber(metrics.staticLimit, 1)} N`,
+        progress: 1,
+      };
+    default:
+      return {
+        phase: "idle",
+        label: "等待开始演示",
+        badge: "待播放",
+        description: "先判断恒定拉力与最大静摩擦的大小关系。",
+        formula: `F恒 = ${formatNumber(constantPullForce, 1)} N，f静,max = ${formatNumber(metrics.staticLimit, 1)} N`,
+        progress,
+      };
   }
-
-  if (displayedScene.phase === "uniform") {
-    return {
-      phase: "uniform",
-      label: "正在匀速测量",
-      badge: "稳定读数",
-      description: `木块已经进入匀速滑动，水平方向重新平衡。此时测力计稳定读数 ${formatNumber(metrics.kineticFriction, 1)} N，就是本次测得的滑动摩擦力。`,
-      formula: `匀速阶段：F拉 = f = μkN = ${formatNumber(metrics.kineticFriction / metrics.normal, 2)} × ${formatNumber(metrics.normal, 1)} = ${formatNumber(metrics.kineticFriction, 1)} N`,
-      progress: 0.9,
-    };
-  }
-
-  return {
-    phase: "complete",
-    label: "实验完成",
-    badge: "已记录结果",
-    description: `本次实验已经完成。你可以继续修改压力、材质或摆放方式，再重新播放；下方记录区会保留最近几次的测量结果，便于横向对比。`,
-    formula: `结论：滑动摩擦力 ${formatNumber(metrics.kineticFriction, 1)} N，且接触面积不进入公式 f = μkN`,
-    progress: 1,
-  };
 }
 
 function computeExperimentMetrics({
@@ -1468,17 +2236,21 @@ function computeExperimentMetrics({
 }
 
 function computeExperimentScene({
+  mode,
   metrics,
   hasPlaybackStarted,
   experimentElapsedMs,
   totalExperimentMs,
+  constantPullForce,
 }: {
+  mode: ForceExperimentMode;
   metrics: ExperimentMetrics;
   hasPlaybackStarted: boolean;
   experimentElapsedMs: number;
   totalExperimentMs: number;
+  constantPullForce: number;
 }): ExperimentScene {
-  if (!hasPlaybackStarted) {
+  if (!hasPlaybackStarted || experimentElapsedMs <= 0) {
     return {
       phase: "idle",
       weight: metrics.weight,
@@ -1489,82 +2261,129 @@ function computeExperimentScene({
       acceleration: 0,
       staticLimit: metrics.staticLimit,
       kineticFriction: metrics.kineticFriction,
-      frictionModeLabel: "静摩擦待命",
-      stateLabel: "等待测量",
+      frictionModeLabel: mode === "measurement" ? "静摩擦待命" : "等待判断",
+      stateLabel: mode === "measurement" ? "等待测量" : "等待演示",
       stateTone: "balanced",
       motionState: "rest",
       isMoving: false,
-      summary: "先观察器材和变量，点击开始实验后再看读数如何变化。",
-      motionHint: "这个实验真正要记录的是匀速阶段的稳定读数。",
+      summary:
+        mode === "measurement"
+          ? "先观察器材和变量，再开始测量最大静摩擦与稳定动摩擦。"
+          : "先判断恒定拉力能否突破最大静摩擦，再观察位移和速度变化。",
+      motionHint:
+        mode === "measurement"
+          ? "这个实验真正要记录的是匀速阶段的稳定读数。"
+          : "若恒定拉力不够大，位移和速度都会保持在 0。",
       travelProgress: 0,
       readingRatio: 0,
+      displacement: 0,
+      velocity: 0,
     };
   }
 
-  if (experimentElapsedMs < RAMP_DURATION_MS) {
-    const progress = clamp01(experimentElapsedMs / RAMP_DURATION_MS);
-    const pullForce = metrics.breakawayForce * easeOutCubic(progress);
-    const frictionForce = Math.min(pullForce, metrics.staticLimit);
-    const nearThreshold = pullForce >= metrics.staticLimit * 0.88;
-    const netForce = Math.max(0, pullForce - frictionForce);
+  if (mode === "measurement") {
+    const gaugeMax = Math.max(metrics.breakawayForce, 0.4);
+    const breakawayMotion = resolveMeasurementMotion({
+      metrics,
+      experimentElapsedMs,
+    });
+
+    if (experimentElapsedMs < RAMP_DURATION_MS) {
+      const progress = clamp01(experimentElapsedMs / RAMP_DURATION_MS);
+      const pullForce = metrics.breakawayForce * easeOutCubic(progress);
+      const frictionForce = Math.min(pullForce, metrics.staticLimit);
+      const nearThreshold = pullForce >= metrics.staticLimit * 0.88;
+
+      return {
+        phase: "ramping",
+        weight: metrics.weight,
+        normal: metrics.normal,
+        pullForce,
+        frictionForce,
+        netForce: 0,
+        acceleration: 0,
+        staticLimit: metrics.staticLimit,
+        kineticFriction: metrics.kineticFriction,
+        frictionModeLabel: nearThreshold ? "接近最大静摩擦" : "静摩擦平衡",
+        stateLabel: nearThreshold ? "接近起动" : "仍未滑动",
+        stateTone: nearThreshold ? "warning" : "balanced",
+        motionState: nearThreshold ? "threshold" : "rest",
+        isMoving: false,
+        summary: "拉力在变大，但静摩擦仍然完全抵消它，木块保持静止。",
+        motionHint: "等到拉力第一次超过最大静摩擦时，木块才会开始滑动。",
+        travelProgress: 0,
+        readingRatio: clamp01(pullForce / gaugeMax),
+        displacement: 0,
+        velocity: 0,
+      };
+    }
+
+    if (experimentElapsedMs < RAMP_DURATION_MS + BREAKAWAY_DURATION_MS) {
+      const progress = clamp01((experimentElapsedMs - RAMP_DURATION_MS) / BREAKAWAY_DURATION_MS);
+      const pullForce = lerp(metrics.breakawayForce, metrics.kineticFriction, easeInOutCubic(progress));
+      const frictionForce = metrics.kineticFriction;
+      const netForce = Math.max(0, pullForce - frictionForce);
+
+      return {
+        phase: "breakaway",
+        weight: metrics.weight,
+        normal: metrics.normal,
+        pullForce,
+        frictionForce,
+        netForce,
+        acceleration: netForce / metrics.massEquivalent,
+        staticLimit: metrics.staticLimit,
+        kineticFriction: metrics.kineticFriction,
+        frictionModeLabel: "动摩擦接管",
+        stateLabel: "开始滑动",
+        stateTone: "active",
+        motionState: "sliding",
+        isMoving: true,
+        summary: "木块刚突破最大静摩擦，速度开始建立，位移曲线从这里离开 0。",
+        motionHint: "继续观察，合力会回落到 0，木块随后进入匀速滑动。",
+        travelProgress: breakawayMotion.totalDistance <= 0 ? 0 : clamp01(breakawayMotion.displacement / breakawayMotion.totalDistance),
+        readingRatio: clamp01(pullForce / gaugeMax),
+        displacement: breakawayMotion.displacement,
+        velocity: breakawayMotion.velocity,
+      };
+    }
+
+    const uniformElapsedSeconds = clamp(
+      experimentElapsedMs - RAMP_DURATION_MS - BREAKAWAY_DURATION_MS,
+      0,
+      UNIFORM_DURATION_MS,
+    ) / 1000;
+    const displacement =
+      breakawayMotion.breakawayEndDisplacement +
+      breakawayMotion.breakawayEndVelocity * uniformElapsedSeconds;
+
+    if (experimentElapsedMs < totalExperimentMs) {
+      return {
+        phase: "uniform",
+        weight: metrics.weight,
+        normal: metrics.normal,
+        pullForce: metrics.kineticFriction,
+        frictionForce: metrics.kineticFriction,
+        netForce: 0,
+        acceleration: 0,
+        staticLimit: metrics.staticLimit,
+        kineticFriction: metrics.kineticFriction,
+        frictionModeLabel: "匀速动摩擦",
+        stateLabel: "匀速滑动",
+        stateTone: "active",
+        motionState: "sliding",
+        isMoving: true,
+        summary: "木块已经进入匀速运动，这时的稳定读数就是实验结果。",
+        motionHint: "对照下方曲线：此时受力重新平衡，位移继续线性增加。",
+        travelProgress: breakawayMotion.totalDistance <= 0 ? 0 : clamp01(displacement / breakawayMotion.totalDistance),
+        readingRatio: clamp01(metrics.kineticFriction / gaugeMax),
+        displacement,
+        velocity: breakawayMotion.breakawayEndVelocity,
+      };
+    }
 
     return {
-      phase: "ramping",
-      weight: metrics.weight,
-      normal: metrics.normal,
-      pullForce,
-      frictionForce,
-      netForce,
-      acceleration: netForce / metrics.massEquivalent,
-      staticLimit: metrics.staticLimit,
-      kineticFriction: metrics.kineticFriction,
-      frictionModeLabel: nearThreshold ? "接近最大静摩擦" : "静摩擦平衡",
-      stateLabel: nearThreshold ? "接近起动" : "仍未滑动",
-      stateTone: nearThreshold ? "warning" : "balanced",
-      motionState: nearThreshold ? "threshold" : "rest",
-      isMoving: false,
-      summary: "拉力在变大，但静摩擦仍然跟得上。",
-      motionHint: "当拉力第一次超过最大静摩擦时，木块才会开始滑动。",
-      travelProgress: 0,
-      readingRatio: pullForce / metrics.breakawayForce,
-    };
-  }
-
-  if (experimentElapsedMs < RAMP_DURATION_MS + BREAKAWAY_DURATION_MS) {
-    const progress = clamp01((experimentElapsedMs - RAMP_DURATION_MS) / BREAKAWAY_DURATION_MS);
-    const pullForce = lerp(metrics.breakawayForce, metrics.kineticFriction, easeInOutCubic(progress));
-    const frictionForce = metrics.kineticFriction;
-    const netForce = Math.max(0, pullForce - frictionForce);
-
-    return {
-      phase: "breakaway",
-      weight: metrics.weight,
-      normal: metrics.normal,
-      pullForce,
-      frictionForce,
-      netForce,
-      acceleration: netForce / metrics.massEquivalent,
-      staticLimit: metrics.staticLimit,
-      kineticFriction: metrics.kineticFriction,
-      frictionModeLabel: "动摩擦接管",
-      stateLabel: "开始滑动",
-      stateTone: "active",
-      motionState: "sliding",
-      isMoving: true,
-      summary: "木块刚突破最大静摩擦，开始从静止转为滑动。",
-      motionHint: "继续观察读数，它会回落到更稳定的动摩擦值。",
-      travelProgress: 0.28 * easeOutCubic(progress),
-      readingRatio: pullForce / metrics.breakawayForce,
-    };
-  }
-
-  if (experimentElapsedMs < totalExperimentMs) {
-    const progress = clamp01(
-      (experimentElapsedMs - RAMP_DURATION_MS - BREAKAWAY_DURATION_MS) / UNIFORM_DURATION_MS,
-    );
-
-    return {
-      phase: "uniform",
+      phase: "complete",
       weight: metrics.weight,
       normal: metrics.normal,
       pullForce: metrics.kineticFriction,
@@ -1574,37 +2393,302 @@ function computeExperimentScene({
       staticLimit: metrics.staticLimit,
       kineticFriction: metrics.kineticFriction,
       frictionModeLabel: "匀速动摩擦",
-      stateLabel: "匀速滑动",
-      stateTone: "active",
+      stateLabel: "测量完成",
+      stateTone: "balanced",
       motionState: "sliding",
       isMoving: true,
-      summary: "木块已经匀速运动，实验进入真正的测量阶段。",
-      motionHint: "这时测力计稳定读数 = 滑动摩擦力。",
-      travelProgress: 0.28 + 0.72 * easeInOutCubic(progress),
-      readingRatio: metrics.kineticFriction / metrics.breakawayForce,
+      summary: "本次实验已经完成，可以保留这次读数，再换材质、压力或摆放方式做对照。",
+      motionHint: "最值得比较的是稳定读数随材质和压力的变化。",
+      travelProgress: 1,
+      readingRatio: clamp01(metrics.kineticFriction / gaugeMax),
+      displacement: breakawayMotion.totalDistance,
+      velocity: breakawayMotion.breakawayEndVelocity,
+    };
+  }
+
+  const gaugeMax = Math.max(metrics.breakawayForce, constantPullForce, 0.4);
+
+  if (constantPullForce <= metrics.staticLimit) {
+    const isComplete = experimentElapsedMs >= totalExperimentMs;
+
+    return {
+      phase: isComplete ? "complete" : "stuck",
+      weight: metrics.weight,
+      normal: metrics.normal,
+      pullForce: constantPullForce,
+      frictionForce: constantPullForce,
+      netForce: 0,
+      acceleration: 0,
+      staticLimit: metrics.staticLimit,
+      kineticFriction: metrics.kineticFriction,
+      frictionModeLabel: "静摩擦平衡",
+      stateLabel: isComplete ? "判断完成" : "仍然静止",
+      stateTone: isComplete ? "balanced" : "warning",
+      motionState: "rest",
+      isMoving: false,
+      summary: "恒定拉力没有超过最大静摩擦，所以木块始终不会起动。",
+      motionHint: "这条实验用来帮助理解：并不是有拉力就一定会运动，先要突破静摩擦阈值。",
+      travelProgress: 0,
+      readingRatio: clamp01(constantPullForce / gaugeMax),
+      displacement: 0,
+      velocity: 0,
+    };
+  }
+
+  const elapsedSeconds = clamp(experimentElapsedMs, 0, totalExperimentMs) / 1000;
+  const totalSeconds = totalExperimentMs / 1000;
+  const netForce = Math.max(0, constantPullForce - metrics.kineticFriction);
+  const acceleration = netForce / metrics.massEquivalent;
+  const displacement = 0.5 * acceleration * elapsedSeconds * elapsedSeconds;
+  const velocity = acceleration * elapsedSeconds;
+  const totalDistance = 0.5 * acceleration * totalSeconds * totalSeconds;
+  const phase =
+    experimentElapsedMs < CONSTANT_PULL_STARTUP_MS
+      ? "breakaway"
+      : experimentElapsedMs < totalExperimentMs
+        ? "accelerating"
+        : "complete";
+
+  return {
+    phase,
+    weight: metrics.weight,
+    normal: metrics.normal,
+    pullForce: constantPullForce,
+    frictionForce: metrics.kineticFriction,
+    netForce,
+    acceleration,
+    staticLimit: metrics.staticLimit,
+    kineticFriction: metrics.kineticFriction,
+    frictionModeLabel: phase === "breakaway" ? "刚突破静摩擦" : "稳定动摩擦",
+    stateLabel:
+      phase === "breakaway"
+        ? "开始起动"
+        : phase === "accelerating"
+          ? "持续加速"
+          : "演示完成",
+    stateTone: phase === "complete" ? "balanced" : "active",
+    motionState: "sliding",
+    isMoving: true,
+    summary:
+      phase === "breakaway"
+        ? "恒定拉力已经超过阈值，木块刚开始启动。"
+        : "这组恒定拉力和动摩擦都保持稳定，所以木块会持续加速前进。",
+    motionHint:
+      phase === "breakaway"
+        ? "看下方曲线：从这一刻开始，位移和速度都不再是 0。"
+        : "速度 - 时间图会近似直线上升，位移 - 时间图会越来越陡。",
+    travelProgress: totalDistance <= 0 ? 0 : clamp01(displacement / totalDistance),
+    readingRatio: clamp01(constantPullForce / gaugeMax),
+    displacement: phase === "complete" ? totalDistance : displacement,
+    velocity: phase === "complete" ? acceleration * totalSeconds : velocity,
+  };
+}
+
+function resolveMeasurementMotion({
+  metrics,
+  experimentElapsedMs,
+}: {
+  metrics: ExperimentMetrics;
+  experimentElapsedMs: number;
+}) {
+  const breakawayElapsedMs = clamp(
+    experimentElapsedMs - RAMP_DURATION_MS,
+    0,
+    BREAKAWAY_DURATION_MS,
+  );
+  const breakawayCurrent = integrateMeasurementBreakaway({
+    metrics,
+    elapsedMs: breakawayElapsedMs,
+  });
+  const breakawayEnd = integrateMeasurementBreakaway({
+    metrics,
+    elapsedMs: BREAKAWAY_DURATION_MS,
+  });
+  const uniformElapsedSeconds = clamp(
+    experimentElapsedMs - RAMP_DURATION_MS - BREAKAWAY_DURATION_MS,
+    0,
+    UNIFORM_DURATION_MS,
+  ) / 1000;
+  const totalDistance =
+    breakawayEnd.displacement +
+    breakawayEnd.velocity * (UNIFORM_DURATION_MS / 1000);
+
+  if (experimentElapsedMs < RAMP_DURATION_MS + BREAKAWAY_DURATION_MS) {
+    return {
+      displacement: breakawayCurrent.displacement,
+      velocity: breakawayCurrent.velocity,
+      totalDistance,
+      breakawayEndVelocity: breakawayEnd.velocity,
+      breakawayEndDisplacement: breakawayEnd.displacement,
     };
   }
 
   return {
-    phase: "complete",
-    weight: metrics.weight,
-    normal: metrics.normal,
-    pullForce: metrics.kineticFriction,
-    frictionForce: metrics.kineticFriction,
-    netForce: 0,
-    acceleration: 0,
-    staticLimit: metrics.staticLimit,
-    kineticFriction: metrics.kineticFriction,
-    frictionModeLabel: "匀速动摩擦",
-    stateLabel: "测量完成",
-    stateTone: "balanced",
-    motionState: "sliding",
-    isMoving: true,
-    summary: "本次实验已经完成，可以和前一次结果做对照。",
-    motionHint: "切换材质或压力后，最值得关注的是稳定读数如何变化。",
-    travelProgress: 1,
-    readingRatio: metrics.kineticFriction / metrics.breakawayForce,
+    displacement:
+      breakawayEnd.displacement + breakawayEnd.velocity * uniformElapsedSeconds,
+    velocity: breakawayEnd.velocity,
+    totalDistance,
+    breakawayEndVelocity: breakawayEnd.velocity,
+    breakawayEndDisplacement: breakawayEnd.displacement,
   };
+}
+
+function integrateMeasurementBreakaway({
+  metrics,
+  elapsedMs,
+}: {
+  metrics: ExperimentMetrics;
+  elapsedMs: number;
+}) {
+  const clampedElapsedMs = clamp(elapsedMs, 0, BREAKAWAY_DURATION_MS);
+  if (clampedElapsedMs <= 0) {
+    return { displacement: 0, velocity: 0 };
+  }
+
+  const stepCount = Math.max(1, Math.ceil(clampedElapsedMs / 24));
+  const totalSeconds = clampedElapsedMs / 1000;
+  const dt = totalSeconds / stepCount;
+  let displacement = 0;
+  let velocity = 0;
+
+  for (let index = 0; index < stepCount; index += 1) {
+    const sampleProgress =
+      (((index + 0.5) / stepCount) * clampedElapsedMs) / BREAKAWAY_DURATION_MS;
+    const pullForce = lerp(
+      metrics.breakawayForce,
+      metrics.kineticFriction,
+      easeInOutCubic(sampleProgress),
+    );
+    const netForce = Math.max(0, pullForce - metrics.kineticFriction);
+    const acceleration = netForce / metrics.massEquivalent;
+    displacement += velocity * dt + 0.5 * acceleration * dt * dt;
+    velocity += acceleration * dt;
+  }
+
+  return { displacement, velocity };
+}
+
+function buildForceTimelineSeries({
+  mode,
+  metrics,
+  totalExperimentMs,
+  constantPullForce,
+  segments,
+}: {
+  mode: ForceExperimentMode;
+  metrics: ExperimentMetrics;
+  totalExperimentMs: number;
+  constantPullForce: number;
+  segments: number;
+}) {
+  return Array.from({ length: segments + 1 }, (_, index) => {
+    const timeMs = (totalExperimentMs * index) / segments;
+    const scene = computeExperimentScene({
+      mode,
+      metrics,
+      hasPlaybackStarted: true,
+      experimentElapsedMs: timeMs,
+      totalExperimentMs,
+      constantPullForce,
+    });
+
+    return {
+      timeMs,
+      timeSeconds: timeMs / 1000,
+      phase: scene.phase,
+      pullForce: scene.pullForce,
+      frictionForce: scene.frictionForce,
+      netForce: scene.netForce,
+      displacement: scene.displacement,
+      velocity: scene.velocity,
+      acceleration: scene.acceleration,
+    };
+  });
+}
+
+function buildPlayedForceSeries({
+  series,
+  currentSample,
+}: {
+  series: ForceTimelineSample[];
+  currentSample: ForceTimelineSample;
+}) {
+  const played = series.filter((sample) => sample.timeSeconds < currentSample.timeSeconds);
+  const lastPlayed = played[played.length - 1];
+
+  if (!lastPlayed || Math.abs(lastPlayed.timeSeconds - currentSample.timeSeconds) > 0.0001) {
+    played.push(currentSample);
+  }
+
+  return played.length === 0 ? [currentSample] : played;
+}
+
+function buildForceGraphGeometry({
+  series,
+  playedSeries,
+  width,
+  height,
+  x,
+  y,
+  duration,
+  minValue,
+  maxValue,
+  mapValue,
+}: {
+  series: ForceTimelineSample[];
+  playedSeries: ForceTimelineSample[];
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  duration: number;
+  minValue: number;
+  maxValue: number;
+  mapValue: (sample: ForceTimelineSample) => number;
+}) {
+  const plotWidth = width - FORCE_GRAPH_PADDING.left - FORCE_GRAPH_PADDING.right;
+  const plotHeight = height - FORCE_GRAPH_PADDING.top - FORCE_GRAPH_PADDING.bottom;
+  const valueSpan = maxValue - minValue || 1;
+  const mapTime = (time: number) =>
+    x + FORCE_GRAPH_PADDING.left + (duration === 0 ? 0 : (time / duration) * plotWidth);
+  const valueMapper = (value: number) =>
+    y + FORCE_GRAPH_PADDING.top + (1 - (value - minValue) / valueSpan) * plotHeight;
+  const fullPoints = series.map((sample) => ({
+    x: mapTime(sample.timeSeconds),
+    y: valueMapper(mapValue(sample)),
+  }));
+
+  return {
+    mapTime,
+    mapValue: valueMapper,
+    fullPolyline: fullPoints.map((point) => `${point.x},${point.y}`).join(" "),
+    playedPolyline: playedSeries
+      .map((sample) => `${mapTime(sample.timeSeconds)},${valueMapper(mapValue(sample))}`)
+      .join(" "),
+    fullAreaPath: buildForceAreaPath({
+      points: fullPoints,
+      baselineY: y + FORCE_GRAPH_PADDING.top + plotHeight,
+    }),
+  };
+}
+
+function buildForceAreaPath({
+  points,
+  baselineY,
+}: {
+  points: Array<{ x: number; y: number }>;
+  baselineY: number;
+}) {
+  if (points.length === 0) {
+    return "";
+  }
+
+  const firstPoint = points[0];
+  const lastPoint = points[points.length - 1];
+
+  return `M ${firstPoint.x} ${baselineY} ${points
+    .map((point) => `L ${point.x} ${point.y}`)
+    .join(" ")} L ${lastPoint.x} ${baselineY} Z`;
 }
 
 function computeStageLayout({
@@ -1616,37 +2700,54 @@ function computeStageLayout({
   travelProgress: number;
   pressure: number;
 }): StageLayout {
-  const width = 920;
-  const height = 520;
-  const groundY = 392;
-  const startX = 248;
-  const maxTravel = 230;
-  const travel = maxTravel * travelProgress;
-  const blockX = startX + travel;
+  const width = FORCE_SVG_STAGE.width;
+  const height = FORCE_SVG_STAGE.height;
+  const panelX = FORCE_SVG_STAGE.panelX;
+  const panelY = FORCE_SVG_STAGE.panelY;
+  const panelWidth = FORCE_SVG_STAGE.panelWidth;
+  const scenePanelHeight = FORCE_SVG_STAGE.scenePanelHeight;
+  const graphY = FORCE_SVG_STAGE.graphY;
+  const graphGap = FORCE_SVG_STAGE.graphGap;
+  const graphHeight = FORCE_SVG_STAGE.graphHeight;
+  const graphWidth = (panelWidth - graphGap) / 2;
+  const groundY = FORCE_SVG_STAGE.sceneGroundY;
+  const springX = FORCE_SVG_STAGE.sceneRight - 176;
+  const springY = 186;
+  const ropeEndX = springX + 154;
   const blockWidth = contactAreaMeta.blockWidth;
   const blockHeight = contactAreaMeta.blockHeight;
+  const startX = FORCE_SVG_STAGE.sceneLeft + 118;
+  const maxTravel = Math.max(180, ropeEndX - startX - blockWidth - 72);
+  const travel = maxTravel * travelProgress;
+  const blockX = startX + travel;
   const blockY = groundY - blockHeight - 18;
   const centerX = blockX + blockWidth / 2;
   const centerY = blockY + blockHeight / 2;
-  const springX = 692;
-  const springY = 188;
   const ropeStartX = blockX + blockWidth;
-  const ropeEndX = springX + 154;
   const weightCount = Math.max(0, Math.round((pressure - 2) / 2));
   const perRow = blockWidth >= 140 ? 2 : 1;
   const weightSlots = Array.from({ length: weightCount }, (_, index) => {
     const row = Math.floor(index / perRow);
     const col = index % perRow;
     const totalRowWidth = perRow * 36 - 6;
-    const x = blockWidth / 2 - totalRowWidth / 2 + col * 36;
-    const y = -24 - row * 26;
 
-    return { x, y };
+    return {
+      x: blockWidth / 2 - totalRowWidth / 2 + col * 36,
+      y: -24 - row * 26,
+    };
   });
 
   return {
     width,
     height,
+    panelX,
+    panelY,
+    panelWidth,
+    scenePanelHeight,
+    graphY,
+    graphWidth,
+    graphHeight,
+    graphGap,
     groundY,
     blockX,
     blockY,
@@ -1665,18 +2766,21 @@ function computeStageLayout({
 }
 
 function buildSurfaceTexture({
-  width,
+  startX,
+  endX,
   groundY,
   accent,
   roughness,
 }: {
-  width: number;
+  startX: number;
+  endX: number;
   groundY: number;
   accent: string;
   roughness: number;
 }) {
+  const span = Math.max(1, endX - startX);
   const lines = Array.from({ length: 18 }, (_, index) => {
-    const x = 76 + index * 42;
+    const x = startX + 16 + ((span - 40) * index) / 17;
     const height = 4 + (index % 3) * roughness * 3.4;
 
     return (
@@ -1696,9 +2800,9 @@ function buildSurfaceTexture({
     <g aria-hidden="true">
       {lines}
       <line
-        x1="48"
+        x1={startX}
         y1={groundY + 18}
-        x2={width - 52}
+        x2={endX}
         y2={groundY + 18}
         className="force-stage-surface-shadow"
         stroke={accent}
@@ -1715,27 +2819,21 @@ function scaleArrow(magnitude: number, maxMagnitude: number) {
   return 50 + (magnitude / maxMagnitude) * 82;
 }
 
-function getSuggestedForceForElapsedMs(
-  elapsedMs: number,
-  totalExperimentMs: number,
-): ForceKey {
-  if (elapsedMs <= 0) {
-    return "gravity";
+function getSuggestedForceForPhase(phase: ExperimentPhase): ForceKey {
+  switch (phase) {
+    case "ramping":
+      return "pull";
+    case "breakaway":
+    case "accelerating":
+      return "net";
+    case "stuck":
+      return "friction";
+    case "uniform":
+    case "complete":
+      return "friction";
+    default:
+      return "gravity";
   }
-
-  if (elapsedMs < RAMP_DURATION_MS) {
-    return "pull";
-  }
-
-  if (elapsedMs < RAMP_DURATION_MS + BREAKAWAY_DURATION_MS) {
-    return "net";
-  }
-
-  if (elapsedMs >= totalExperimentMs) {
-    return "friction";
-  }
-
-  return "friction";
 }
 
 function formatSignedNumber(value: number) {
@@ -1747,8 +2845,12 @@ function lerp(start: number, end: number, progress: number) {
   return start + (end - start) * progress;
 }
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
 function clamp01(value: number) {
-  return Math.max(0, Math.min(1, value));
+  return clamp(value, 0, 1);
 }
 
 function easeOutCubic(value: number) {
@@ -1757,6 +2859,10 @@ function easeOutCubic(value: number) {
 
 function easeInOutCubic(value: number) {
   return value < 0.5 ? 4 * value * value * value : 1 - ((-2 * value + 2) ** 3) / 2;
+}
+
+function formatTimeLabel(value: number) {
+  return `${formatNumber(value, value % 1 === 0 ? 0 : 1)}s`;
 }
 
 function getLabelMetrics(
