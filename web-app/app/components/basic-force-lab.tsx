@@ -937,7 +937,7 @@ export function BasicForceLab({
                 <ControlPanelSection title="实验控制" hint="先预测，再播放，再对比" accent>
                   <ControlChipGroup
                     columns={2}
-                    compact
+                    size="dense"
                     items={FORCE_MODE_OPTIONS.map((item) => ({
                       key: item.key,
                       label: item.label,

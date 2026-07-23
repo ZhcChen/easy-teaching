@@ -3763,6 +3763,10 @@ html[data-theme="dark"] .force-state-pill.is-active {
   gap: 10px;
 }
 
+.control-chip-group.is-dense {
+  gap: 6px;
+}
+
 .control-chip-button.is-active {
   border-color: var(--brand);
   background: color-mix(in srgb, var(--brand-soft) 76%, var(--surface-strong));
@@ -3774,6 +3778,15 @@ html[data-theme="dark"] .force-state-pill.is-active {
   min-height: 52px;
   padding: 0 10px;
   background: color-mix(in srgb, var(--surface-strong) 96%, transparent);
+}
+
+.control-chip-button.is-dense {
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+.control-chip-button.is-dense .control-chip-label {
+  font-size: 12px;
 }
 
 .control-chip-label {

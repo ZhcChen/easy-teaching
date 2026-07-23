@@ -11,6 +11,7 @@ type ControlChipItem = {
 type ControlChipGroupProps = {
   items: ControlChipItem[];
   columns?: 1 | 2 | 3;
+  size?: "regular" | "compact" | "dense";
   compact?: boolean;
   className?: string;
 };
@@ -18,13 +19,15 @@ type ControlChipGroupProps = {
 export function ControlChipGroup({
   items,
   columns = 3,
+  size,
   compact = false,
   className,
 }: ControlChipGroupProps) {
+  const resolvedSize = size ?? (compact ? "compact" : "regular");
   const groupClassName = [
     "control-chip-group",
     `is-${columns}-column`,
-    compact ? "is-compact" : "",
+    resolvedSize !== "regular" ? `is-${resolvedSize}` : "",
     className ?? "",
   ]
     .filter(Boolean)
@@ -35,7 +38,7 @@ export function ControlChipGroup({
       {items.map((item) => {
         const buttonClassName = [
           "control-chip-button",
-          compact ? "is-compact" : "",
+          resolvedSize !== "regular" ? `is-${resolvedSize}` : "",
           item.active ? "is-active" : "",
         ]
           .filter(Boolean)
