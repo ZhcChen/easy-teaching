@@ -1,7 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
-import { app, BrowserWindow, nativeImage } from "electron";
+import { app, BrowserWindow, Menu, nativeImage } from "electron";
 
 const DEV_RENDERER_URL = "http://127.0.0.1:57001";
 const LOCAL_SERVER_HOST = "127.0.0.1";
@@ -60,6 +60,16 @@ function applyRuntimeBrandIcon() {
   if (process.platform === "darwin" && app.dock) {
     app.dock.setIcon(icon);
   }
+}
+
+function hideNativeMenuBar(window: BrowserWindow) {
+  if (process.platform === "darwin") {
+    return;
+  }
+
+  window.setAutoHideMenuBar(true);
+  window.setMenuBarVisibility(false);
+  window.removeMenu();
 }
 
 async function resolveRequestFilePath(urlPathname: string) {
@@ -182,6 +192,7 @@ async function createMainWindow() {
     height: 960,
     minWidth: 1200,
     minHeight: 760,
+    autoHideMenuBar: process.platform !== "darwin",
     show: false,
     title: APP_DISPLAY_NAME,
     backgroundColor: WINDOW_BACKGROUND,
@@ -193,6 +204,8 @@ async function createMainWindow() {
       sandbox: false
     }
   });
+
+  hideNativeMenuBar(window);
 
   window.once("ready-to-show", () => {
     window.show();
@@ -207,6 +220,9 @@ app.whenReady()
   .then(async () => {
     app.setName(APP_DISPLAY_NAME);
     applyRuntimeBrandIcon();
+    if (process.platform !== "darwin") {
+      Menu.setApplicationMenu(null);
+    }
     await createMainWindow();
 
     app.on("activate", () => {
