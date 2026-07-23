@@ -3196,31 +3196,51 @@ html[data-theme="dark"] .force-state-pill.is-active {
 }
 
 .force-stage-stepbar {
-  display: flex;
-  flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
   gap: 8px;
-  padding: 8px 10px;
-  border: 1px solid rgba(138, 190, 255, 0.1);
-  border-radius: 14px;
-  background: rgba(7, 17, 31, 0.38);
-  box-shadow: 0 8px 20px rgba(2, 9, 20, 0.12);
-  backdrop-filter: blur(14px);
 }
 
 .force-stage-stepbar .control-step-button {
   min-height: 32px;
   padding: 0 10px;
+  border-color: rgba(124, 168, 255, 0.22);
+  background: rgba(7, 17, 31, 0.78);
+  color: rgba(236, 243, 255, 0.9);
+  box-shadow: 0 10px 24px rgba(2, 9, 20, 0.16);
+}
+
+.force-stage-stepbar .control-step-button:hover {
+  border-color: rgba(132, 188, 255, 0.4);
+  background: rgba(12, 28, 48, 0.92);
+  color: #f8fbff;
+}
+
+.force-stage-stepbar .control-step-button.is-active {
+  border-color: rgba(92, 160, 255, 0.82);
+  background: linear-gradient(135deg, rgba(31, 103, 255, 0.96) 0%, rgba(63, 148, 255, 0.88) 100%);
+  color: #f8fbff;
+  box-shadow:
+    0 12px 24px rgba(14, 60, 168, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .force-stage-stepbar .control-step-index {
   width: 18px;
   height: 18px;
   font-size: 10px;
+  background: rgba(154, 191, 255, 0.2);
+  color: rgba(240, 246, 255, 0.92);
+}
+
+.force-stage-stepbar .control-step-button.is-active .control-step-index {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
 }
 
 .force-stage-stepbar .control-step-label {
   font-size: 12px;
+  color: inherit;
 }
 
 .force-stage-hud-title {
