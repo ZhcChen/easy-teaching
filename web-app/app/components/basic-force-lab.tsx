@@ -5,6 +5,7 @@ import { ControlButton } from "./control-button";
 import { ControlChipGroup } from "./control-chip-group";
 import { ControlPanelSection } from "./control-panel-section";
 import { ControlRange } from "./control-range";
+import { ControlStepGroup } from "./control-step-group";
 import { ControlStatusBar } from "./control-status-bar";
 import { StatusPill } from "./status-pill";
 import { VisualModeSwitch } from "./visual-mode-switch";
@@ -973,9 +974,34 @@ export function BasicForceLab({
                     ]}
                   />
 
+                  <ControlStepGroup
+                    className="force-walkthrough-steps is-panel"
+                    items={phaseSteps.map((step, index) => ({
+                      key: step.phase,
+                      label: step.label,
+                      stepLabel: String(index + 1),
+                      title: step.detail,
+                      active: activePhase === step.phase,
+                      ariaLabel: `阶段 ${index + 1}：${step.label}`,
+                      onClick: () => jumpToPhase(step.phase),
+                    }))}
+                  />
+
+                  <ControlRange
+                    id="force-experiment-progress"
+                    label="实验时间轴"
+                    min={0}
+                    max={totalExperimentMs}
+                    step={10}
+                    value={hasPlaybackStarted ? experimentElapsedMs : 0}
+                    valueFormatter={(value) => `${formatNumber(value / 1000, 1)} s`}
+                    onChange={seekExperiment}
+                  />
+
                   <div className="force-action-grid">
                     <ControlButton
                       variant="primary"
+                      className="force-action-primary"
                       onClick={() => {
                         if (isExperimentRunning) {
                           pauseExperiment();
@@ -992,38 +1018,13 @@ export function BasicForceLab({
                     >
                       {primaryActionLabel}
                     </ControlButton>
-                    <ControlButton onClick={startExperiment}>
+                    <ControlButton size="compact" onClick={startExperiment}>
                       从头播放
                     </ControlButton>
-                    <ControlButton onClick={resetDefaults}>
+                    <ControlButton size="compact" onClick={resetDefaults}>
                       恢复默认
                     </ControlButton>
                   </div>
-
-                  <div className="force-walkthrough-steps is-panel">
-                    {phaseSteps.map((step, index) => (
-                      <button
-                        key={step.phase}
-                        type="button"
-                        className={activePhase === step.phase ? "force-step-chip is-active" : "force-step-chip"}
-                        onClick={() => jumpToPhase(step.phase)}
-                      >
-                        <span className="force-step-chip-index">{index + 1}</span>
-                        <span>{step.label}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  <ControlRange
-                    id="force-experiment-progress"
-                    label="实验时间轴"
-                    min={0}
-                    max={totalExperimentMs}
-                    step={10}
-                    value={hasPlaybackStarted ? experimentElapsedMs : 0}
-                    valueFormatter={(value) => `${formatNumber(value / 1000, 1)} s`}
-                    onChange={seekExperiment}
-                  />
                 </ControlPanelSection>
 
                 <ControlPanelSection title="压力 / 正压力" hint="直接改变 N 的大小">
