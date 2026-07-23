@@ -183,12 +183,12 @@ const FORCE_SVG_STAGE = {
   height: 960,
   panelX: 24,
   panelY: 110,
-  scenePanelHeight: 236,
-  sceneGroundY: 312,
+  scenePanelHeight: 288,
+  sceneGroundY: 324,
   sceneInset: 92,
-  graphY: 404,
+  graphY: 446,
   graphGap: 24,
-  graphHeight: 522,
+  graphHeight: 480,
 };
 const FORCE_VIEW_OPTIONS = [
   {
@@ -2771,7 +2771,7 @@ function scaleArrow(magnitude: number, maxMagnitude: number) {
     return 0;
   }
 
-  return 44 + (magnitude / maxMagnitude) * 74;
+  return 40 + (magnitude / maxMagnitude) * 68;
 }
 
 function getSuggestedForceForPhase(phase: ExperimentPhase): ForceKey {
