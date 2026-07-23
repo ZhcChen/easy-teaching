@@ -2834,10 +2834,10 @@ function getLabelMetrics(
   }
 
   if (direction === "up") {
-    return { x: anchorX - width / 2, y: endY - 20, width };
+    return { x: anchorX + 18, y: endY - 14, width };
   }
 
-  return { x: anchorX - width / 2, y: endY - 14, width };
+  return { x: anchorX + 18, y: endY - 14, width };
 }
 
 function getPillWidth(label: string) {
