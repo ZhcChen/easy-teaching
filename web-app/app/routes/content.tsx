@@ -1,4 +1,5 @@
 import { StageSelectionView } from "../components/stage-selection-view";
+import { useDocumentMeta, useLocale } from "../i18n";
 import type { Route } from "./+types/content";
 
 export function meta({}: Route.MetaArgs) {
@@ -12,5 +13,12 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function ContentPage() {
+  const { tt } = useLocale();
+
+  useDocumentMeta({
+    title: `${tt("可视化教学")} · ${tt("知识库")}`,
+    description: tt("按学段、学科与章节组织可视化教学内容的一级入口。"),
+  });
+
   return <StageSelectionView />;
 }

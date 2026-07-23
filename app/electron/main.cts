@@ -6,6 +6,7 @@ import { app, BrowserWindow, nativeImage } from "electron";
 const DEV_RENDERER_URL = "http://127.0.0.1:57001";
 const LOCAL_SERVER_HOST = "127.0.0.1";
 const WINDOW_BACKGROUND = "#f4f7fb";
+const APP_DISPLAY_NAME = "可视化教学";
 
 const MIME_TYPES: Record<string, string> = {
   ".css": "text/css; charset=utf-8",
@@ -182,7 +183,7 @@ async function createMainWindow() {
     minWidth: 1200,
     minHeight: 760,
     show: false,
-    title: "Easy Teaching",
+    title: APP_DISPLAY_NAME,
     backgroundColor: WINDOW_BACKGROUND,
     ...(windowIcon ? { icon: windowIcon } : {}),
     webPreferences: {
@@ -204,6 +205,7 @@ async function createMainWindow() {
 
 app.whenReady()
   .then(async () => {
+    app.setName(APP_DISPLAY_NAME);
     applyRuntimeBrandIcon();
     await createMainWindow();
 

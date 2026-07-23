@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
+import { useLocale } from "../i18n";
+
 type ControlRangeProps = {
   id: string;
   label: string;
@@ -29,6 +31,7 @@ export function ControlRange({
   valueFormatter,
   onChange,
 }: ControlRangeProps) {
+  const { isZh } = useLocale();
   const [isEditing, setIsEditing] = useState(false);
   const [draftValue, setDraftValue] = useState(() => formatEditableValue(value, step));
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -99,7 +102,7 @@ export function ControlRange({
           isEditing ? (
             <input
               ref={inputRef}
-              aria-label={`${label} 数值输入`}
+              aria-label={isZh ? `${label} 数值输入` : `${label} value input`}
               className="force-control-value-input"
               inputMode="decimal"
               type="text"

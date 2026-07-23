@@ -1,3 +1,4 @@
+import { useDocumentMeta, useLocale } from "../i18n";
 import type { Route } from "./+types/study";
 
 export function meta({}: Route.MetaArgs) {
@@ -11,28 +12,35 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function StudyPage() {
+  const { tt } = useLocale();
+
+  useDocumentMeta({
+    title: `${tt("可视化教学")} · ${tt("学习")}`,
+    description: tt("学习记录、收藏、复习与同步中心的一级入口。"),
+  });
+
   return (
     <div className="page-stack">
       <section className="hero-surface">
-        <span className="eyebrow-chip">学习页</span>
+        <span className="eyebrow-chip">{tt("学习页")}</span>
         <div className="hero-copy-block">
-          <h2 className="hero-heading">学习记录先本地沉淀，再逐步同步</h2>
+          <h2 className="hero-heading">{tt("学习记录先本地沉淀，再逐步同步")}</h2>
           <p className="hero-paragraph">
-            当前阶段先保证本地记录稳定可用，后续再通过同步中心把本地数据同步到云端。
+            {tt("当前阶段先保证本地记录稳定可用，后续再通过同步中心把本地数据同步到云端。")}
           </p>
         </div>
       </section>
 
       <section className="simple-grid">
         <div className="surface-panel">
-          <p className="surface-eyebrow">学习内容</p>
-          <h3 className="surface-title">当前重点沉淀</h3>
+          <p className="surface-eyebrow">{tt("学习内容")}</p>
+          <h3 className="surface-title">{tt("当前重点沉淀")}</h3>
           <div className="list-stack">
           {records.map((item) => (
               <article key={item.title} className="list-card">
-                <p className="list-card-title">{item.title}</p>
+                <p className="list-card-title">{tt(item.title)}</p>
                 <p className="list-card-copy">
-                  {item.description}
+                  {tt(item.description)}
                 </p>
               </article>
             ))}
@@ -40,13 +48,13 @@ export default function StudyPage() {
         </div>
 
         <aside className="surface-panel">
-          <p className="surface-eyebrow">同步中心</p>
-          <h3 className="surface-title">后续同步规划</h3>
+          <p className="surface-eyebrow">{tt("同步中心")}</p>
+          <h3 className="surface-title">{tt("后续同步规划")}</h3>
           <ol className="step-list">
             {syncSteps.map((step, index) => (
               <li key={step} className="step-list-item">
                 <span className="step-list-index">{index + 1}</span>
-                <p>{step}</p>
+                <p>{tt(step)}</p>
               </li>
             ))}
           </ol>

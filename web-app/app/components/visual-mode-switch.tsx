@@ -1,5 +1,7 @@
 import type { CSSProperties } from "react";
 
+import { useLocale } from "../i18n";
+
 type VisualModeOption = {
   key: string;
   label: string;
@@ -19,6 +21,7 @@ export function VisualModeSwitch({
   className,
   onChange,
 }: VisualModeSwitchProps) {
+  const { tt } = useLocale();
   const activeIndex = Math.max(
     0,
     options.findIndex((option) => option.key === value),
@@ -34,7 +37,7 @@ export function VisualModeSwitch({
     <div
       className={trackClassName}
       role="tablist"
-      aria-label="可视化模式切换"
+      aria-label={tt("可视化模式切换")}
       style={
         {
           "--switch-count": options.length,

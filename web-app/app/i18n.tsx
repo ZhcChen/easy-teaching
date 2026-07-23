@@ -1,0 +1,557 @@
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+
+export type AppLocale = "zh-CN" | "en";
+
+export const DEFAULT_LOCALE: AppLocale = "zh-CN";
+export const LOCALE_STORAGE_KEY = "easy-teaching-locale";
+
+type LocaleContextValue = {
+  locale: AppLocale;
+  isZh: boolean;
+  setLocale: (nextLocale: AppLocale) => void;
+  tt: (text: string) => string;
+};
+
+const LocaleContext = createContext<LocaleContextValue | null>(null);
+
+export function LocaleProvider({ children }: { children: ReactNode }) {
+  const [locale, setLocaleState] = useState<AppLocale>(DEFAULT_LOCALE);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const storedLocale = window.localStorage.getItem(LOCALE_STORAGE_KEY);
+    if (storedLocale === "en" || storedLocale === "zh-CN") {
+      setLocaleState(storedLocale);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    document.documentElement.lang = locale;
+    document.documentElement.dataset.locale = locale;
+  }, [locale]);
+
+  const value = useMemo<LocaleContextValue>(() => ({
+    locale,
+    isZh: locale === "zh-CN",
+    setLocale(nextLocale) {
+      setLocaleState(nextLocale);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(LOCALE_STORAGE_KEY, nextLocale);
+      }
+    },
+    tt(text) {
+      return translateText(locale, text);
+    },
+  }), [locale]);
+
+  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
+}
+
+export function useLocale() {
+  const context = useContext(LocaleContext);
+  if (!context) {
+    throw new Error("useLocale must be used within LocaleProvider");
+  }
+
+  return context;
+}
+
+export function useDocumentMeta({
+  title,
+  description,
+}: {
+  title: string;
+  description?: string;
+}) {
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    document.title = title;
+
+    if (!description) {
+      return;
+    }
+
+    let meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "description";
+      document.head.appendChild(meta);
+    }
+
+    meta.content = description;
+  }, [description, title]);
+}
+
+const EXACT_TRANSLATIONS: Record<string, string> = {
+  "可视化教学": "Visual Learning",
+  "首页": "Home",
+  "知识库": "Library",
+  "学习": "Study",
+  "我的": "Me",
+  "主导航": "Primary navigation",
+  "打开首页": "Open home",
+  "页面异常": "Page error",
+  "发生了未预期的错误。": "An unexpected error occurred.",
+  "请求异常": "Request error",
+  "访问的页面不存在。": "The page you requested does not exist.",
+  "亮色": "Light",
+  "暗色": "Dark",
+  "主题切换": "Theme toggle",
+  "语言切换": "Language switch",
+  "界面特性": "Interface features",
+  "可视化模式切换": "Visualization mode switch",
+  "展开参数控制面板": "Expand control panel",
+  "收起参数控制面板": "Collapse control panel",
+  "参数控制": "Control Panel",
+  "实验控制": "Experiment Controls",
+  "运动模式": "Motion Mode",
+  "核心参数": "Core Parameters",
+  "显示项": "Display Options",
+  "重置": "Reset",
+  "时间轴": "Timeline",
+  "初速度": "Initial Velocity",
+  "加速度": "Acceleration",
+  "加速度（负）": "Acceleration (negative)",
+  "加速度箭头": "Acceleration Arrow",
+  "进入全屏": "Enter Fullscreen",
+  "退出全屏": "Exit Fullscreen",
+  "从学段继续选择学科。": "Continue from the selected stage to choose a subject.",
+  "演示时长": "Demo Duration",
+  "位移拖尾": "Displacement Trail",
+  "秒级采样点": "Per-second Samples",
+  "速度曲线": "Velocity Curve",
+  "运动拖尾": "Motion Trail",
+  "速度箭头": "Velocity Arrow",
+  "减速度箭头": "Deceleration Arrow",
+  "轨道视图": "Track View",
+  "看采样点间距，判断速度变化。": "Judge speed changes by comparing the spacing between sample points.",
+  "原点": "Origin",
+  "停止点": "Stop Point",
+  "位移 - 时间": "Displacement - Time",
+  "（曲线斜率越大，表示速度越快。）": "(A steeper slope means a higher speed.)",
+  "速度 - 时间": "Velocity - Time",
+  "（这条线越高，说明同一时刻速度越大。）": "(A higher line means a greater velocity at the same moment.)",
+  "速度曲线已隐藏，可在左侧重新打开": "The velocity curve is hidden. Re-enable it from the left panel.",
+  "第三人称跟随": "Third-person follow",
+  "左拖旋转 · 滚轮缩放": "Left drag to orbit · Scroll to zoom",
+  "蓝箭头 = 速度": "Blue arrow = velocity",
+  "当前 a ≈ 0": "Current a ≈ 0",
+  "橙箭头 = 减速度": "Orange arrow = deceleration",
+  "绿箭头 = 加速度": "Green arrow = acceleration",
+  "时间": "Time",
+  "速度": "Velocity",
+  "位移": "Displacement",
+  "结论": "Conclusion",
+  "匀速": "Uniform",
+  "匀速直线": "Uniform Motion",
+  "每秒位移保持一致，最适合先建立速度和位移的直觉。": "The displacement per second stays constant, which is ideal for building intuition about velocity and displacement.",
+  "加速": "Accelerating",
+  "匀加速": "Uniform Acceleration",
+  "速度逐渐增大，轨道上的采样点会越来越疏。": "The velocity increases over time, so the sampled points on the track spread farther apart.",
+  "减速": "Braking",
+  "匀减速": "Uniform Deceleration",
+  "速度逐渐减小，直到停止，适合讲刹停过程。": "The velocity decreases until the cart stops, which is useful for explaining braking.",
+  "2D 解析视图": "2D analytical view",
+  "3D 第三人称视图": "3D third-person view",
+  "暂停播放": "Pause",
+  "重新播放": "Replay",
+  "继续播放": "Resume",
+  "开始播放": "Play",
+  "待开始": "Ready",
+  "已暂停": "Paused",
+  "已完成": "Completed",
+  "匀速中": "Uniform motion",
+  "同样过去 1 秒，轨道上的采样点间距基本一样，说明速度保持不变。": "If the same 1 second passes and the spacing between sample points stays nearly the same, the velocity is unchanged.",
+  "位移随时间均匀增加，s-t 图像是一条斜直线。": "Displacement increases uniformly over time, so the s-t graph is a straight line.",
+  "加速中": "Accelerating",
+  "越往后的采样点越疏，表示相同时间内位移增加得更快。": "Later sample points are farther apart, which means displacement grows faster in the same amount of time.",
+  "速度一直在增大，所以位移曲线越来越陡。": "Velocity keeps increasing, so the displacement curve becomes steeper.",
+  "已刹停": "Stopped",
+  "小车已经停止，后面的时间只会保持这个位移，不再继续前进。": "The cart has stopped, so later time only keeps the same displacement.",
+  "采样点逐渐变密，说明相同时间内位移增长得越来越慢。": "Sample points become denser, showing that displacement grows more slowly over equal time intervals.",
+  "速度减到 0 后，位移保持不变。": "After the velocity drops to 0, the displacement remains unchanged.",
+  "速度持续减小，所以位移曲线仍上升，但斜率在不断变小。": "Velocity keeps decreasing, so the displacement curve still rises, but its slope keeps shrinking.",
+  "展开控制面板": "Expand control panel",
+  "控制面板": "Control Panel",
+  "先改变量，再播放实验。": "Adjust variables first, then play the experiment.",
+  "收起控制面板": "Collapse control panel",
+  "先预测，再播放，再对比": "Predict first, then play and compare",
+  "实验测量": "Measurement",
+  "逐步增大拉力，观察最大静摩擦与稳定动摩擦。": "Increase the pull force step by step to observe peak static friction and stable kinetic friction.",
+  "恒力拉动": "Constant Pull",
+  "直接给定恒定拉力，观察合力、加速度、速度和位移变化。": "Set a constant pull force directly and observe net force, acceleration, velocity, and displacement.",
+  "手动拖动": "Manual Drag",
+  "直接在 2D 画布里拖动木块，用拖动速度观察受力和轨迹变化。": "Drag the block directly in the 2D canvas to observe force and trajectory changes through drag speed.",
+  "恒定拉力": "Constant Pull Force",
+  "先点开始记录，再到右侧 2D 实验区拖动木块。拖动越快，拉力、合力和下方图表变化越明显。": "Press start recording first, then drag the block in the 2D experiment area on the right. Faster dragging produces more visible changes in pull force, net force, and the charts below.",
+  "拖动画布": "Drag canvas",
+  "记录时长": "Recording Time",
+  "实验时间轴": "Experiment Timeline",
+  "压力 / 正压力": "Pressure / Normal Force",
+  "直接改变 N 的大小": "Change the magnitude of N directly",
+  "当前压力": "Current Pressure",
+  "等效质量": "Equivalent Mass",
+  "理论滑动摩擦": "Theoretical Kinetic Friction",
+  "接触材质": "Contact Surface",
+  "改变摩擦系数 μ": "Adjust the friction coefficient μ",
+  "摆放方式": "Placement",
+  "验证面积是否进入公式": "Check whether area enters the formula",
+  "滑动摩擦实验可视化示意图": "Sliding friction experiment visualization",
+  "起点": "Start",
+  "弹簧测力计": "Spring Dynamometer",
+  "手动拉动端": "Manual Pull End",
+  "恒力输入端": "Constant-force Input",
+  "木块": "Block",
+  "受力 - 时间": "Force - Time",
+  "（拉力 / 摩擦力 / 合力）": "(Pull force / Friction / Net force)",
+  "F拉": "F_pull",
+  "f静,max": "f_static,max",
+  "位移 / 速度 - 时间": "Displacement / Velocity - Time",
+  "（左轴位移，右轴速度）": "(Left axis: displacement, right axis: velocity)",
+  "等待稳定读数": "Wait for a stable reading",
+  "完成一次实验后记录匀速阶段读数": "Record the steady-state reading after completing one experiment",
+  "恒定拉力已超过静摩擦阈值，当前木块持续加速前进。": "The constant pull force has exceeded the static-friction threshold, so the block is now accelerating continuously.",
+  "恒定拉力未超过最大静摩擦，木块保持静止。": "The constant pull force has not exceeded maximum static friction, so the block remains at rest.",
+  "停止记录": "Stop Recording",
+  "重新记录": "Record Again",
+  "开始记录": "Start Recording",
+  "暂停实验": "Pause Experiment",
+  "开始实验": "Start Experiment",
+  "光滑木板": "Smooth Board",
+  "阻力较小，最容易拉动。": "Lower resistance, easiest to pull.",
+  "普通木板": "Wooden Board",
+  "适合作为默认对照组。": "Good as the default reference group.",
+  "棉布面": "Cloth Surface",
+  "粗糙程度明显提升。": "Noticeably rougher.",
+  "毛巾面": "Towel Surface",
+  "阻力最大，读数变化最明显。": "Highest resistance and the clearest reading changes.",
+  "正放": "Flat",
+  "接触面积最大，作为默认状态。": "Largest contact area, used as the default state.",
+  "侧放": "Side",
+  "面积变小，但材料与压力不变。": "Smaller area while material and pressure stay the same.",
+  "竖放": "Upright",
+  "面积最小，用来验证面积无关。": "Smallest area, used to verify area independence.",
+  "重力 G": "Gravity G",
+  "支持力 N": "Normal Force N",
+  "拉力 F": "Pull Force F",
+  "摩擦力 f": "Friction f",
+  "合力 R": "Net Force R",
+  "先预测": "Predict First",
+  "先看器材和变量": "Inspect apparatus and variables first",
+  "拉力增大": "Increasing Pull Force",
+  "静摩擦仍在平衡": "Static friction still balances",
+  "刚刚起动": "Just Started Moving",
+  "突破最大静摩擦": "Break static-friction limit",
+  "匀速测量": "Uniform-speed Measurement",
+  "稳定读数就是结果": "The stable reading is the result",
+  "得出结论": "Reach a Conclusion",
+  "准备做下一组对比": "Ready for the next comparison",
+  "先判断": "Assess First",
+  "先点击开始记录": "Press start recording first",
+  "拖动观察": "Drag to Observe",
+  "用拖动速度带出受力变化": "Use drag speed to reveal force changes",
+  "完成判断": "Assessment Complete",
+  "停止后对比图表变化": "Compare chart changes after stopping",
+  "看恒力是否够大": "Check whether the constant force is large enough",
+  "开始起动": "Start Moving",
+  "持续加速": "Keep Accelerating",
+  "合力保持为正": "Net force remains positive",
+  "完成演示": "Demo Complete",
+  "速度和位移都已建立": "Velocity and displacement are both established",
+  "保持静止": "Stay at Rest",
+  "拉力未破阈值": "Pull force below threshold",
+  "确认不会起动": "Confirm no motion starts",
+  "手动滑动": "Manual Sliding",
+  "静摩擦响应": "Static-friction response",
+  "等待拖动": "Waiting for drag",
+  "记录暂停": "Recording Paused",
+  "等待记录": "Waiting to Record",
+  "拖动中": "Dragging",
+  "轻推观察": "Observe with a light push",
+  "静摩擦待命": "Static friction ready",
+  "等待测量": "Waiting to Measure",
+  "等待演示": "Waiting to Demo",
+  "接近最大静摩擦": "Near maximum static friction",
+  "静摩擦平衡": "Static-friction balance",
+  "接近起动": "Near motion onset",
+  "仍未滑动": "Still not sliding",
+  "动摩擦接管": "Kinetic friction takes over",
+  "开始滑动": "Start Sliding",
+  "匀速动摩擦": "Uniform kinetic friction",
+  "匀速滑动": "Uniform Sliding",
+  "测量完成": "Measurement Complete",
+  "仍然静止": "Still at Rest",
+  "刚突破静摩擦": "Just Broke Static Friction",
+  "稳定动摩擦": "Stable Kinetic Friction",
+  "等待开始实验": "Ready to Start the Experiment",
+  "待播放": "Ready",
+  "可起动": "Can Start Moving",
+  "拉力不足": "Insufficient Pull Force",
+  "准备起动": "Preparing to Move",
+  "正在匀速测量": "Measuring at Uniform Speed",
+  "实验完成": "Experiment Complete",
+  "已记录结果": "Result Recorded",
+  "木块保持静止": "Block Remains at Rest",
+  "木块开始起动": "Block Starts Moving",
+  "突破阈值": "Threshold Broken",
+  "木块持续加速": "Block Keeps Accelerating",
+  "合力为正": "Positive Net Force",
+  "已建立轨迹": "Trajectory Established",
+  "确认静止": "Confirmed at Rest",
+  "等待开始演示": "Ready to Start the Demo",
+  "等待手动拖动": "Ready for Manual Drag",
+  "待记录": "Ready to Record",
+  "手动拖动中": "Manual Dragging",
+  "实时记录": "Live Recording",
+  "已完成记录": "Recording Completed",
+  "可对比图表": "Charts Ready to Compare",
+  "选择学段": "Choose a learning stage",
+  "先确定学习范围，再逐页进入学科与知识点页面。": "Pick the learning stage first, then move page by page into subjects and topics.",
+  "科技图解": "Visual tech",
+  "逐页进入": "Step by step",
+  "本地优先": "Local-first",
+  "教学入口": "Teaching entry",
+  "进入学科页": "Open subject page",
+  "进入知识点页": "Open topic page",
+  "学科": "Subjects",
+  "知识点": "Topics",
+  "模式": "Modes",
+  "图解 / 动画 / 实验": "Diagrams / Animation / Experiments",
+  "建模 / 推导 / 专题": "Modeling / Reasoning / Topics",
+  "初中": "Junior High",
+  "高中": "Senior High",
+  "物理": "Physics",
+  "数学": "Mathematics",
+  "化学": "Chemistry",
+  "记忆专题": "Memory",
+  "从运动、力、电学和光学切入最适合做首批可视化。": "Motion, mechanics, electricity, and optics are the best starting points for the first visualization set.",
+  "函数图像、平面几何和动态推导都适合做交互卡片入口。": "Function graphs, plane geometry, and dynamic reasoning all fit an interactive card-based entry.",
+  "先做实验步骤和现象结果，不急着上复杂模型。": "Start with experiment steps and visible phenomena before introducing complex models.",
+  "适合做时间线、框架图和复习卡片的知识记忆内容。": "Great for timelines, framework maps, and revision cards.",
+  "聚焦建模、推导和专题理解，内容更适合 PC 工作台式展示。": "Focus on modeling, derivation, and topic-based understanding, which fits a PC workbench layout better.",
+  "优先从力学、电磁和运动专题切入，最能体现可视化价值。": "Start with mechanics, electromagnetism, and motion topics to show visualization value most clearly.",
+  "函数、解析几何和空间图形都适合科技简约的交互风格。": "Functions, analytic geometry, and spatial figures all fit a clean tech-style interaction model.",
+  "先做结构和过程，再逐步扩展到更复杂的模型展示。": "Start with structure and process, then expand gradually into more complex models.",
+  "可以服务知识框架、时间线和抽认卡内容。": "This can support knowledge frameworks, timelines, and flashcards.",
+  "速度与位移轨迹": "Velocity and Displacement Track",
+  "把速度、时间、位移放到同一画布，让关系一眼能看懂。": "Put velocity, time, and displacement on one canvas so the relationship is immediately clear.",
+  "运动学": "Kinematics",
+  "轨迹": "Trajectory",
+  "图解": "Diagram",
+  "支持播放与暂停": "Supports play and pause",
+  "展示轨迹与刻度": "Shows trajectory and scale marks",
+  "适合首批演示": "Good for the first demo set",
+  "基础受力分析": "Basic Force Analysis",
+  "把拉力、摩擦力和受力平衡放到同一实验里，让变化过程一眼看懂。": "Put pull force, friction, and force balance into one experiment so the changing process is easy to see.",
+  "拉力": "Pull force",
+  "摩擦": "Friction",
+  "平衡": "Balance",
+  "支持分阶段实验播放": "Supports staged experiment playback",
+  "同步观察拉力与摩擦变化": "Observe pull force and friction changes together",
+  "适合课堂实验讲解": "Works well for classroom experiment explanation",
+  "串并联电路观察": "Series and Parallel Circuit Viewer",
+  "把电路连接、开关状态和灯泡亮灭放到同一画布，让差异一眼看懂。": "Put circuit layout, switch states, and bulb brightness on one canvas so the differences are obvious.",
+  "电路": "Circuit",
+  "开关": "Switch",
+  "亮灭": "On/Off",
+  "支持串联并联切换": "Supports switching between series and parallel",
+  "高亮电流路径与亮灭状态": "Highlights current paths and on/off states",
+  "适合课堂对照讲解": "Great for side-by-side classroom explanation",
+  "抛物线图像关系": "Parabola Graph Relationships",
+  "通过参数变化与图像联动理解函数图像特征。": "Understand graph features through linked parameter and graph changes.",
+  "函数": "Function",
+  "坐标系": "Coordinate System",
+  "联动": "Linked Response",
+  "参数可调": "Adjustable parameters",
+  "图像即时反馈": "Instant graph feedback",
+  "适合讲解顶点变化": "Good for explaining vertex changes",
+  "三角形关系图解": "Triangle Relationship Diagram",
+  "用拖拽与辅助线展示角、边和证明思路。": "Use drag interactions and helper lines to show angles, sides, and proof ideas.",
+  "几何": "Geometry",
+  "辅助线": "Auxiliary lines",
+  "证明": "Proof",
+  "拖拽观察": "Drag to observe",
+  "适合课堂推导": "Good for classroom derivation",
+  "方便做记忆提示": "Convenient for memory cues",
+  "实验流程与现象": "Experiment Flow and Phenomena",
+  "按步骤卡展示实验过程、现象和结论，结构清晰易记。": "Show the experiment process, phenomena, and conclusions as step cards for a clear and memorable structure.",
+  "实验": "Experiment",
+  "流程": "Flow",
+  "现象": "Phenomena",
+  "步骤清晰": "Clear steps",
+  "适合预习复盘": "Good for preview and review",
+  "可衔接结论区": "Can connect to the conclusion area",
+  "时间线记忆图": "Timeline Memory Map",
+  "把节点、阶段和重点事件做成一张可复看的结构图。": "Turn milestones, stages, and key events into a reusable structured map.",
+  "时间线": "Timeline",
+  "记忆": "Memory",
+  "结构图": "Structure Map",
+  "全局总览": "Global overview",
+  "适合反复复习": "Suitable for repeated review",
+  "文理内容都可复用": "Reusable across arts and sciences",
+  "受力分析实验台": "Force Analysis Workbench",
+  "把受力图、参数区和结论区整合成一个可视化页面。": "Combine the force diagram, parameter area, and conclusion area into one visualization page.",
+  "力学": "Mechanics",
+  "实验台": "Workbench",
+  "建模": "Modeling",
+  "适合首屏展示": "Good for the first screen",
+  "支持全屏沉浸查看": "Supports immersive fullscreen viewing",
+  "便于后续接入引擎": "Easy to connect to an engine later",
+  "平抛运动分层视图": "Layered Projectile Motion View",
+  "把水平、竖直和合运动拆分显示，适合专题理解。": "Split horizontal, vertical, and combined motion for topic-based understanding.",
+  "分解": "Decomposition",
+  "分层切换": "Layer switching",
+  "利于错题复盘": "Useful for reviewing mistakes",
+  "适合 PC 展示": "Good for PC presentation",
+  "电场与磁场可视化": "Electric and Magnetic Field Visualization",
+  "以后可扩展成更强的场线与粒子运动演示。": "This can later grow into richer field-line and particle-motion demonstrations.",
+  "电磁": "Electromagnetism",
+  "场线": "Field lines",
+  "演示": "Demo",
+  "更强科技感": "Stronger tech feel",
+  "适合后续 3D": "Good for future 3D",
+  "专题延展空间大": "Strong room for topic expansion",
+  "函数参数实验室": "Function Parameter Lab",
+  "调整参数并同步观察图像变化与性质结论。": "Adjust parameters and observe graph changes and property conclusions together.",
+  "参数": "Parameters",
+  "图像": "Graph",
+  "直接看变化": "See changes directly",
+  "适合 PC 讲解": "Good for PC-based explanation",
+  "可叠加结论提示": "Can overlay conclusion hints",
+  "立体几何观察台": "Solid Geometry Viewer",
+  "适合后续接入 3D 旋转视图，先做核心关系演示。": "A good candidate for a future 3D orbit view, starting with core relationship demos.",
+  "立几": "Solid geometry",
+  "空间": "Space",
+  "旋转": "Rotation",
+  "3D 潜力大": "Strong 3D potential",
+  "适合全屏": "Good for fullscreen",
+  "能体现引擎价值": "Shows the value of the engine",
+  "分子结构观察": "Molecular Structure Viewer",
+  "用简约科技风展示结构、键角和重点标注。": "Show structure, bond angles, and annotations in a clean tech style.",
+  "分子": "Molecule",
+  "结构": "Structure",
+  "模型": "Model",
+  "结构表达直观": "Structure is easy to read",
+  "后续可接旋转交互": "Can later add rotation interaction",
+  "知识框架地图": "Knowledge Framework Map",
+  "把知识点关系组织成结构图，适合全屏浏览和记忆。": "Organize topic relationships into a structure map that works well for fullscreen browsing and memory work.",
+  "框架": "Framework",
+  "复盘": "Review",
+  "总览清晰": "Clear overview",
+  "适合长内容": "Good for long-form content",
+  "可服务文理多学科": "Supports many subjects across arts and sciences",
+  "可开始": "Ready",
+  "优先开发": "Priority",
+  "后续扩展": "Planned",
+  "可视化页面": "Visualization Page",
+  "可视化页面预览。": "Visualization page preview.",
+  "未找到知识点": "Topic not found",
+  "这个可视化页面还没有准备好": "This visualization page is not ready yet",
+  "当前路由没有匹配到知识点数据。你可以先返回首页或知识库重新选择。": "No topic data matched the current route. Return to Home or Library and choose again.",
+  "返回首页": "Back to home",
+  "打开知识库": "Open library",
+  "返回知识点页": "Back to topics",
+  "返回学科页": "Back to subjects",
+  "参数层": "Parameters",
+  "结论层": "Conclusions",
+  "图形层": "Graphics",
+  "状态层": "State",
+  "页面状态": "Page state",
+  "科技简约": "Clean tech",
+  "当前先验证页面气质和进入流程，不急着堆过多控件。": "This screen is currently focused on validating the visual tone and entry flow, without rushing to add too many controls.",
+  "全屏能力": "Fullscreen",
+  "已支持": "Supported",
+  "点击右上角图标进入或退出全屏，按 Esc 也能退出。": "Use the top-right button to enter or exit fullscreen, and press Esc to exit too.",
+  "后续接入": "Next step",
+  "当前是静态科技画布，后面逐步替换为真实可视化引擎。": "This is currently a static tech-style canvas and will be replaced progressively by real visualization engines.",
+  "未找到学段": "Stage not found",
+  "这个学段入口不存在": "This stage entry does not exist",
+  "当前路径没有匹配到学段数据，请返回学段页重新选择。": "No stage data matched this path. Return and choose a stage again.",
+  "面包屑": "Breadcrumb",
+  "当前学段": "Current stage",
+  "每个学科继续进入下一页，知识点不在当前页堆叠展示。": "Each subject continues to the next page instead of stacking all topics on the current page.",
+  "学科工作台": "Subject workspace",
+  "未找到学科": "Subject not found",
+  "这个学科入口不存在": "This subject entry does not exist",
+  "当前路径没有匹配到学科数据，请先返回学段页重新选择。": "No subject data matched this path. Return to the stage page and choose again.",
+  "进入页面": "Open page",
+  "学习页": "Study",
+  "学习记录先本地沉淀，再逐步同步": "Keep study records locally first, then sync them gradually",
+  "当前阶段先保证本地记录稳定可用，后续再通过同步中心把本地数据同步到云端。": "At this stage the priority is stable local records, and cloud sync will be introduced later through the sync center.",
+  "学习内容": "Study content",
+  "当前重点沉淀": "Current focus",
+  "同步中心": "Sync center",
+  "后续同步规划": "Future sync plan",
+  "最近学习": "Recent study",
+  "保留最近进入的章节、实验参数与最近一次学习位置。": "Keep the most recently opened chapter, experiment parameters, and last study position.",
+  "收藏与复习": "Favorites and review",
+  "沉淀收藏内容、错题、记忆卡片与重点标记。": "Keep favorites, mistakes, memory cards, and important markers.",
+  "进度与笔记": "Progress and notes",
+  "保留学习进度、个人笔记与实验过程中的自定义记录。": "Keep study progress, personal notes, and custom records from experiments.",
+  "先建立本地数据模型与版本管理，避免后续同步时结构频繁漂移。": "Build the local data model and versioning first to avoid structural drift later during sync.",
+  "提供手动同步入口，让用户明确知道本地数据何时上云、何时回拉。": "Provide a manual sync entry so users know clearly when local data is pushed to or pulled from the cloud.",
+  "云端阶段再增加账号体系、冲突合并与跨端恢复能力。": "Add accounts, conflict merging, and cross-device recovery during the cloud phase.",
+  "偏好、本地数据与同步入口集中管理": "Manage preferences, local data, and sync in one place",
+  "当前“我的”先保持克制，重点说明后续会承接的偏好、本地数据和同步能力。": "The Me page stays intentionally minimal for now and focuses on the preferences, local data, and sync abilities it will hold later.",
+  "模块说明": "Module",
+  "偏好与内容设置": "Preferences and content settings",
+  "管理学段偏好、常用学科、主题推荐与视觉显示偏好。": "Manage stage preferences, frequently used subjects, theme suggestions, and display preferences.",
+  "默认学段": "Default stage",
+  "常用学科": "Frequent subjects",
+  "主题模式": "Theme mode",
+  "播放与动效偏好": "Playback and motion preferences",
+  "本地数据与同步": "Local data and sync",
+  "后续会从这里进入本地数据导出、同步状态查看与手动同步。": "This will later be the entry for exporting local data, checking sync status, and manual sync.",
+  "本地数据概览": "Local data overview",
+  "最近同步状态": "Recent sync status",
+  "手动同步入口": "Manual sync entry",
+  "恢复与迁移": "Restore and migrate",
+  "可视化教学 Web App 基座，面向 PC 与 H5，采用本地优先的数据策略。": "The Visual Learning web app foundation targets PC and H5 with a local-first data strategy.",
+  "按学段、学科与章节组织可视化教学内容的一级入口。": "The primary entry for visualization content organized by stage, subject, and topic.",
+  "偏好、本地数据、同步设置与账号能力的一级入口。": "The primary entry for preferences, local data, sync settings, and account abilities.",
+  "学习记录、收藏、复习与同步中心的一级入口。": "The primary entry for study records, favorites, review, and the sync center.",
+};
+
+const EXACT_PATTERN_TRANSLATIONS: Array<[RegExp, string]> = [
+  [/^(\d+) 个学科$/, "$1 subjects"],
+  [/^(\d+) 个知识点$/, "$1 topics"],
+  [/^(\d+) 个知识点入口$/, "$1 topic entries"],
+  [/^总时长 (.+) s$/, "Duration $1 s"],
+  [/^本段 (.+) m$/, "This segment $1 m"],
+];
+
+export function translateText(locale: AppLocale, text: string) {
+  if (locale === "zh-CN") {
+    return text;
+  }
+
+  const exact = EXACT_TRANSLATIONS[text];
+  if (exact) {
+    return exact;
+  }
+
+  for (const [pattern, replacement] of EXACT_PATTERN_TRANSLATIONS) {
+    if (pattern.test(text)) {
+      return text.replace(pattern, replacement);
+    }
+  }
+
+  return text;
+}

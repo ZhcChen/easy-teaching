@@ -1,3 +1,4 @@
+import { useDocumentMeta, useLocale } from "../i18n";
 import type { Route } from "./+types/me";
 
 export function meta({}: Route.MetaArgs) {
@@ -11,14 +12,21 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function MePage() {
+  const { tt } = useLocale();
+
+  useDocumentMeta({
+    title: `${tt("可视化教学")} · ${tt("我的")}`,
+    description: tt("偏好、本地数据、同步设置与账号能力的一级入口。"),
+  });
+
   return (
     <div className="page-stack">
       <section className="hero-surface">
-        <span className="eyebrow-chip">我的</span>
+        <span className="eyebrow-chip">{tt("我的")}</span>
         <div className="hero-copy-block">
-          <h2 className="hero-heading">偏好、本地数据与同步入口集中管理</h2>
+          <h2 className="hero-heading">{tt("偏好、本地数据与同步入口集中管理")}</h2>
           <p className="hero-paragraph">
-            当前“我的”先保持克制，重点说明后续会承接的偏好、本地数据和同步能力。
+            {tt("当前“我的”先保持克制，重点说明后续会承接的偏好、本地数据和同步能力。")}
           </p>
         </div>
       </section>
@@ -27,14 +35,14 @@ export default function MePage() {
       {sections.map((section) => (
         <section key={section.title} className="surface-panel">
           <div>
-            <p className="surface-eyebrow">模块说明</p>
-            <h2 className="surface-title">{section.title}</h2>
-            <p className="surface-copy">{section.description}</p>
+            <p className="surface-eyebrow">{tt("模块说明")}</p>
+            <h2 className="surface-title">{tt(section.title)}</h2>
+            <p className="surface-copy">{tt(section.description)}</p>
           </div>
           <ul className="list-stack">
             {section.items.map((item) => (
               <li key={item} className="list-card">
-                <p className="list-card-title">{item}</p>
+                <p className="list-card-title">{tt(item)}</p>
               </li>
             ))}
           </ul>

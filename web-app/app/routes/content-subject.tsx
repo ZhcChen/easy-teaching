@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 
 import { StatusPanel } from "../components/status-panel";
+import { useDocumentMeta, useLocale } from "../i18n";
 import { getSubjectByStageAndId } from "../data/teaching-catalog";
 import type { Route } from "./+types/content-subject";
 
@@ -23,22 +24,32 @@ export function meta({ params }: Route.MetaArgs) {
 }
 
 export default function ContentSubjectPage({ params }: Route.ComponentProps) {
+  const { tt } = useLocale();
   const data = getSubjectByStageAndId(params.stageId ?? "", params.subjectId ?? "");
+
+  useDocumentMeta({
+    title: data
+      ? `${tt("可视化教学")} · ${tt(data.stage.label)} ${tt(data.subject.label)}`
+      : `${tt("可视化教学")} · ${tt("知识点")}`,
+    description: data
+      ? `${tt(data.stage.label)} · ${tt(data.subject.label)}`
+      : tt("知识点"),
+  });
 
   if (!data) {
     return (
       <StatusPanel
-        eyebrow="未找到学科"
-        title="这个学科入口不存在"
-        description="当前路径没有匹配到学科数据，请先返回学段页重新选择。"
+        eyebrow={tt("未找到学科")}
+        title={tt("这个学科入口不存在")}
+        description={tt("当前路径没有匹配到学科数据，请先返回学段页重新选择。")}
         tone="danger"
         actions={
           <>
             <Link to="/content" className="action-link is-primary">
-              返回知识库
+              {tt("知识库")}
             </Link>
             <Link to="/" className="action-link">
-              返回首页
+              {tt("返回首页")}
             </Link>
           </>
         }
@@ -50,20 +61,20 @@ export default function ContentSubjectPage({ params }: Route.ComponentProps) {
 
   return (
     <div className="page-stack">
-      <nav className="breadcrumb subject-topic-breadcrumb" aria-label="面包屑">
+      <nav className="breadcrumb subject-topic-breadcrumb" aria-label={tt("面包屑")}>
         <Link to="/" className="breadcrumb-link">
-          首页
+          {tt("首页")}
         </Link>
         <span className="breadcrumb-separator">/</span>
         <Link to="/content" className="breadcrumb-link">
-          知识库
+          {tt("知识库")}
         </Link>
         <span className="breadcrumb-separator">/</span>
         <Link to={`/content/${stage.id}`} className="breadcrumb-link">
-          {stage.label}
+          {tt(stage.label)}
         </Link>
         <span className="breadcrumb-separator">/</span>
-        <span className="breadcrumb-current">{subject.label}</span>
+        <span className="breadcrumb-current">{tt(subject.label)}</span>
       </nav>
 
       <section className="content-flow-section">
@@ -90,26 +101,26 @@ export default function ContentSubjectPage({ params }: Route.ComponentProps) {
                   <div className="entry-card-badges">
                     {modeBadges.map((badge) => (
                       <span key={badge.label} className={`entry-badge${badge.soft ? " is-soft" : ""}`}>
-                        {badge.label}
+                        {tt(badge.label)}
                       </span>
                     ))}
                   </div>
-                  <span className="entry-card-arrow">进入页面</span>
+                  <span className="entry-card-arrow">{tt("进入页面")}</span>
                 </div>
 
                 <div className="entry-card-body topic-tech-body">
-                  <h3 className="entry-card-title">{topic.title}</h3>
+                  <h3 className="entry-card-title">{tt(topic.title)}</h3>
                 </div>
 
                 <div className="topic-tech-tags">
                   {topic.tags.slice(0, 2).map((tag) => (
                     <span key={tag} className="topic-tech-tag">
-                      {tag}
+                      {tt(tag)}
                     </span>
                   ))}
                   {topic.highlights.slice(0, 1).map((item) => (
                     <span key={item} className="topic-tech-tag is-muted">
-                      {item}
+                      {tt(item)}
                     </span>
                   ))}
                 </div>

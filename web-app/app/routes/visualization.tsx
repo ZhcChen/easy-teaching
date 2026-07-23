@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import { BasicForceLab } from "../components/basic-force-lab";
 import { MotionTrackLab } from "../components/motion-track-lab";
 import { StatusPanel } from "../components/status-panel";
+import { useDocumentMeta, useLocale } from "../i18n";
 import { getTopicById, type TeachingTopic } from "../data/teaching-catalog";
 import type { Route } from "./+types/visualization";
 
@@ -26,9 +27,19 @@ export function meta({ params }: Route.MetaArgs) {
 }
 
 export default function VisualizationPage({ params }: Route.ComponentProps) {
+  const { tt } = useLocale();
   const topicData = getTopicById(params.topicId ?? "");
   const fullscreenRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useDocumentMeta({
+    title: topicData
+      ? `${tt("可视化页面")} · ${tt(topicData.topic.title)}`
+      : tt("可视化页面"),
+    description: topicData
+      ? `${tt(topicData.topic.title)} · ${tt("可视化页面预览。")}`
+      : tt("可视化页面预览。"),
+  });
 
   useEffect(() => {
     function handleFullscreenChange() {
@@ -70,17 +81,17 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
   if (!topicData) {
     return (
       <StatusPanel
-        eyebrow="未找到知识点"
-        title="这个可视化页面还没有准备好"
-        description="当前路由没有匹配到知识点数据。你可以先返回首页或知识库重新选择。"
+        eyebrow={tt("未找到知识点")}
+        title={tt("这个可视化页面还没有准备好")}
+        description={tt("当前路由没有匹配到知识点数据。你可以先返回首页或知识库重新选择。")}
         tone="danger"
         actions={
           <>
             <Link to="/" className="action-link is-primary">
-              返回首页
+              {tt("返回首页")}
             </Link>
             <Link to="/content" className="action-link">
-              打开知识库
+              {tt("打开知识库")}
             </Link>
           </>
         }
@@ -119,10 +130,10 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
       {isImmersiveLab ? null : (
         <div className="action-row">
           <Link to={`/content/${stage.id}/${subject.id}`} className="action-link is-primary">
-            返回知识点页
+            {tt("返回知识点页")}
           </Link>
           <Link to={`/content/${stage.id}`} className="action-link">
-            返回学科页
+            {tt("返回学科页")}
           </Link>
         </div>
       )}
@@ -143,6 +154,8 @@ function DefaultVisualizationShell({
   onToggleFullscreen,
   fullscreenRef,
 }: DefaultVisualizationShellProps) {
+  const { tt } = useLocale();
+
   return (
     <section ref={fullscreenRef} className="visual-shell">
       <div className="visual-canvas">
@@ -152,8 +165,8 @@ function DefaultVisualizationShell({
             void onToggleFullscreen();
           }}
           className="fullscreen-button is-floating"
-          aria-label={isFullscreen ? "退出全屏" : "进入全屏"}
-          title={isFullscreen ? "退出全屏" : "进入全屏"}
+          aria-label={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
+          title={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
         >
           {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
         </button>
@@ -167,9 +180,9 @@ function DefaultVisualizationShell({
           <div className="visual-metric-grid">
             {sceneMetrics.map((metric) => (
               <article key={metric.label} className="visual-metric-card">
-                <p className="surface-eyebrow">{metric.label}</p>
-                <p className="visual-metric-value">{metric.value}</p>
-                <p className="visual-metric-copy">{metric.detail}</p>
+                <p className="surface-eyebrow">{tt(metric.label)}</p>
+                <p className="visual-metric-value">{tt(metric.value)}</p>
+                <p className="visual-metric-copy">{tt(metric.detail)}</p>
               </article>
             ))}
           </div>
@@ -179,16 +192,16 @@ function DefaultVisualizationShell({
             <div className="visual-orbit visual-orbit-md" />
             <div className="visual-core" />
             <div className="floating-note floating-note-a">
-              参数层
+              {tt("参数层")}
             </div>
             <div className="floating-note floating-note-b">
-              结论层
+              {tt("结论层")}
             </div>
             <div className="floating-note floating-note-c">
-              图形层
+              {tt("图形层")}
             </div>
             <div className="floating-note floating-note-d">
-              状态层
+              {tt("状态层")}
             </div>
             <div className="visual-centerpiece-spacer" />
           </div>
@@ -196,7 +209,7 @@ function DefaultVisualizationShell({
           <div className="visual-detail-grid">
             {topic.highlights.map((item) => (
               <article key={item} className="visual-detail-card">
-                <p>{item}</p>
+                <p>{tt(item)}</p>
               </article>
             ))}
           </div>

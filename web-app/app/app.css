@@ -281,6 +281,10 @@ a:focus-visible {
     0 8px 20px rgba(15, 31, 56, 0.06);
 }
 
+.theme-switch.is-locale {
+  width: 88px;
+}
+
 .theme-switch-indicator {
   position: absolute;
   top: 2px;

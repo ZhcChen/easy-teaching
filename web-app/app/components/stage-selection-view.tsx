@@ -1,21 +1,24 @@
 import { Link } from "react-router";
 
+import { useLocale } from "../i18n";
 import { teachingStages } from "../data/teaching-catalog";
 
 export function StageSelectionView() {
+  const { tt } = useLocale();
+
   return (
     <div className="page-stack">
       <section className="content-flow-section stage-selection-flow">
         <div className="section-header stage-selection-header">
           <div className="stage-selection-title-block">
             <p className="section-kicker">Step 01</p>
-            <h1 className="section-title stage-selection-title">选择学段</h1>
-            <p className="stage-selection-copy">先确定学习范围，再逐页进入学科与知识点页面。</p>
+            <h1 className="section-title stage-selection-title">{tt("选择学段")}</h1>
+            <p className="stage-selection-copy">{tt("先确定学习范围，再逐页进入学科与知识点页面。")}</p>
           </div>
-          <div className="stage-selection-pills" aria-label="界面特性">
+          <div className="stage-selection-pills" aria-label={tt("界面特性")}>
             {featurePills.map((item) => (
               <span key={item} className="stage-selection-pill">
-                {item}
+                {tt(item)}
               </span>
             ))}
           </div>
@@ -51,18 +54,18 @@ export function StageSelectionView() {
                     <span className="entry-card-index">
                       {stage.id === "junior" ? "01" : "02"}
                     </span>
-                    <span className="stage-card-channel">教学入口</span>
+                    <span className="stage-card-channel">{tt("教学入口")}</span>
                   </div>
-                  <span className="entry-card-arrow">进入学科页</span>
+                  <span className="entry-card-arrow">{tt("进入学科页")}</span>
                 </div>
 
                 <div className="entry-card-body stage-card-body">
-                  <h3 className="entry-card-title">{stage.label}</h3>
-                  <p className="entry-card-copy">{stage.description}</p>
+                  <h3 className="entry-card-title">{tt(stage.label)}</h3>
+                  <p className="entry-card-copy">{tt(stage.description)}</p>
                   <div className="stage-card-tags">
                     {subjectPreview.map((subject) => (
                       <span key={subject} className="stage-card-tag">
-                        {subject}
+                        {tt(subject)}
                       </span>
                     ))}
                   </div>
@@ -70,21 +73,21 @@ export function StageSelectionView() {
 
                 <div className="stage-card-metrics">
                   <article className="stage-card-metric">
-                    <span className="stage-card-metric-label">学科</span>
+                    <span className="stage-card-metric-label">{tt("学科")}</span>
                     <strong className="stage-card-metric-value">{stage.subjects.length}</strong>
                   </article>
                   <article className="stage-card-metric">
-                    <span className="stage-card-metric-label">知识点</span>
+                    <span className="stage-card-metric-label">{tt("知识点")}</span>
                     <strong className="stage-card-metric-value">{topicCount}</strong>
                   </article>
                   <article className="stage-card-metric">
-                    <span className="stage-card-metric-label">模式</span>
+                    <span className="stage-card-metric-label">{tt("模式")}</span>
                     <strong className="stage-card-metric-value is-text">{stageMode}</strong>
                   </article>
                 </div>
 
                 <div className="stage-card-footer">
-                  <span className="stage-card-track">{stageTrack}</span>
+                  <span className="stage-card-track">{tt(stageTrack)}</span>
                   <span className="stage-card-footer-line" aria-hidden="true" />
                 </div>
               </Link>

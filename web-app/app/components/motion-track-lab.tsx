@@ -20,6 +20,7 @@ import {
 import { StatusPill } from "./status-pill";
 import { VisualModeSwitch } from "./visual-mode-switch";
 import type { TeachingTopic } from "../data/teaching-catalog";
+import { useLocale } from "../i18n";
 
 type MotionMode = "uniform" | "accelerating" | "braking";
 type MotionViewMode = "2d" | "3d";
@@ -172,6 +173,7 @@ export function MotionTrackLab({
   onToggleFullscreen,
   fullscreenRef,
 }: MotionTrackLabProps) {
+  const { isZh, tt } = useLocale();
   const [mode, setMode] = useState<MotionMode>("uniform");
   const [viewMode, setViewMode] = useState<MotionViewMode>(readStoredMotionViewMode);
   const [isControlPanelCollapsed, setIsControlPanelCollapsed] =
@@ -362,12 +364,12 @@ export function MotionTrackLab({
   const hasEnded = currentTime >= duration;
   const hasProgress = currentTime > 0;
   const primaryActionLabel = isPlaying
-    ? "暂停播放"
+    ? tt("暂停播放")
     : hasEnded
-      ? "重新播放"
+      ? tt("重新播放")
       : hasProgress
-        ? "继续播放"
-        : "开始播放";
+        ? tt("继续播放")
+        : tt("开始播放");
   const progress = duration === 0 ? 0 : currentTime / duration;
   const velocityArrowLength =
     currentMotion.velocity <= 0 ? 0 : 72 + 110 * (currentMotion.velocity / velocityDomain);
@@ -383,6 +385,10 @@ export function MotionTrackLab({
     "--motion-accent": preset.accent,
     "--motion-accent-soft": preset.accentSoft,
   } as CSSProperties;
+  const motionViewOptions = MOTION_VIEW_OPTIONS.map((item) => ({
+    ...item,
+    title: tt(item.title),
+  }));
 
   function applyPreset(nextMode: MotionMode) {
     const nextPreset = MOTION_PRESETS[nextMode];
@@ -456,8 +462,8 @@ export function MotionTrackLab({
                 type="button"
                 className="force-panel-toggle is-collapsed-only"
                 onClick={() => setIsControlPanelCollapsed(false)}
-                aria-label="展开参数控制面板"
-                title="展开参数控制面板"
+                aria-label={tt("展开参数控制面板")}
+                title={tt("展开参数控制面板")}
               >
                 <PanelChevronIcon collapsed />
               </button>
@@ -466,30 +472,30 @@ export function MotionTrackLab({
             <>
               <div className="force-control-header">
                 <div className="force-control-title-block">
-                  <h4 className="force-control-title">参数控制</h4>
+                  <h4 className="force-control-title">{tt("参数控制")}</h4>
                 </div>
                 <button
                   type="button"
                   className="force-panel-toggle"
                   onClick={() => setIsControlPanelCollapsed(true)}
-                  aria-label="收起参数控制面板"
-                  title="收起参数控制面板"
+                  aria-label={tt("收起参数控制面板")}
+                  title={tt("收起参数控制面板")}
                 >
                   <PanelChevronIcon collapsed={false} />
                 </button>
               </div>
 
               <div className="force-control-scroll motion-control-scroll">
-                <ControlPanelSection title="实验控制" accent className="motion-panel-section">
+                <ControlPanelSection title={tt("实验控制")} accent className="motion-panel-section">
                   <ControlStatusBar
                     className="motion-panel-toolbar"
                     itemsClassName="motion-toolbar-status"
                     items={[
-                      <StatusPill key="mode">{preset.label}</StatusPill>,
-                      <StatusPill key="duration">总时长 {formatNumber(duration, 1)} s</StatusPill>,
+                      <StatusPill key="mode">{tt(preset.label)}</StatusPill>,
+                      <StatusPill key="duration">{tt(`总时长 ${formatNumber(duration, 1)} s`)}</StatusPill>,
                     ]}
                     status={
-                      <StatusPill tone={summary.stateTone}>{summary.stateLabel}</StatusPill>
+                      <StatusPill tone={summary.stateTone}>{tt(summary.stateLabel)}</StatusPill>
                     }
                   />
 
@@ -509,13 +515,13 @@ export function MotionTrackLab({
                       {primaryActionLabel}
                     </ControlButton>
                     <ControlButton size="compact" onClick={resetDefaults}>
-                      重置
+                      {tt("重置")}
                     </ControlButton>
                   </div>
 
                   <ControlRange
                     id="motion-track-time"
-                    label="时间轴"
+                    label={tt("时间轴")}
                     unit="s"
                     min={0}
                     max={duration}
@@ -539,24 +545,24 @@ export function MotionTrackLab({
                   />
                 </ControlPanelSection>
 
-                <ControlPanelSection title="运动模式" className="motion-panel-section">
+                <ControlPanelSection title={tt("运动模式")} className="motion-panel-section">
                   <ControlChipGroup
                     items={Object.values(MOTION_PRESETS).map((item) => ({
                       key: item.mode,
-                      label: item.badge,
+                      label: tt(item.badge),
                       active: mode === item.mode,
-                      ariaLabel: item.label,
-                      title: item.description,
+                      ariaLabel: tt(item.label),
+                      title: tt(item.description),
                       onClick: () => applyPreset(item.mode),
                     }))}
                     columns={3}
                   />
                 </ControlPanelSection>
 
-                <ControlPanelSection title="核心参数" className="motion-panel-section">
+                <ControlPanelSection title={tt("核心参数")} className="motion-panel-section">
                   <ControlRange
                     id="motion-track-v0"
-                    label="初速度"
+                    label={tt("初速度")}
                     unit="m/s"
                     min={0.4}
                     max={60}
@@ -569,7 +575,7 @@ export function MotionTrackLab({
 
                   <ControlRange
                     id="motion-track-acceleration"
-                    label={mode === "braking" ? "加速度（负）" : "加速度"}
+                    label={mode === "braking" ? tt("加速度（负）") : tt("加速度")}
                     unit="m/s²"
                     min={mode === "braking" ? -2.2 : mode === "uniform" ? 0 : 0.2}
                     max={mode === "braking" ? -0.2 : mode === "uniform" ? 0 : 1.8}
@@ -583,7 +589,7 @@ export function MotionTrackLab({
 
                   <ControlRange
                     id="motion-track-duration"
-                    label="演示时长"
+                    label={tt("演示时长")}
                     unit="s"
                     min={4}
                     max={100}
@@ -595,26 +601,26 @@ export function MotionTrackLab({
                   />
                 </ControlPanelSection>
 
-                <ControlPanelSection title="显示项" className="motion-panel-section">
+                <ControlPanelSection title={tt("显示项")} className="motion-panel-section">
                   <ControlChipGroup
                     items={
                       viewMode === "2d"
                         ? [
                             {
                               key: "trail",
-                              label: "位移拖尾",
+                              label: tt("位移拖尾"),
                               active: viewOptions.showTrail,
                               onClick: () => toggleView("showTrail"),
                             },
                             {
                               key: "samples",
-                              label: "秒级采样点",
+                              label: tt("秒级采样点"),
                               active: viewOptions.showSamples,
                               onClick: () => toggleView("showSamples"),
                             },
                             {
                               key: "velocity-curve",
-                              label: "速度曲线",
+                              label: tt("速度曲线"),
                               active: viewOptions.showVelocityCurve,
                               onClick: () => toggleView("showVelocityCurve"),
                             },
@@ -622,20 +628,20 @@ export function MotionTrackLab({
                         : [
                             {
                               key: "trail",
-                              label: "运动拖尾",
+                              label: tt("运动拖尾"),
                               active: viewOptions.showTrail,
                               onClick: () => toggleView("showTrail"),
                             },
                             {
                               key: "velocity-arrow",
-                              label: "速度箭头",
+                              label: tt("速度箭头"),
                               active: viewOptions.showVelocityArrow,
                               onClick: () => toggleView("showVelocityArrow"),
                             },
                             {
                               key: "acceleration-arrow",
                               label:
-                                acceleration < 0 ? "减速度箭头" : "加速度箭头",
+                                acceleration < 0 ? tt("减速度箭头") : tt("加速度箭头"),
                               active: viewOptions.showAccelerationArrow,
                               onClick: () => toggleView("showAccelerationArrow"),
                             },
@@ -663,15 +669,15 @@ export function MotionTrackLab({
                 void onToggleFullscreen();
               }}
               className="fullscreen-button is-floating"
-              aria-label={isFullscreen ? "退出全屏" : "进入全屏"}
-              title={isFullscreen ? "退出全屏" : "进入全屏"}
+              aria-label={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
+              title={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
             >
               {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
             </button>
             <VisualModeSwitch
               className="motion-stage-view-switch"
               value={viewMode}
-              options={MOTION_VIEW_OPTIONS}
+              options={motionViewOptions}
               onChange={(nextValue) => setViewMode(nextValue as MotionViewMode)}
             />
             <div className="visual-grid-layer" />
@@ -685,7 +691,7 @@ export function MotionTrackLab({
               viewBox={`0 0 ${SVG_STAGE.width} ${SVG_STAGE.height}`}
               className="motion-stage-svg"
               role="img"
-              aria-label={`${topic.title}可视化示意图`}
+              aria-label={isZh ? `${tt(topic.title)}可视化示意图` : `${tt(topic.title)} visualization`}
             >
               <defs>
                 <linearGradient id="motion-stage-line-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -720,10 +726,10 @@ export function MotionTrackLab({
               />
 
               <text x={SVG_STAGE.panelX + 36} y={SVG_STAGE.panelY + 30} className="motion-stage-panel-title">
-                轨道视图
+                {tt("轨道视图")}
               </text>
               <text x={SVG_STAGE.panelX + 36} y={SVG_STAGE.panelY + 54} className="motion-stage-panel-copy">
-                看采样点间距，判断速度变化。
+                {tt("看采样点间距，判断速度变化。")}
               </text>
 
               {Array.from({ length: TRACK_TICK_COUNT }).map((_, index) => {
@@ -774,7 +780,7 @@ export function MotionTrackLab({
 
               <circle cx={SVG_STAGE.trackLeft} cy={SVG_STAGE.trackY} r="8" className="motion-stage-origin-dot" />
               <text x={SVG_STAGE.trackLeft - 10} y={SVG_STAGE.trackY - 34} className="motion-stage-ruler-label">
-                原点
+                {tt("原点")}
               </text>
 
               {viewOptions.showSamples
@@ -822,7 +828,7 @@ export function MotionTrackLab({
                     className="motion-stage-stop-line"
                   />
                   <text x={stopTrackX} y={SVG_STAGE.trackY - 124} textAnchor="middle" className="motion-stage-stop-label">
-                    停止点
+                    {tt("停止点")}
                   </text>
                 </g>
               ) : null}
@@ -875,9 +881,9 @@ export function MotionTrackLab({
                 className="motion-stage-graph-shell"
               />
               <text x={SVG_STAGE.panelX + 28} y={SVG_STAGE.graphY + 34} className="motion-stage-panel-title">
-                位移 - 时间
+                {tt("位移 - 时间")}
                 <tspan className="motion-stage-panel-note-inline">
-                  （曲线斜率越大，表示速度越快。）
+                  {tt("（曲线斜率越大，表示速度越快。）")}
                 </tspan>
               </text>
 
@@ -963,9 +969,9 @@ export function MotionTrackLab({
                 y={SVG_STAGE.graphY + 34}
                 className="motion-stage-panel-title"
               >
-                速度 - 时间
+                {tt("速度 - 时间")}
                 <tspan className="motion-stage-panel-note-inline">
-                  （这条线越高，说明同一时刻速度越大。）
+                  {tt("（这条线越高，说明同一时刻速度越大。）")}
                 </tspan>
               </text>
 
@@ -1047,7 +1053,7 @@ export function MotionTrackLab({
                   textAnchor="middle"
                   className="motion-stage-graph-placeholder"
                 >
-                  速度曲线已隐藏，可在左侧重新打开
+                  {tt("速度曲线已隐藏，可在左侧重新打开")}
                 </text>
               )}
             </svg>
@@ -1066,19 +1072,19 @@ export function MotionTrackLab({
                   <div className="motion-stage-3d-hud">
                     <div className="motion-stage-hud-head is-compact">
                       <span className="motion-stage-mode-pill">3D</span>
-                      <span className="motion-stage-kpi-pill">第三人称跟随</span>
-                      <span className="motion-stage-kpi-pill">左拖旋转 · 滚轮缩放</span>
-                      <span className="motion-stage-kpi-pill">蓝箭头 = 速度</span>
+                      <span className="motion-stage-kpi-pill">{tt("第三人称跟随")}</span>
+                      <span className="motion-stage-kpi-pill">{tt("左拖旋转 · 滚轮缩放")}</span>
+                      <span className="motion-stage-kpi-pill">{tt("蓝箭头 = 速度")}</span>
                       <span className="motion-stage-kpi-pill">
                         {Math.abs(currentMotion.acceleration) < 0.02
-                          ? "当前 a ≈ 0"
+                          ? tt("当前 a ≈ 0")
                           : currentMotion.acceleration < 0
-                          ? "橙箭头 = 减速度"
-                          : "绿箭头 = 加速度"}
+                          ? tt("橙箭头 = 减速度")
+                          : tt("绿箭头 = 加速度")}
                       </span>
                     </div>
                     <p className="motion-stage-note is-compact">
-                      {summary.observation}
+                      {tt(summary.observation)}
                     </p>
                   </div>
                 </div>
@@ -1089,11 +1095,11 @@ export function MotionTrackLab({
               <div className="motion-stage-summary-bar">
                 <div className="motion-stage-summary-main">
                   <div className="motion-stage-hud-head is-compact">
-                    <span className="motion-stage-mode-pill">{preset.badge}</span>
-                    <StatusPill tone={summary.stateTone}>{summary.stateLabel}</StatusPill>
+                    <span className="motion-stage-mode-pill">{tt(preset.badge)}</span>
+                    <StatusPill tone={summary.stateTone}>{tt(summary.stateLabel)}</StatusPill>
                     {activeInterval ? (
                       <span className="motion-stage-kpi-pill">
-                        本段 {formatNumber(activeInterval.distance, 1)} m
+                        {tt(`本段 ${formatNumber(activeInterval.distance, 1)} m`)}
                       </span>
                     ) : null}
                   </div>
@@ -1104,26 +1110,26 @@ export function MotionTrackLab({
 
                 <div className="motion-stage-stat-strip">
                   <article className="motion-stage-stat-item">
-                    <span>时间</span>
+                    <span>{tt("时间")}</span>
                     <strong>{formatNumber(currentMotion.time, 1)} s</strong>
                   </article>
                   <article className="motion-stage-stat-item">
-                    <span>速度</span>
+                    <span>{tt("速度")}</span>
                     <strong>{formatNumber(currentMotion.velocity, 1)} m/s</strong>
                   </article>
                   <article className="motion-stage-stat-item">
-                    <span>位移</span>
+                    <span>{tt("位移")}</span>
                     <strong>{formatNumber(currentMotion.position, 1)} m</strong>
                   </article>
                   <article className="motion-stage-stat-item">
-                    <span>加速度</span>
+                    <span>{tt("加速度")}</span>
                     <strong>{formatNumber(currentMotion.acceleration, 2)} m/s²</strong>
                   </article>
                 </div>
 
                 <div className="motion-stage-summary-conclusion">
-                  <span className="motion-stage-summary-label">结论</span>
-                  <strong className="motion-stage-conclusion is-compact">{summary.conclusion}</strong>
+                  <span className="motion-stage-summary-label">{tt("结论")}</span>
+                  <strong className="motion-stage-conclusion is-compact">{tt(summary.conclusion)}</strong>
                 </div>
               </div>
             </div>

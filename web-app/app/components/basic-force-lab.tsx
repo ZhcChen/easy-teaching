@@ -17,6 +17,7 @@ import { ControlStatusBar } from "./control-status-bar";
 import { StatusPill } from "./status-pill";
 import { VisualModeSwitch } from "./visual-mode-switch";
 import type { TeachingTopic } from "../data/teaching-catalog";
+import { useLocale } from "../i18n";
 
 type ForceKey = "gravity" | "normal" | "pull" | "friction" | "net";
 type MotionState = "rest" | "threshold" | "sliding";
@@ -307,6 +308,7 @@ export function BasicForceLab({
   onToggleFullscreen,
   fullscreenRef,
 }: BasicForceLabProps) {
+  const { isZh, tt } = useLocale();
   const [mode, setMode] = useState<ForceExperimentMode>(DEFAULT_VALUES.mode);
   const [viewMode, setViewMode] = useState<ForceViewMode>(readStoredForceViewMode);
   const [isControlPanelCollapsed, setIsControlPanelCollapsed] =
@@ -943,17 +945,17 @@ export function BasicForceLab({
         ];
   const primaryActionLabel = isManualMode
     ? manualIsRecording
-      ? "停止记录"
+      ? tt("停止记录")
       : manualHasPlaybackStarted
-        ? "重新记录"
-        : "开始记录"
+        ? tt("重新记录")
+        : tt("开始记录")
     : isExperimentRunning
-      ? "暂停实验"
+      ? tt("暂停实验")
       : hasPartialPlayback
-        ? "继续播放"
+        ? tt("继续播放")
         : hasPlaybackStarted
-          ? "重新播放"
-          : "开始实验";
+          ? tt("重新播放")
+          : tt("开始实验");
 
   const horizontalMax = Math.max(
     metrics.breakawayForce,
@@ -967,6 +969,10 @@ export function BasicForceLab({
     FORCE_MODE_OPTIONS.find((item) => item.key === mode)?.label ?? "实验测量";
   const forceViewOptions =
     isManualMode ? FORCE_VIEW_OPTIONS.filter((item) => item.key === "2d") : FORCE_VIEW_OPTIONS;
+  const localizedForceViewOptions = forceViewOptions.map((item) => ({
+    ...item,
+    title: tt(item.title),
+  }));
   const forceGuideX = forceGraph.mapTime(currentTimelineSample.timeSeconds);
   const thresholdLineY = forceGraph.mapValue(metrics.staticLimit);
   const currentPullPoint = {
@@ -1346,8 +1352,8 @@ export function BasicForceLab({
                 type="button"
                 className="force-panel-toggle is-collapsed-only"
                 onClick={() => setIsControlPanelCollapsed(false)}
-                aria-label="展开控制面板"
-                title="展开控制面板"
+                aria-label={tt("展开控制面板")}
+                title={tt("展开控制面板")}
               >
                 <PanelChevronIcon collapsed />
               </button>
@@ -1356,30 +1362,30 @@ export function BasicForceLab({
             <>
               <div className="force-control-header">
                 <div className="force-control-title-block">
-                  <h4 className="force-control-title">控制面板</h4>
-                  <p className="force-control-copy">先改变量，再播放实验。</p>
+                  <h4 className="force-control-title">{tt("控制面板")}</h4>
+                  <p className="force-control-copy">{tt("先改变量，再播放实验。")}</p>
                 </div>
                 <button
                   type="button"
                   className="force-panel-toggle"
                   onClick={() => setIsControlPanelCollapsed(true)}
-                  aria-label="收起控制面板"
-                  title="收起控制面板"
+                  aria-label={tt("收起控制面板")}
+                  title={tt("收起控制面板")}
                 >
                   <PanelChevronIcon collapsed={false} />
                 </button>
               </div>
 
               <div className="force-control-scroll basic-force-control-scroll">
-                <ControlPanelSection title="实验控制" hint="先预测，再播放，再对比" accent>
+                <ControlPanelSection title={tt("实验控制")} hint={tt("先预测，再播放，再对比")} accent>
                   <ControlChipGroup
                     columns={3}
                     size="dense"
                     items={FORCE_MODE_OPTIONS.map((item) => ({
                       key: item.key,
-                      label: item.label,
+                      label: tt(item.label),
                       active: mode === item.key,
-                      title: item.title,
+                      title: tt(item.title),
                       onClick: () => setMode(item.key as ForceExperimentMode),
                     }))}
                   />
@@ -1387,7 +1393,7 @@ export function BasicForceLab({
                   {mode === "constant-pull" ? (
                     <ControlRange
                       id="force-constant-pull"
-                      label="恒定拉力"
+                      label={tt("恒定拉力")}
                       unit="N"
                       min={0.2}
                       max={8}
@@ -1399,20 +1405,20 @@ export function BasicForceLab({
 
                   {mode === "manual-drag" ? (
                     <p className="force-inline-copy">
-                      先点开始记录，再到右侧 2D 实验区拖动木块。拖动越快，拉力、合力和下方图表变化越明显。
+                      {tt("先点开始记录，再到右侧 2D 实验区拖动木块。拖动越快，拉力、合力和下方图表变化越明显。")}
                     </p>
                   ) : null}
 
                   <ControlStatusBar
                     items={[
                       <StatusPill key="state" tone={displayedScene.stateTone}>
-                        {displayedScene.stateLabel}
+                        {tt(displayedScene.stateLabel)}
                       </StatusPill>,
-                      <StatusPill key="mode">{displayedScene.frictionModeLabel}</StatusPill>,
+                      <StatusPill key="mode">{tt(displayedScene.frictionModeLabel)}</StatusPill>,
                       mode === "measurement" ? (
                         <StatusPill key="limit">f静,max {formatNumber(metrics.staticLimit, 1)} N</StatusPill>
                       ) : mode === "manual-drag" ? (
-                        <StatusPill key="manual">拖动画布</StatusPill>
+                        <StatusPill key="manual">{tt("拖动画布")}</StatusPill>
                       ) : (
                         <StatusPill key="pull">F恒 {formatNumber(constantPullForce, 1)} N</StatusPill>
                       ),
@@ -1422,7 +1428,7 @@ export function BasicForceLab({
                   {mode === "manual-drag" ? (
                     <ControlRange
                       id="force-manual-progress"
-                      label="记录时长"
+                      label={tt("记录时长")}
                       unit="s"
                       min={0}
                       max={MANUAL_TIMELINE_MAX_MS / 1000}
@@ -1435,7 +1441,7 @@ export function BasicForceLab({
                   ) : (
                     <ControlRange
                       id="force-experiment-progress"
-                      label="实验时间轴"
+                      label={tt("实验时间轴")}
                       min={0}
                       max={totalExperimentMs}
                       step={10}
@@ -1466,15 +1472,15 @@ export function BasicForceLab({
                       {primaryActionLabel}
                     </ControlButton>
                     <ControlButton size="compact" onClick={resetDefaults}>
-                      重置
+                      {tt("重置")}
                     </ControlButton>
                   </div>
                 </ControlPanelSection>
 
-                <ControlPanelSection title="压力 / 正压力" hint="直接改变 N 的大小">
+                <ControlPanelSection title={tt("压力 / 正压力")} hint={tt("直接改变 N 的大小")}>
                   <ControlRange
                     id="force-pressure"
-                    label="当前压力"
+                    label={tt("当前压力")}
                     unit="N"
                     min={2}
                     max={10}
@@ -1485,34 +1491,36 @@ export function BasicForceLab({
 
                   <div className="force-insight-grid force-insight-grid-compact">
                     <article className="force-insight-card">
-                      <span className="force-insight-label">等效质量</span>
+                      <span className="force-insight-label">{tt("等效质量")}</span>
                       <strong className="force-insight-value">{formatNumber(metrics.massEquivalent, 2)} kg</strong>
                     </article>
                     <article className="force-insight-card">
-                      <span className="force-insight-label">理论滑动摩擦</span>
+                      <span className="force-insight-label">{tt("理论滑动摩擦")}</span>
                       <strong className="force-insight-value">{formatNumber(metrics.kineticFriction, 1)} N</strong>
                     </article>
                   </div>
                 </ControlPanelSection>
 
-                <ControlPanelSection title="接触材质" hint="改变摩擦系数 μ">
+                <ControlPanelSection title={tt("接触材质")} hint={tt("改变摩擦系数 μ")}>
                   <ControlChipGroup
                     items={SURFACE_PRESETS.map((preset) => ({
                       key: preset.key,
-                      label: preset.label,
+                      label: tt(preset.label),
                       active: surfacePreset === preset.key,
+                      title: tt(preset.description),
                       onClick: () => setSurfacePreset(preset.key),
                     }))}
                     columns={2}
                   />
                 </ControlPanelSection>
 
-                <ControlPanelSection title="摆放方式" hint="验证面积是否进入公式">
+                <ControlPanelSection title={tt("摆放方式")} hint={tt("验证面积是否进入公式")}>
                   <ControlChipGroup
                     items={CONTACT_AREAS.map((item) => ({
                       key: item.key,
-                      label: item.label,
+                      label: tt(item.label),
                       active: contactArea === item.key,
+                      title: tt(item.description),
                       onClick: () => setContactArea(item.key),
                     }))}
                     columns={3}
@@ -1538,26 +1546,28 @@ export function BasicForceLab({
                 void onToggleFullscreen();
               }}
               className="fullscreen-button is-floating"
-              aria-label={isFullscreen ? "退出全屏" : "进入全屏"}
-              title={isFullscreen ? "退出全屏" : "进入全屏"}
+              aria-label={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
+              title={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
             >
               {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
             </button>
             <VisualModeSwitch
               className="force-stage-view-switch"
               value={viewMode}
-              options={forceViewOptions}
+              options={localizedForceViewOptions}
               onChange={(nextValue) => setViewMode(nextValue as ForceViewMode)}
             />
             <ControlStepGroup
               className="force-stage-overlay is-top-center force-stage-stepbar"
               items={phaseSteps.map((step, index) => ({
                 key: step.phase,
-                label: step.label,
+                label: tt(step.label),
                 stepLabel: String(index + 1),
-                title: step.detail,
+                title: tt(step.detail),
                 active: activePhase === step.phase,
-                ariaLabel: `阶段 ${index + 1}：${step.label}`,
+                ariaLabel: isZh
+                  ? `阶段 ${index + 1}：${tt(step.label)}`
+                  : `Step ${index + 1}: ${tt(step.label)}`,
                 onClick: () => jumpToPhase(step.phase),
               }))}
             />
@@ -1575,7 +1585,7 @@ export function BasicForceLab({
                     : "force-stage-svg"
                 }
                 role="img"
-                aria-label="滑动摩擦实验可视化示意图"
+                aria-label={isZh ? "滑动摩擦实验可视化示意图" : "Sliding friction experiment visualization"}
                 onPointerMove={handleManualPointerMove}
                 onPointerUp={handleManualPointerUp}
                 onPointerLeave={handleManualPointerUp}
@@ -1597,12 +1607,12 @@ export function BasicForceLab({
                   className="motion-stage-panel-shell"
                 />
                 <text x={stage.panelX + 28} y={stage.panelY + 36} className="force-scene-inline-title">
-                  {experimentStatus.label}
+                  {tt(experimentStatus.label)}
                 </text>
                 <g transform={`translate(${stage.panelX + 184}, ${stage.panelY + 18})`}>
                   <rect width="116" height="30" rx="15" className="force-scene-inline-badge" />
                   <text x="58" y="20" textAnchor="middle" className="force-scene-inline-badge-copy">
-                    {experimentStatus.badge}
+                    {tt(experimentStatus.badge)}
                   </text>
                 </g>
                 <g transform={`translate(${stage.panelX + 28}, ${stage.panelY + 60})`}>
@@ -1616,9 +1626,9 @@ export function BasicForceLab({
                 </g>
                 {(() => {
                   const chipLabels = [
-                    surfacePresetMeta.label,
-                    contactAreaMeta.label,
-                    `压力 ${formatNumber(pressure, 1)} N`,
+                    tt(surfacePresetMeta.label),
+                    tt(contactAreaMeta.label),
+                    isZh ? `压力 ${formatNumber(pressure, 1)} N` : `Pressure ${formatNumber(pressure, 1)} N`,
                   ];
                   let cursorX = stage.panelX + 28;
 
@@ -1677,10 +1687,12 @@ export function BasicForceLab({
                   className="force-stage-ground"
                 />
                 <text x={stage.panelX + 28} y={stage.groundY - 18} className="force-svg-caption">
-                  {surfacePresetMeta.label}
+                  {tt(surfacePresetMeta.label)}
                 </text>
                 <text x={stage.panelX + 28} y={stage.groundY + 44} className="force-svg-caption">
-                  {contactAreaMeta.label} · 压力 {formatNumber(pressure, 1)} N
+                  {isZh
+                    ? `${tt(contactAreaMeta.label)} · 压力 ${formatNumber(pressure, 1)} N`
+                    : `${tt(contactAreaMeta.label)} · Pressure ${formatNumber(pressure, 1)} N`}
                 </text>
 
                 <g className="force-stage-trail">
@@ -1693,7 +1705,7 @@ export function BasicForceLab({
                   <circle cx={stage.startCenterX} cy={stage.groundY + 30} r="5" />
                   <circle cx={stage.centerX} cy={stage.groundY + 30} r="5" className="motion-stage-origin-dot" />
                   <text x={stage.startCenterX - 20} y={stage.groundY + 54} className="force-svg-caption">
-                    起点
+                    {tt("起点")}
                   </text>
                   <text x={stage.centerX + 10} y={stage.groundY + 54} className="force-svg-caption">
                     {formatNumber(displayedScene.displacement, 2)} m
@@ -1751,10 +1763,10 @@ export function BasicForceLab({
                   <line x1="138" y1="32" x2="146" y2="32" className="force-stage-scale-handle-stem" />
                   <text x="74" y="72" textAnchor="middle" className="force-stage-scale-label">
                     {mode === "measurement"
-                      ? "弹簧测力计"
+                      ? tt("弹簧测力计")
                       : mode === "manual-drag"
-                        ? "手动拉动端"
-                        : "恒力输入端"}
+                        ? tt("手动拉动端")
+                        : tt("恒力输入端")}
                   </text>
                 </g>
 
@@ -1797,7 +1809,7 @@ export function BasicForceLab({
                     textAnchor="middle"
                     className="force-svg-title"
                   >
-                    木块
+                    {tt("木块")}
                   </text>
                   <text
                     x={stage.blockWidth / 2}
@@ -1805,7 +1817,7 @@ export function BasicForceLab({
                     textAnchor="middle"
                     className="force-svg-copy"
                   >
-                    {contactAreaMeta.label}
+                    {tt(contactAreaMeta.label)}
                   </text>
 
                   {stage.weightSlots.map((slot, index) => (
@@ -1900,12 +1912,12 @@ export function BasicForceLab({
                   className="motion-stage-graph-shell"
                 />
                 <text x={stage.panelX + 28} y={stage.graphY + 34} className="motion-stage-panel-title">
-                  受力 - 时间
-                  <tspan className="motion-stage-panel-note-inline">（拉力 / 摩擦力 / 合力）</tspan>
+                  {tt("受力 - 时间")}
+                  <tspan className="motion-stage-panel-note-inline">{tt("（拉力 / 摩擦力 / 合力）")}</tspan>
                 </text>
                 <g transform={`translate(${stage.panelX + stage.graphWidth - 178}, ${stage.graphY + 26})`}>
                   {[
-                    { label: "F拉", color: FORCE_COLORS.pull, offset: 0 },
+                    { label: tt("F拉"), color: FORCE_COLORS.pull, offset: 0 },
                     { label: "f", color: FORCE_COLORS.friction, offset: 58 },
                     { label: "R", color: FORCE_COLORS.net, offset: 108 },
                   ].map(({ label, color, offset }) => (
@@ -1984,7 +1996,7 @@ export function BasicForceLab({
                   textAnchor="end"
                   className="motion-stage-stop-label"
                 >
-                  f静,max
+                  {tt("f静,max")}
                 </text>
 
                 <polyline
@@ -2037,13 +2049,13 @@ export function BasicForceLab({
                   className="motion-stage-graph-shell"
                 />
                 <text x={motionGraphX + 28} y={stage.graphY + 34} className="motion-stage-panel-title">
-                  位移 / 速度 - 时间
-                  <tspan className="motion-stage-panel-note-inline">（左轴位移，右轴速度）</tspan>
+                  {tt("位移 / 速度 - 时间")}
+                  <tspan className="motion-stage-panel-note-inline">{tt("（左轴位移，右轴速度）")}</tspan>
                 </text>
                 <g transform={`translate(${motionGraphX + stage.graphWidth - 126}, ${stage.graphY + 26})`}>
                   {[
-                    { label: "位移", color: "#7bc1ff", offset: 0 },
-                    { label: "速度", color: "#5de2b1", offset: 72 },
+                    { label: tt("位移"), color: "#7bc1ff", offset: 0 },
+                    { label: tt("速度"), color: "#5de2b1", offset: 72 },
                   ].map(({ label, color, offset }) => (
                     <g key={label} transform={`translate(${offset}, 0)`}>
                       <circle cx="0" cy="0" r="5" fill={color} />
@@ -2196,20 +2208,22 @@ export function BasicForceLab({
             {viewMode === "3d" ? (
               <>
                 <div className="force-stage-overlay is-top-left">
-                  <div className="force-stage-hud-card">
-                    <div className="force-stage-hud-head">
-                      <span className="force-stage-hud-title">{experimentStatus.label}</span>
-                      <StatusPill tone={displayedScene.stateTone}>{experimentStatus.badge}</StatusPill>
-                    </div>
+                    <div className="force-stage-hud-card">
+                      <div className="force-stage-hud-head">
+                      <span className="force-stage-hud-title">{tt(experimentStatus.label)}</span>
+                      <StatusPill tone={displayedScene.stateTone}>{tt(experimentStatus.badge)}</StatusPill>
+                      </div>
                     <div className="force-stage-progress-inline">
                       <span style={{ width: `${experimentStatus.progress * 100}%` }} />
                     </div>
                     <div className="force-stage-chip-row">
-                      <span className="force-stage-chip">{currentModeLabel}</span>
-                      <span className="force-stage-chip">{surfacePresetMeta.label}</span>
-                      <span className="force-stage-chip">{contactAreaMeta.label}</span>
-                      <span className="force-stage-chip">压力 {formatNumber(pressure, 1)} N</span>
-                      <span className="force-stage-chip">左拖旋转 · 滚轮缩放</span>
+                      <span className="force-stage-chip">{tt(currentModeLabel)}</span>
+                      <span className="force-stage-chip">{tt(surfacePresetMeta.label)}</span>
+                      <span className="force-stage-chip">{tt(contactAreaMeta.label)}</span>
+                      <span className="force-stage-chip">
+                        {isZh ? `压力 ${formatNumber(pressure, 1)} N` : `Pressure ${formatNumber(pressure, 1)} N`}
+                      </span>
+                      <span className="force-stage-chip">{tt("左拖旋转 · 滚轮缩放")}</span>
                     </div>
                   </div>
                 </div>
@@ -2229,7 +2243,7 @@ export function BasicForceLab({
                             style={{ backgroundColor: item.color }}
                             aria-hidden="true"
                           />
-                          <span>{item.label}</span>
+                          <span>{tt(item.label)}</span>
                         </span>
                         <strong>{formatNumber(item.value, 1)} N</strong>
                       </button>
@@ -2256,17 +2270,19 @@ export function BasicForceLab({
                         {mode === "measurement"
                           ? latestRecord
                             ? `${formatNumber(latestRecord.kineticFriction, 1)} N`
-                            : "等待稳定读数"
+                            : tt("等待稳定读数")
                           : `${formatNumber(displayedScene.netForce, 2)} N`}
                       </strong>
                       <span>
                         {mode === "measurement"
                           ? latestRecord
-                            ? `${latestRecord.surfaceLabel} · 压力 ${formatNumber(latestRecord.pressure, 1)} N · ${latestRecord.contactAreaLabel}`
-                            : "完成一次实验后记录匀速阶段读数"
+                            ? isZh
+                              ? `${tt(latestRecord.surfaceLabel)} · 压力 ${formatNumber(latestRecord.pressure, 1)} N · ${tt(latestRecord.contactAreaLabel)}`
+                              : `${tt(latestRecord.surfaceLabel)} · Pressure ${formatNumber(latestRecord.pressure, 1)} N · ${tt(latestRecord.contactAreaLabel)}`
+                            : tt("完成一次实验后记录匀速阶段读数")
                           : canBreakaway
-                            ? `恒定拉力已超过静摩擦阈值，当前木块持续加速前进。`
-                            : `恒定拉力未超过最大静摩擦，木块保持静止。`}
+                            ? tt("恒定拉力已超过静摩擦阈值，当前木块持续加速前进。")
+                            : tt("恒定拉力未超过最大静摩擦，木块保持静止。")}
                       </span>
                     </div>
                   </div>

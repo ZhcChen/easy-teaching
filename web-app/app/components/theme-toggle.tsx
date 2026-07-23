@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 
+import { useLocale } from "../i18n";
+
 const STORAGE_KEY = "easy-teaching-theme";
 
 type ThemeMode = "light" | "dark";
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<ThemeMode>("light");
+  const { tt } = useLocale();
 
   useEffect(() => {
     const current = readTheme();
@@ -20,7 +23,7 @@ export function ThemeToggle() {
   }
 
   return (
-    <div className="theme-switch" role="group" aria-label="主题切换">
+    <div className="theme-switch" role="group" aria-label={tt("主题切换")}>
       <span
         aria-hidden="true"
         className={theme === "dark" ? "theme-switch-indicator is-dark" : "theme-switch-indicator"}
@@ -31,7 +34,7 @@ export function ThemeToggle() {
         onClick={() => setMode("light")}
         aria-pressed={theme === "light"}
       >
-        亮色
+        {tt("亮色")}
       </button>
       <button
         type="button"
@@ -39,7 +42,7 @@ export function ThemeToggle() {
         onClick={() => setMode("dark")}
         aria-pressed={theme === "dark"}
       >
-        暗色
+        {tt("暗色")}
       </button>
     </div>
   );

@@ -10,7 +10,9 @@ import {
   useLocation,
 } from "react-router";
 
+import { LanguageToggle } from "./components/language-toggle";
 import { ThemeToggle } from "./components/theme-toggle";
+import { LocaleProvider, useLocale } from "./i18n";
 import type { Route } from "./+types/root";
 import "./app.css";
 
@@ -21,7 +23,16 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
+  return (
+    <LocaleProvider>
+      <LayoutShell>{children}</LayoutShell>
+    </LocaleProvider>
+  );
+}
+
+function LayoutShell({ children }: { children: ReactNode }) {
   const location = useLocation();
+  const { locale, isZh, tt } = useLocale();
   const activeNavIndex = getActiveNavIndex(location.pathname);
   const isVisualRoute = location.pathname.startsWith("/visual");
   const bodyClassName = isVisualRoute ? "app-body is-visual-route antialiased" : "app-body antialiased";
@@ -34,7 +45,7 @@ export function Layout({ children }: { children: ReactNode }) {
   } as CSSProperties;
 
   return (
-    <html lang="zh-CN" data-theme="light" suppressHydrationWarning>
+    <html lang="zh-CN" data-theme="light" data-locale={locale} suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -49,6 +60,15 @@ export function Layout({ children }: { children: ReactNode }) {
               } catch (error) {
                 document.documentElement.dataset.theme = "light";
               }
+
+              try {
+                const locale = localStorage.getItem("easy-teaching-locale") || "zh-CN";
+                document.documentElement.lang = locale === "en" ? "en" : "zh-CN";
+                document.documentElement.dataset.locale = locale === "en" ? "en" : "zh-CN";
+              } catch (error) {
+                document.documentElement.lang = "zh-CN";
+                document.documentElement.dataset.locale = "zh-CN";
+              }
             })();`,
           }}
         />
@@ -57,17 +77,17 @@ export function Layout({ children }: { children: ReactNode }) {
         <div className={appShellClassName}>
           <header className="topbar">
             <div className="topbar-inner">
-              <NavLink to="/" end className="brand-link" aria-label="打开首页">
+              <NavLink to="/" end className="brand-link" aria-label={tt("打开首页")}>
                 <span className="brand-mark" aria-hidden="true">
                   <img src="/brand/logo-mark.svg" alt="" className="brand-mark-image" />
                 </span>
                 <span className="brand-copy">
-                  <strong className="brand-title">可视化教学</strong>
-                  <span className="brand-subtitle">EASY TEACHING</span>
+                  <strong className="brand-title">{tt("可视化教学")}</strong>
+                  <span className="brand-subtitle">{isZh ? "Web · 桌面" : "Web · Desktop"}</span>
                 </span>
               </NavLink>
 
-              <nav className="topbar-nav" aria-label="主导航" style={navStyle}>
+              <nav className="topbar-nav" aria-label={tt("主导航")} style={navStyle}>
                 <span aria-hidden="true" className="topbar-nav-indicator" />
                 {navItems.map((item, index) => (
                   <NavLink
@@ -77,12 +97,13 @@ export function Layout({ children }: { children: ReactNode }) {
                     aria-current={index === activeNavIndex ? "page" : undefined}
                     className={index === activeNavIndex ? "topbar-link is-active" : "topbar-link"}
                   >
-                    {item.label}
+                    {tt(item.label)}
                   </NavLink>
                 ))}
               </nav>
 
               <div className="topbar-actions">
+                <LanguageToggle />
                 <ThemeToggle />
               </div>
             </div>
@@ -103,15 +124,16 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "页面异常";
-  let details = "发生了未预期的错误。";
+  const { tt } = useLocale();
+  let message = tt("页面异常");
+  let details = tt("发生了未预期的错误。");
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "请求异常";
+    message = error.status === 404 ? "404" : tt("请求异常");
     details =
       error.status === 404
-        ? "访问的页面不存在。"
+        ? tt("访问的页面不存在。")
         : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
@@ -121,7 +143,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   return (
     <main className="page-shell">
       <section className="status-panel is-danger">
-        <p className="status-kicker">页面异常</p>
+        <p className="status-kicker">{tt("页面异常")}</p>
         <h1 className="status-title">{message}</h1>
         <p className="status-copy">{details}</p>
         {stack && (

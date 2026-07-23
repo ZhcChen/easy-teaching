@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 
+import { useLocale } from "../i18n";
+
 type ThreeModule = typeof import("three");
 
 type ForceKey = "gravity" | "normal" | "pull" | "friction" | "net";
@@ -105,6 +107,7 @@ export function BasicForceThreeStage({
   surface,
   visibleForces,
 }: BasicForceThreeStageProps) {
+  const { isZh } = useLocale();
   const hostRef = useRef<HTMLDivElement | null>(null);
   const cameraDistanceRef = useRef(DEFAULT_CAMERA_DISTANCE);
   const orbitRef = useRef({
@@ -913,7 +916,13 @@ export function BasicForceThreeStage({
     };
   }, []);
 
-  return <div ref={hostRef} className="force-stage-3d-layer" aria-label="滑动摩擦实验 3D 场景" />;
+  return (
+    <div
+      ref={hostRef}
+      className="force-stage-3d-layer"
+      aria-label={isZh ? "滑动摩擦实验 3D 场景" : "3D sliding friction experiment scene"}
+    />
+  );
 }
 
 function buildForceArrow(THREE: ThreeModule, color: string): ForceArrowRuntime {
