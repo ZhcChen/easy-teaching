@@ -2757,16 +2757,14 @@ html[data-theme="dark"] .force-state-pill.is-active {
   line-height: 1;
 }
 
-.control-step-group,
-.force-walkthrough-steps {
+.control-step-group {
   display: flex;
   gap: 8px;
   overflow-x: auto;
   padding-bottom: 2px;
 }
 
-.control-step-group.is-panel,
-.force-walkthrough-steps.is-panel {
+.control-step-group.is-panel {
   flex-wrap: wrap;
   overflow: visible;
 }
@@ -3142,6 +3140,15 @@ html[data-theme="dark"] .force-state-pill.is-active {
   min-width: 90px;
 }
 
+.force-stage-overlay.is-top-center {
+  top: 16px;
+  left: 50%;
+  z-index: 3;
+  width: min(760px, calc(100% - 220px));
+  max-width: none;
+  transform: translateX(-50%);
+}
+
 .force-stage-overlay.is-top-left {
   top: 62px;
   left: 16px;
@@ -3186,6 +3193,34 @@ html[data-theme="dark"] .force-state-pill.is-active {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+}
+
+.force-stage-stepbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(138, 190, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(7, 17, 31, 0.38);
+  box-shadow: 0 8px 20px rgba(2, 9, 20, 0.12);
+  backdrop-filter: blur(14px);
+}
+
+.force-stage-stepbar .control-step-button {
+  min-height: 32px;
+  padding: 0 10px;
+}
+
+.force-stage-stepbar .control-step-index {
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+}
+
+.force-stage-stepbar .control-step-label {
+  font-size: 12px;
 }
 
 .force-stage-hud-title {
@@ -4884,6 +4919,11 @@ html[data-theme="dark"] .force-state-pill.is-active {
     max-width: min(320px, calc(100% - 24px));
   }
 
+  .force-stage-overlay.is-top-center {
+    top: 12px;
+    width: min(620px, calc(100% - 168px));
+  }
+
   .force-stage-overlay.is-top-left {
     top: 58px;
     left: 12px;
@@ -5107,6 +5147,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
   }
 
   .force-stage-overlay,
+  .force-stage-overlay.is-top-center,
   .force-stage-overlay.is-top-left,
   .force-stage-overlay.is-bottom-left,
   .force-stage-overlay.is-bottom-right {
@@ -5114,6 +5155,11 @@ html[data-theme="dark"] .force-state-pill.is-active {
     right: 12px;
     width: auto;
     max-width: none;
+  }
+
+  .force-stage-overlay.is-top-center {
+    top: 56px;
+    transform: none;
   }
 
   .force-stage-overlay.is-top-left {

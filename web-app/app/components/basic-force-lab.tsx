@@ -974,19 +974,6 @@ export function BasicForceLab({
                     ]}
                   />
 
-                  <ControlStepGroup
-                    className="force-walkthrough-steps is-panel"
-                    items={phaseSteps.map((step, index) => ({
-                      key: step.phase,
-                      label: step.label,
-                      stepLabel: String(index + 1),
-                      title: step.detail,
-                      active: activePhase === step.phase,
-                      ariaLabel: `阶段 ${index + 1}：${step.label}`,
-                      onClick: () => jumpToPhase(step.phase),
-                    }))}
-                  />
-
                   <ControlRange
                     id="force-experiment-progress"
                     label="实验时间轴"
@@ -1104,6 +1091,20 @@ export function BasicForceLab({
               options={FORCE_VIEW_OPTIONS}
               onChange={(nextValue) => setViewMode(nextValue as ForceViewMode)}
             />
+            <div className="force-stage-overlay is-top-center">
+              <ControlStepGroup
+                className="force-stage-stepbar"
+                items={phaseSteps.map((step, index) => ({
+                  key: step.phase,
+                  label: step.label,
+                  stepLabel: String(index + 1),
+                  title: step.detail,
+                  active: activePhase === step.phase,
+                  ariaLabel: `阶段 ${index + 1}：${step.label}`,
+                  onClick: () => jumpToPhase(step.phase),
+                }))}
+              />
+            </div>
             <div className="visual-grid-layer" />
             <div className="visual-glow visual-glow-a" />
             <div className="visual-glow visual-glow-b" />
