@@ -3211,6 +3211,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
 }
 
 .force-stage-stepbar .control-step-button:hover {
+  transform: none;
   border-color: rgba(132, 188, 255, 0.4);
   background: rgba(12, 28, 48, 0.92);
   color: #f8fbff;
