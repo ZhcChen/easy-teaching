@@ -7,3 +7,4 @@
 **/dist/
 **/coverage/
 **/project.private.config.json
+.playwright-mcp/
