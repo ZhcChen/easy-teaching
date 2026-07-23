@@ -76,9 +76,9 @@ const GROUND_DEPTH = 8.6;
 const GROUND_THICKNESS = 0.34;
 const BOARD_START_X = -6.2;
 const BOARD_TRAVEL_X = 5.1;
-const SCALE_CENTER_X = 6.8;
-const SCALE_HOOK_X = 5.72;
-const SCALE_CENTER_Y = 1.36;
+const MACHINE_CENTER_X = 5.3;
+const MACHINE_GUIDE_X = 3.76;
+const MACHINE_GUIDE_Y = 0.78;
 const DEFAULT_CAMERA_DISTANCE = 11.8;
 const MIN_CAMERA_DISTANCE = 8.2;
 const MAX_CAMERA_DISTANCE = 17.2;
@@ -101,10 +101,10 @@ export function BasicForceThreeStage({
   const hostRef = useRef<HTMLDivElement | null>(null);
   const cameraDistanceRef = useRef(DEFAULT_CAMERA_DISTANCE);
   const orbitRef = useRef({
-    yaw: -0.82,
-    pitch: 0.16,
-    targetYaw: -0.82,
-    targetPitch: 0.16,
+    yaw: -0.64,
+    pitch: 0.12,
+    targetYaw: -0.64,
+    targetPitch: 0.12,
     isDragging: false,
     pointerId: -1,
     lastPointerX: 0,
@@ -371,17 +371,17 @@ export function BasicForceThreeStage({
       const blockOuter = new THREE.Mesh(
         new THREE.BoxGeometry(1, 1, 1),
         new THREE.MeshStandardMaterial({
-          color: 0x15325a,
-          roughness: 0.48,
-          metalness: 0.08,
+          color: 0x6d4e31,
+          roughness: 0.68,
+          metalness: 0.04,
         }),
       );
       const blockInner = new THREE.Mesh(
         new THREE.BoxGeometry(1, 1, 1),
         new THREE.MeshStandardMaterial({
-          color: 0x2b4f7d,
-          roughness: 0.54,
-          metalness: 0.04,
+          color: 0xac7d49,
+          roughness: 0.72,
+          metalness: 0.02,
           transparent: true,
           opacity: 0.92,
         }),
@@ -437,62 +437,194 @@ export function BasicForceThreeStage({
         return weightGroup;
       });
 
-      const scaleGroup = new THREE.Group();
-      scaleGroup.position.set(SCALE_CENTER_X, SCALE_CENTER_Y, 0);
-      const scaleBody = new THREE.Mesh(
-        new THREE.BoxGeometry(1.92, 0.88, 0.86),
-        new THREE.MeshStandardMaterial({
-          color: 0x10233f,
-          roughness: 0.34,
-          metalness: 0.2,
-        }),
+      const machineBaseMaterial = new THREE.MeshStandardMaterial({
+        color: 0x202833,
+        roughness: 0.42,
+        metalness: 0.24,
+      });
+      const machinePanelMaterial = new THREE.MeshStandardMaterial({
+        color: 0xe58d2f,
+        roughness: 0.4,
+        metalness: 0.08,
+      });
+      const machineMetalMaterial = new THREE.MeshStandardMaterial({
+        color: 0xcfd9e7,
+        roughness: 0.22,
+        metalness: 0.44,
+      });
+      const machineDisplayMaterial = new THREE.MeshStandardMaterial({
+        color: 0x7bc1ff,
+        emissive: 0x7bc1ff,
+        emissiveIntensity: 0.92,
+        roughness: 0.12,
+        metalness: 0.18,
+      });
+      const machineStatusLampMaterial = new THREE.MeshStandardMaterial({
+        color: 0x46d7a7,
+        emissive: 0x46d7a7,
+        emissiveIntensity: 0.84,
+        roughness: 0.16,
+        metalness: 0.08,
+      });
+
+      const machineGroup = new THREE.Group();
+      machineGroup.position.set(MACHINE_CENTER_X, 0, 0);
+
+      const machineBase = new THREE.Mesh(
+        new THREE.BoxGeometry(3.1, 0.18, 1.58),
+        machineBaseMaterial,
       );
-      const scaleScreen = new THREE.Mesh(
-        new THREE.BoxGeometry(0.98, 0.16, 0.08),
+      machineBase.position.set(0, 0.09, 0);
+
+      const machineDeck = new THREE.Mesh(
+        new THREE.BoxGeometry(2.72, 0.08, 1.24),
+        machinePanelMaterial,
+      );
+      machineDeck.position.set(-0.02, 0.22, 0);
+
+      const machineRailFront = new THREE.Mesh(
+        new THREE.BoxGeometry(2.42, 0.1, 0.1),
+        machineMetalMaterial,
+      );
+      machineRailFront.position.set(-0.18, 0.3, 0.44);
+      const machineRailBack = machineRailFront.clone();
+      machineRailBack.position.z = -0.44;
+
+      const machineFrontColumn = new THREE.Mesh(
+        new THREE.BoxGeometry(0.16, 1.08, 0.16),
+        machineMetalMaterial,
+      );
+      machineFrontColumn.position.set(0.38, 0.82, 0.42);
+      const machineRearColumn = machineFrontColumn.clone();
+      machineRearColumn.position.z = -0.42;
+
+      const machineCrossBeam = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, 0.16, 1.04),
+        machineMetalMaterial,
+      );
+      machineCrossBeam.position.set(0.38, 1.32, 0);
+
+      const machineHousing = new THREE.Mesh(
+        new THREE.BoxGeometry(1.42, 0.9, 0.96),
+        machineBaseMaterial,
+      );
+      machineHousing.position.set(0.72, 0.84, 0);
+
+      const machineHousingNose = new THREE.Mesh(
+        new THREE.BoxGeometry(0.54, 0.56, 0.82),
+        machinePanelMaterial,
+      );
+      machineHousingNose.position.set(-0.06, 0.76, 0);
+
+      const machineDisplayFrame = new THREE.Mesh(
+        new THREE.BoxGeometry(0.84, 0.26, 0.1),
+        machinePanelMaterial,
+      );
+      machineDisplayFrame.position.set(0.42, 0.92, 0.49);
+
+      const machineDisplayBezel = new THREE.Mesh(
+        new THREE.BoxGeometry(0.72, 0.14, 0.04),
         new THREE.MeshStandardMaterial({
           color: 0x08131f,
           roughness: 0.12,
-          metalness: 0.24,
+          metalness: 0.2,
         }),
       );
-      scaleScreen.position.set(-0.12, 0.1, 0.44);
-      const scaleFill = new THREE.Mesh(
-        new THREE.BoxGeometry(0.92, 0.08, 0.04),
+      machineDisplayBezel.position.set(0.32, 0.92, 0.56);
+
+      const machineDisplayFill = new THREE.Mesh(
+        new THREE.BoxGeometry(0.66, 0.06, 0.025),
+        machineDisplayMaterial,
+      );
+      machineDisplayFill.position.set(0.34, 0.92, 0.6);
+
+      const machineStatusLamp = new THREE.Mesh(
+        new THREE.SphereGeometry(0.075, 18, 18),
+        machineStatusLampMaterial,
+      );
+      machineStatusLamp.position.set(1.22, 0.84, 0.3);
+
+      const machineHandle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.045, 0.045, 0.42, 18),
+        machineMetalMaterial,
+      );
+      machineHandle.rotation.z = Math.PI / 2;
+      machineHandle.position.set(1.18, 1.18, 0);
+
+      const machineRotorGroup = new THREE.Group();
+      machineRotorGroup.position.set(-1.02, 0.78, 0);
+
+      const machineDrum = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.18, 0.18, 0.72, 24),
         new THREE.MeshStandardMaterial({
-          color: 0x7bc1ff,
-          emissive: 0x7bc1ff,
-          emissiveIntensity: 0.86,
-          roughness: 0.14,
-          metalness: 0.18,
+          color: 0x6e7888,
+          roughness: 0.2,
+          metalness: 0.62,
         }),
       );
-      scaleFill.position.set(-0.56, 0.1, 0.49);
-      const scaleHead = new THREE.Mesh(
-        new THREE.CapsuleGeometry(0.16, 0.18, 6, 12),
-        new THREE.MeshStandardMaterial({
-          color: 0x18395f,
-          roughness: 0.28,
-          metalness: 0.22,
-        }),
+      machineDrum.rotation.x = Math.PI / 2;
+
+      const machineDrumCore = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.08, 0.08, 0.8, 20),
+        machineMetalMaterial,
       );
-      scaleHead.rotation.z = Math.PI / 2;
-      scaleHead.position.set(0.92, 0.06, 0);
-      const scaleHook = new THREE.Mesh(
-        new THREE.TorusGeometry(0.12, 0.025, 10, 26, Math.PI * 1.2),
-        new THREE.MeshStandardMaterial({
-          color: 0xdce9f8,
-          roughness: 0.22,
-          metalness: 0.32,
-        }),
+      machineDrumCore.rotation.x = Math.PI / 2;
+
+      const machineDrumFlangeFront = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.28, 0.28, 0.045, 24),
+        machineMetalMaterial,
       );
-      scaleHook.rotation.z = Math.PI * 0.18;
-      scaleHook.position.set(-1.04, 0.02, 0);
-      scaleGroup.add(scaleBody);
-      scaleGroup.add(scaleScreen);
-      scaleGroup.add(scaleFill);
-      scaleGroup.add(scaleHead);
-      scaleGroup.add(scaleHook);
-      sceneRoot.add(scaleGroup);
+      machineDrumFlangeFront.rotation.x = Math.PI / 2;
+      machineDrumFlangeFront.position.z = 0.31;
+      const machineDrumFlangeBack = machineDrumFlangeFront.clone();
+      machineDrumFlangeBack.position.z = -0.31;
+
+      machineRotorGroup.add(machineDrum);
+      machineRotorGroup.add(machineDrumCore);
+      machineRotorGroup.add(machineDrumFlangeFront);
+      machineRotorGroup.add(machineDrumFlangeBack);
+
+      const machineGuideArm = new THREE.Mesh(
+        new THREE.BoxGeometry(0.34, 0.08, 0.12),
+        machineMetalMaterial,
+      );
+      machineGuideArm.position.set(-1.34, 0.78, 0);
+
+      const machineGuideRing = new THREE.Mesh(
+        new THREE.TorusGeometry(0.11, 0.024, 10, 28),
+        machineMetalMaterial,
+      );
+      machineGuideRing.rotation.y = Math.PI / 2;
+      machineGuideRing.position.set(-1.54, 0.78, 0);
+
+      const machineClampFront = new THREE.Mesh(
+        new THREE.BoxGeometry(0.12, 0.46, 0.14),
+        machineBaseMaterial,
+      );
+      machineClampFront.position.set(1.26, -0.08, 0.44);
+      const machineClampBack = machineClampFront.clone();
+      machineClampBack.position.z = -0.44;
+
+      machineGroup.add(machineBase);
+      machineGroup.add(machineDeck);
+      machineGroup.add(machineRailFront);
+      machineGroup.add(machineRailBack);
+      machineGroup.add(machineFrontColumn);
+      machineGroup.add(machineRearColumn);
+      machineGroup.add(machineCrossBeam);
+      machineGroup.add(machineHousing);
+      machineGroup.add(machineHousingNose);
+      machineGroup.add(machineDisplayFrame);
+      machineGroup.add(machineDisplayBezel);
+      machineGroup.add(machineDisplayFill);
+      machineGroup.add(machineStatusLamp);
+      machineGroup.add(machineHandle);
+      machineGroup.add(machineRotorGroup);
+      machineGroup.add(machineGuideArm);
+      machineGroup.add(machineGuideRing);
+      machineGroup.add(machineClampFront);
+      machineGroup.add(machineClampBack);
+      sceneRoot.add(machineGroup);
 
       const ropeMaterial = new THREE.LineBasicMaterial({
         color: 0xf0f6ff,
@@ -500,7 +632,7 @@ export function BasicForceThreeStage({
         opacity: 0.92,
       });
       const ropeGeometry = new THREE.BufferGeometry();
-      ropeGeometry.setAttribute("position", new THREE.Float32BufferAttribute(new Float32Array(6), 3));
+      ropeGeometry.setAttribute("position", new THREE.Float32BufferAttribute(new Float32Array(9), 3));
       const ropeLine = new THREE.Line(ropeGeometry, ropeMaterial);
       sceneRoot.add(ropeLine);
 
@@ -621,17 +753,22 @@ export function BasicForceThreeStage({
           weightGroup.position.set(x, y, 0);
         });
 
-        scaleFill.scale.x = Math.max(0.02, nextState.readingRatio);
-        scaleFill.position.x = -0.56 + ((0.92 * scaleFill.scale.x) - 0.92) / 2;
+        machineDisplayFill.scale.x = Math.max(0.04, nextState.readingRatio);
+        machineDisplayFill.position.x = 0.01 + (0.66 * machineDisplayFill.scale.x) / 2;
+        machineRotorGroup.rotation.z =
+          -nextState.travelProgress * 8.2 - nextState.readingRatio * 0.8;
+        machineStatusLampMaterial.emissiveIntensity = nextState.isExperimentRunning ? 1.18 : 0.84;
 
         const ropeStart = new THREE.Vector3(
           blockX + blockDimensions.x / 2,
           blockY + 0.05,
           0,
         );
-        const ropeEnd = new THREE.Vector3(SCALE_HOOK_X, SCALE_CENTER_Y + 0.02, 0);
+        const ropeGuide = new THREE.Vector3(MACHINE_GUIDE_X, MACHINE_GUIDE_Y, 0);
+        const ropeEnd = new THREE.Vector3(MACHINE_GUIDE_X + 0.18, MACHINE_GUIDE_Y, 0);
         ropePositions.setXYZ(0, ropeStart.x, ropeStart.y, ropeStart.z);
-        ropePositions.setXYZ(1, ropeEnd.x, ropeEnd.y, ropeEnd.z);
+        ropePositions.setXYZ(1, ropeGuide.x, ropeGuide.y, ropeGuide.z);
+        ropePositions.setXYZ(2, ropeEnd.x, ropeEnd.y, ropeEnd.z);
         ropePositions.needsUpdate = true;
 
         updateForceArrow({
@@ -704,7 +841,7 @@ export function BasicForceThreeStage({
         orbit.yaw = lerp(orbit.yaw, orbit.targetYaw, CAMERA_DAMPING);
         orbit.pitch = lerp(orbit.pitch, orbit.targetPitch, CAMERA_DAMPING);
 
-        const focusX = blockX + (SCALE_HOOK_X - blockX) * 0.36;
+        const focusX = blockX + (MACHINE_GUIDE_X - blockX) * 0.58;
         target.set(focusX, blockY + 0.56, 0);
         const cameraDistance = cameraDistanceRef.current;
         const horizontalDistance = Math.cos(orbit.pitch) * cameraDistance;
@@ -714,7 +851,7 @@ export function BasicForceThreeStage({
           target.y + Math.sin(orbit.pitch) * cameraDistance + 1.2,
           target.z + Math.sin(orbit.yaw) * horizontalDistance,
         );
-        cameraLookAt.set(target.x + 1.05, target.y - 0.36, 0);
+        cameraLookAt.set(target.x + 0.42, target.y - 0.32, 0);
         camera.lookAt(cameraLookAt);
 
         const blockMaterial = blockOuter.material as any;
