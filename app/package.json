@@ -1,0 +1,18 @@
+{
+  "name": "easy-teaching-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Easy Teaching desktop app shell powered by Tauri.",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "build:debug": "tauri build --debug",
+    "check": "cargo check --manifest-path src-tauri/Cargo.toml",
+    "verify:release-tag": "node ./scripts/verify-release-version.mjs",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.9.6"
+  }
+}

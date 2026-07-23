@@ -1,0 +1,177 @@
+name: Release App
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-app-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  validate-tag:
+    name: Validate release tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install app dependencies
+        run: npm ci --prefix app
+
+      - name: Verify tag matches app version
+        run: npm --prefix app run verify:release-tag
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+
+  build:
+    name: Build ${{ matrix.platform.name }}
+    needs: validate-tag
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - name: macOS arm64
+            runner: macos-latest
+            rust_target: aarch64-apple-darwin
+            artifact_name: app-macos-arm64-assets
+          - name: macOS x64
+            runner: macos-15-intel
+            rust_target: x86_64-apple-darwin
+            artifact_name: app-macos-x64-assets
+          - name: Windows x64
+            runner: windows-latest
+            rust_target: x86_64-pc-windows-msvc
+            artifact_name: app-windows-x64-assets
+          - name: Linux x64
+            runner: ubuntu-latest
+            rust_target: x86_64-unknown-linux-gnu
+            artifact_name: app-linux-x64-assets
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install Linux dependencies
+        if: matrix.platform.runner == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            app/package-lock.json
+            web-app/package-lock.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform.rust_target }}
+
+      - name: Cache Rust build outputs
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "./app/src-tauri -> target"
+
+      - name: Install web-app dependencies
+        run: npm ci --prefix web-app
+
+      - name: Install app dependencies
+        run: npm ci --prefix app
+
+      - name: Typecheck web-app
+        run: npm --prefix web-app run typecheck
+
+      - name: Build desktop bundles
+        run: npm --prefix app run build -- --target ${{ matrix.platform.rust_target }}
+
+      - name: Upload release assets
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.platform.artifact_name }}
+          path: app/src-tauri/target/${{ matrix.platform.rust_target }}/release/bundle/**/*
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download built assets
+        uses: actions/download-artifact@v8
+        with:
+          path: .artifacts/downloaded-assets
+
+      - name: Create release notes
+        run: |
+          cat <<'EOF' > .artifacts/release-notes.md
+          Easy Teaching 桌面端发布包。
+
+          - Web 前端来源：web-app
+          - 桌面宿主：Tauri app
+          EOF
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          mapfile -d '' -t ASSET_FILES < <(find .artifacts/downloaded-assets -type f \( \
+            -name "*.dmg" -o \
+            -name "*.app.tar.gz" -o \
+            -name "*.app.tar.gz.sig" -o \
+            -name "*.deb" -o \
+            -name "*.AppImage" -o \
+            -name "*.rpm" -o \
+            -name "*.msi" -o \
+            -name "*.exe" -o \
+            -name "*.sig" \
+          \) -print0)
+
+          if [[ ${#ASSET_FILES[@]} -eq 0 ]]; then
+            echo "未找到可发布的构建产物"
+            exit 1
+          fi
+
+          if [[ "${RELEASE_TAG}" == *-* ]]; then
+            PRERELEASE_FLAG="--prerelease"
+          else
+            PRERELEASE_FLAG=""
+          fi
+
+          if gh release view "${RELEASE_TAG}" > /dev/null 2>&1; then
+            mapfile -t EXISTING_ASSETS < <(gh release view "${RELEASE_TAG}" --json assets --jq '.assets[].name')
+
+            for ASSET_NAME in "${EXISTING_ASSETS[@]}"; do
+              gh release delete-asset "${RELEASE_TAG}" "${ASSET_NAME}" --yes
+            done
+
+            gh release upload "${RELEASE_TAG}" "${ASSET_FILES[@]}" --clobber
+            gh release edit "${RELEASE_TAG}" \
+              --title "Easy Teaching ${RELEASE_TAG}" \
+              --notes-file .artifacts/release-notes.md \
+              ${PRERELEASE_FLAG}
+          else
+            gh release create "${RELEASE_TAG}" "${ASSET_FILES[@]}" \
+              --title "Easy Teaching ${RELEASE_TAG}" \
+              --notes-file .artifacts/release-notes.md \
+              ${PRERELEASE_FLAG}
+          fi

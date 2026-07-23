@@ -5,6 +5,9 @@
 **/miniprogram_npm/
 **/node_modules/
 **/dist/
+**/build/
 **/coverage/
+**/target/
+**/src-tauri/gen/
 **/project.private.config.json
 .playwright-mcp/
