@@ -75,16 +75,16 @@ describe("ContentSubjectPage topic delivery states", () => {
     expect(ohmsLawLink).toHaveAttribute("href", "/visual/ohms-law-lab");
   });
 
-  it("surfaces the split light-propagation topics with planned and backlog states", () => {
+  it("surfaces the split light-propagation topics with implemented and backlog states", () => {
     renderPage("junior", "physics");
 
     const shadowLink = screen.getByRole("link", { name: /影子形成与本影半影/i });
     const pinholeLink = screen.getByRole("link", { name: /小孔成像规律观察/i });
     const eclipseLink = screen.getByRole("link", { name: /日食月食与光路可见性/i });
 
-    expect(within(shadowLink).getByText("规划中")).toBeInTheDocument();
-    expect(within(shadowLink).getByText("查看规划")).toBeInTheDocument();
-    expect(within(shadowLink).getByText("可开始")).toBeInTheDocument();
+    expect(within(shadowLink).getByText("已可用")).toBeInTheDocument();
+    expect(within(shadowLink).getByText("直接进入")).toBeInTheDocument();
+    expect(within(shadowLink).getByText("优先开发")).toBeInTheDocument();
     expect(shadowLink).toHaveAttribute("href", "/visual/shadow-formation-lab");
 
     expect(within(pinholeLink).getAllByText("后续扩展").length).toBeGreaterThan(0);

@@ -4810,6 +4810,214 @@ html[data-theme="dark"] .force-state-pill.is-active {
   filter: drop-shadow(0 0 14px rgba(93, 226, 177, 0.22));
 }
 
+.shadow-lab-layout {
+  transition:
+    grid-template-columns 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    gap 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.shadow-lab-layout.is-collapsed {
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.shadow-control-panel {
+  gap: 12px;
+  padding: 14px;
+  border-radius: 20px;
+}
+
+.shadow-control-panel.is-collapsed {
+  width: 44px;
+  max-width: 44px;
+  gap: 0;
+}
+
+.shadow-control-panel.is-collapsed .force-panel-collapsed-shell {
+  width: 44px;
+}
+
+.shadow-control-scroll {
+  gap: 12px;
+}
+
+.shadow-lab-main {
+  gap: 10px;
+}
+
+.shadow-stage-canvas {
+  background:
+    radial-gradient(circle at 18% 20%, rgba(255, 191, 103, 0.15) 0%, transparent 22%),
+    radial-gradient(circle at 84% 72%, rgba(181, 118, 255, 0.13) 0%, transparent 24%),
+    linear-gradient(180deg, #07121f 0%, #081624 46%, #050d17 100%);
+}
+
+.shadow-stage-stepbar {
+  max-width: calc(100% - 160px);
+}
+
+.shadow-stage-summary-card {
+  min-width: min(272px, 100%);
+}
+
+.shadow-stage-summary-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.shadow-stage-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid rgba(138, 190, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(7, 17, 31, 0.32);
+}
+
+.shadow-stage-summary-item span {
+  color: var(--canvas-copy);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.shadow-stage-summary-item strong {
+  color: var(--canvas-text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.shadow-stage-svg {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+}
+
+.shadow-stage-panel {
+  fill: rgba(7, 17, 31, 0.16);
+  stroke: rgba(138, 190, 255, 0.12);
+  stroke-width: 2;
+}
+
+.shadow-stage-bench {
+  stroke: rgba(150, 195, 255, 0.28);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.shadow-stage-source-stand,
+.shadow-stage-object-stand {
+  stroke: rgba(226, 236, 255, 0.36);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.shadow-stage-source-glow {
+  fill: rgba(255, 191, 103, 0.22);
+  filter: drop-shadow(0 0 18px rgba(255, 191, 103, 0.18));
+}
+
+.shadow-stage-source-point {
+  fill: rgba(255, 191, 103, 0.98);
+  stroke: rgba(255, 232, 196, 0.72);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 16px rgba(255, 191, 103, 0.24));
+}
+
+.shadow-stage-source-area {
+  fill: rgba(255, 191, 103, 0.84);
+  stroke: rgba(255, 228, 190, 0.72);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 16px rgba(255, 191, 103, 0.22));
+}
+
+.shadow-stage-object-body {
+  stroke: rgba(226, 236, 255, 0.22);
+  stroke-width: 2;
+  filter: drop-shadow(0 12px 24px rgba(2, 9, 20, 0.18));
+}
+
+.shadow-stage-screen-frame {
+  stroke: rgba(214, 228, 245, 0.28);
+  stroke-width: 2;
+}
+
+.shadow-stage-screen-shadow {
+  transition:
+    y 0.24s ease,
+    height 0.24s ease,
+    opacity 0.24s ease;
+}
+
+.shadow-stage-screen-shadow.is-sharp,
+.shadow-stage-screen-shadow.is-umbra {
+  fill: rgba(5, 12, 22, 0.8);
+}
+
+.shadow-stage-screen-shadow.is-penumbra {
+  fill: rgba(16, 29, 50, 0.42);
+}
+
+.shadow-stage-ray {
+  fill: none;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  transition:
+    opacity 0.24s ease,
+    d 0.24s ease;
+}
+
+.shadow-stage-ray.is-point {
+  stroke: rgba(255, 191, 103, 0.94);
+  filter: drop-shadow(0 0 10px rgba(255, 191, 103, 0.18));
+}
+
+.shadow-stage-ray.is-umbra {
+  stroke: rgba(103, 198, 255, 0.92);
+  filter: drop-shadow(0 0 12px rgba(103, 198, 255, 0.16));
+}
+
+.shadow-stage-ray.is-outer {
+  stroke: rgba(181, 118, 255, 0.84);
+  stroke-dasharray: 8 8;
+}
+
+.shadow-stage-label,
+.shadow-stage-distance-text,
+.shadow-stage-note,
+.shadow-stage-shadow-label {
+  fill: rgba(236, 244, 255, 0.94);
+}
+
+.shadow-stage-label,
+.shadow-stage-shadow-label {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.shadow-stage-shadow-label.is-soft {
+  fill: rgba(201, 216, 238, 0.88);
+}
+
+.shadow-stage-distance-line {
+  stroke: rgba(229, 239, 255, 0.84);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.shadow-stage-distance-text {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.shadow-stage-note {
+  font-size: 16px;
+  font-weight: 600;
+}
+
 .mirror-stage-candle-highlight {
   fill: rgba(255, 255, 255, 0.18);
 }

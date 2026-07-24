@@ -35,6 +35,12 @@ vi.mock("../components/plane-mirror-lab", () => ({
   ),
 }));
 
+vi.mock("../components/shadow-formation-lab", () => ({
+  ShadowFormationLab: ({ topic }: { topic: { title: string } }) => (
+    <div data-testid="shadow-formation-lab">影子实验页：{topic.title}</div>
+  ),
+}));
+
 vi.mock("../components/motion-track-lab", () => ({
   MotionTrackLab: ({ topic }: { topic: { title: string } }) => (
     <div data-testid="motion-track-lab">运动轨迹实验页：{topic.title}</div>
@@ -127,6 +133,13 @@ describe("VisualizationPage delivery routing", () => {
     expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
   });
 
+  it("routes implemented shadow topics to the real optics lab component", () => {
+    renderPage("shadow-formation-lab");
+
+    expect(screen.getByTestId("shadow-formation-lab")).toHaveTextContent("影子形成与本影半影");
+    expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
+  });
+
   it("routes implemented evaporation topics to the real thermo lab component", () => {
     renderPage("evaporation-rate-lab");
 
@@ -150,18 +163,6 @@ describe("VisualizationPage delivery routing", () => {
     expect(screen.getByRole("link", { name: "返回知识点页" })).toHaveAttribute(
       "href",
       "/content/senior/physics",
-    );
-  });
-
-  it("shows the junior planned-shell state for the next light-propagation topic", () => {
-    renderPage("shadow-formation-lab");
-
-    expect(screen.getByRole("heading", { name: "影子形成与本影半影" })).toBeInTheDocument();
-    expect(screen.getAllByText("规划中").length).toBeGreaterThan(0);
-    expect(screen.getByText(/当前还没有真实实验页，先保留为教学规划项。/)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "返回知识点页" })).toHaveAttribute(
-      "href",
-      "/content/junior/physics",
     );
   });
 

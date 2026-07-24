@@ -34,6 +34,7 @@ const IMPLEMENTED_TOPIC_IDS = new Set([
   "circuit-observer",
   "light-reflection-lab",
   "plane-mirror-lab",
+  "shadow-formation-lab",
   "evaporation-rate-lab",
   "ohms-law-lab",
 ]);
@@ -196,10 +197,10 @@ export const teachingStages: TeachingStage[] = [
             stageId: "junior",
             subjectId: "physics",
             mode: "2D",
-            deliveryState: "planned",
-            status: "可开始",
+            deliveryState: "implemented",
+            status: "优先开发",
             tags: ["光学", "影子", "直线传播"],
-            highlights: ["适合先讲遮挡成影", "可对照点光源与面光源", "可衔接日食月食基础"],
+            highlights: ["支持点光源与面光源对照", "可直接观察本影与半影", "突出直线传播与影子大小变化"],
           },
           {
             id: "pinhole-imaging-lab",

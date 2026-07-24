@@ -10,6 +10,7 @@ import { NewtonFirstLawLab } from "../components/newton-first-law-lab";
 import { OhmsLawLab } from "../components/ohms-law-lab";
 import { PlaneMirrorLab } from "../components/plane-mirror-lab";
 import { PressureFactorsLab } from "../components/pressure-factors-lab";
+import { ShadowFormationLab } from "../components/shadow-formation-lab";
 import { StatusPanel } from "../components/status-panel";
 import { TwoForceBalanceLab } from "../components/two-force-balance-lab";
 import { useDocumentMeta, useLocale } from "../i18n";
@@ -169,6 +170,13 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
         />
       ) : topic.id === "plane-mirror-lab" ? (
         <PlaneMirrorLab
+          topic={topic}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+          fullscreenRef={fullscreenRef}
+        />
+      ) : topic.id === "shadow-formation-lab" ? (
+        <ShadowFormationLab
           topic={topic}
           isFullscreen={isFullscreen}
           onToggleFullscreen={toggleFullscreen}
