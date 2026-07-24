@@ -35,6 +35,12 @@ vi.mock("../components/pressure-factors-lab", () => ({
   ),
 }));
 
+vi.mock("../components/two-force-balance-lab", () => ({
+  TwoForceBalanceLab: ({ topic }: { topic: { title: string } }) => (
+    <div data-testid="two-force-balance-lab">二力平衡实验页：{topic.title}</div>
+  ),
+}));
+
 function renderPage(topicId: string) {
   const props = { params: { topicId } } as Parameters<typeof VisualizationPage>[0];
 
@@ -73,6 +79,13 @@ describe("VisualizationPage delivery routing", () => {
     renderPage("pressure-factors-lab");
 
     expect(screen.getByTestId("pressure-factors-lab")).toHaveTextContent("压强影响因素实验");
+    expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
+  });
+
+  it("routes implemented balance topics to the real balance lab component", () => {
+    renderPage("two-force-balance-lab");
+
+    expect(screen.getByTestId("two-force-balance-lab")).toHaveTextContent("二力平衡条件探究");
     expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
   });
 

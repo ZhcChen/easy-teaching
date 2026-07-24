@@ -30,6 +30,7 @@ const IMPLEMENTED_TOPIC_IDS = new Set([
   "newton-first-law-lab",
   "sliding-friction-lab",
   "pressure-factors-lab",
+  "two-force-balance-lab",
   "circuit-observer",
 ]);
 
@@ -111,6 +112,18 @@ export const teachingStages: TeachingStage[] = [
             status: "优先开发",
             tags: ["摩擦力", "压力", "控制变量"],
             highlights: ["支持多组对照记录", "验证接触面积无关", "适合课堂实验讲解"],
+          },
+          {
+            id: "two-force-balance-lab",
+            title: "二力平衡条件探究",
+            summary: "按步骤破坏大小、方向、共线和同一物体四个条件，理解二力平衡为何缺一不可。",
+            stageId: "junior",
+            subjectId: "physics",
+            mode: "2D",
+            deliveryState: "implemented",
+            status: "优先开发",
+            tags: ["二力平衡", "受力", "控制变量"],
+            highlights: ["支持五组验证流程", "实时检查四个条件", "突出平衡与不平衡对比"],
           },
           {
             id: "pressure-factors-lab",

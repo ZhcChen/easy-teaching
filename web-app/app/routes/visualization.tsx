@@ -7,6 +7,7 @@ import { MotionTrackLab } from "../components/motion-track-lab";
 import { NewtonFirstLawLab } from "../components/newton-first-law-lab";
 import { PressureFactorsLab } from "../components/pressure-factors-lab";
 import { StatusPanel } from "../components/status-panel";
+import { TwoForceBalanceLab } from "../components/two-force-balance-lab";
 import { useDocumentMeta, useLocale } from "../i18n";
 import {
   getTopicDeliveryMeta,
@@ -143,6 +144,13 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
         />
       ) : topic.id === "pressure-factors-lab" ? (
         <PressureFactorsLab
+          topic={topic}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+          fullscreenRef={fullscreenRef}
+        />
+      ) : topic.id === "two-force-balance-lab" ? (
+        <TwoForceBalanceLab
           topic={topic}
           isFullscreen={isFullscreen}
           onToggleFullscreen={toggleFullscreen}

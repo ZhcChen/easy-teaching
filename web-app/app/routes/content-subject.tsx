@@ -173,7 +173,8 @@ function getTopicThemeClass(topicId: string) {
   if (
     topicId === "sliding-friction-lab" ||
     topicId === "basic-force" ||
-    topicId === "pressure-factors-lab"
+    topicId === "pressure-factors-lab" ||
+    topicId === "two-force-balance-lab"
   ) {
     return "is-force";
   }

@@ -4224,6 +4224,174 @@ html[data-theme="dark"] .force-state-pill.is-active {
   stroke-linecap: round;
 }
 
+.balance-lab-layout {
+  transition:
+    grid-template-columns 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    gap 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.balance-lab-layout.is-collapsed {
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.balance-control-panel {
+  gap: 12px;
+  padding: 14px;
+  border-radius: 20px;
+}
+
+.balance-control-panel.is-collapsed {
+  width: 44px;
+  max-width: 44px;
+  gap: 0;
+}
+
+.balance-control-panel.is-collapsed .force-panel-collapsed-shell {
+  width: 44px;
+}
+
+.balance-control-scroll {
+  gap: 12px;
+}
+
+.balance-lab-main {
+  gap: 10px;
+}
+
+.balance-stage-canvas {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(96, 165, 250, 0.14) 0%, transparent 24%),
+    radial-gradient(circle at 82% 76%, rgba(192, 132, 252, 0.14) 0%, transparent 24%),
+    linear-gradient(180deg, #071220 0%, #081724 46%, #050c15 100%);
+}
+
+.balance-stage-stepbar {
+  max-width: calc(100% - 144px);
+}
+
+.balance-stage-condition-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.balance-stage-condition-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.balance-stage-condition-chip.is-ok {
+  border: 1px solid rgba(93, 226, 177, 0.26);
+  background: rgba(93, 226, 177, 0.12);
+  color: #88f0cb;
+}
+
+.balance-stage-condition-chip.is-bad {
+  border: 1px solid rgba(255, 139, 123, 0.22);
+  background: rgba(255, 139, 123, 0.12);
+  color: #ffb4aa;
+}
+
+.balance-stage-summary-card {
+  min-width: min(284px, 100%);
+}
+
+.balance-stage-summary-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.balance-stage-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid rgba(138, 190, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(7, 17, 31, 0.32);
+}
+
+.balance-stage-summary-item span {
+  color: var(--canvas-copy);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.balance-stage-summary-item strong {
+  color: var(--canvas-text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.balance-stage-table-line {
+  stroke: rgba(151, 194, 255, 0.3);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.balance-stage-pulley {
+  fill: rgba(103, 198, 255, 0.1);
+  stroke: rgba(151, 194, 255, 0.44);
+  stroke-width: 3;
+}
+
+.balance-stage-rope {
+  stroke: rgba(218, 230, 247, 0.78);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.balance-stage-weight {
+  fill: rgba(255, 191, 103, 0.18);
+  stroke: rgba(255, 191, 103, 0.46);
+  stroke-width: 2;
+}
+
+.balance-stage-body {
+  fill: rgba(96, 165, 250, 0.16);
+  stroke: rgba(151, 194, 255, 0.34);
+  stroke-width: 2.5;
+}
+
+.balance-stage-body-secondary {
+  fill: rgba(192, 132, 252, 0.14);
+}
+
+.balance-stage-body-core {
+  fill: rgba(103, 198, 255, 0.22);
+}
+
+.balance-stage-anchor {
+  fill: rgba(255, 255, 255, 0.9);
+}
+
+.balance-stage-force-arrow {
+  stroke: rgba(96, 165, 250, 0.94);
+  stroke-width: 4.5;
+  stroke-linecap: round;
+}
+
+.balance-stage-net-arrow {
+  stroke: rgba(192, 132, 252, 0.94);
+  stroke-width: 4.5;
+  stroke-linecap: round;
+}
+
+.balance-stage-rotation-arc {
+  fill: none;
+  stroke: rgba(255, 191, 103, 0.86);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 8 8;
+}
+
 .force-stage-stepbar {
   justify-content: center;
   align-items: center;
