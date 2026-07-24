@@ -411,6 +411,7 @@ const EXACT_TRANSLATIONS: Record<string, string> = {
   "总电压": "Total Voltage",
   "总电阻": "Total Resistance",
   "导通": "Conducting",
+  "未通电": "Not Energized",
   "串联结构": "Series Layout",
   "电流处处相等，电压按电阻大小分配。": "Current stays equal everywhere, while voltage is shared according to resistance.",
   "并联结构": "Parallel Layout",

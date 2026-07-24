@@ -31,8 +31,11 @@ type CircuitMetrics = {
   l2Power: number;
   l1Brightness: number;
   l2Brightness: number;
-  l1Active: boolean;
-  l2Active: boolean;
+  switchClosed: boolean;
+  l1Conducting: boolean;
+  l2Conducting: boolean;
+  l1Faulted: boolean;
+  l2Faulted: boolean;
   hasCircuitFlow: boolean;
   stateLabel: string;
   stateTone: Tone;
@@ -156,7 +159,6 @@ export function CircuitObserverLab({
   }
 
   function clearFaults() {
-    setMasterSwitchClosed(true);
     setL1Enabled(true);
     setL2Enabled(true);
   }
@@ -347,16 +349,34 @@ export function CircuitObserverLab({
                   <ControlChipGroup
                     items={[
                       {
-                        key: "l1",
-                        label: tt(l1Enabled ? "L1 正常" : "L1 断开"),
+                        key: "l1-normal",
+                        label: tt("L1 正常"),
                         active: l1Enabled,
-                        onClick: () => setL1Enabled((previous) => !previous),
+                        onClick: () => setL1Enabled(true),
                       },
                       {
-                        key: "l2",
-                        label: tt(l2Enabled ? "L2 正常" : "L2 断开"),
+                        key: "l1-open",
+                        label: tt("L1 断开"),
+                        active: !l1Enabled,
+                        onClick: () => setL1Enabled(false),
+                      },
+                    ]}
+                    columns={2}
+                  />
+
+                  <ControlChipGroup
+                    items={[
+                      {
+                        key: "l2-normal",
+                        label: tt("L2 正常"),
                         active: l2Enabled,
-                        onClick: () => setL2Enabled((previous) => !previous),
+                        onClick: () => setL2Enabled(true),
+                      },
+                      {
+                        key: "l2-open",
+                        label: tt("L2 断开"),
+                        active: !l2Enabled,
+                        onClick: () => setL2Enabled(false),
                       },
                     ]}
                     columns={2}
@@ -436,7 +456,8 @@ export function CircuitObserverLab({
                   current={metrics.l1Current}
                   voltage={metrics.l1Voltage}
                   brightness={metrics.l1Brightness}
-                  active={metrics.l1Active}
+                  conducting={metrics.l1Conducting}
+                  faulted={metrics.l1Faulted}
                   tt={tt}
                 />
                 <BulbCard
@@ -445,7 +466,8 @@ export function CircuitObserverLab({
                   current={metrics.l2Current}
                   voltage={metrics.l2Voltage}
                   brightness={metrics.l2Brightness}
-                  active={metrics.l2Active}
+                  conducting={metrics.l2Conducting}
+                  faulted={metrics.l2Faulted}
                   tt={tt}
                 />
                 </div>
@@ -518,7 +540,13 @@ function SeriesCircuitScene({
         {tt("电流处处相等，电压按电阻大小分配。")}
       </text>
 
-      <BatterySymbol x={188} topY={272} bottomY={530} label={tt("电源")} />
+      <BatterySymbol
+        x={188}
+        topY={272}
+        bottomY={530}
+        label={tt("电源")}
+        energized={metrics.hasCircuitFlow}
+      />
 
       <WirePath
         d="M 188 272 H 468"
@@ -528,7 +556,8 @@ function SeriesCircuitScene({
       <SwitchSymbol
         x={514}
         y={272}
-        closed={metrics.activeSegments.includes("series-switch")}
+        closed={metrics.switchClosed}
+        energized={metrics.hasCircuitFlow}
         label={tt("主开关")}
       />
       <WirePath
@@ -543,7 +572,7 @@ function SeriesCircuitScene({
         label="L1"
         resistance={l1Resistance}
         brightness={metrics.l1Brightness}
-        active={metrics.l1Active}
+        active={metrics.l1Conducting}
       />
       <WirePath
         d="M 872 272 H 988"
@@ -557,7 +586,7 @@ function SeriesCircuitScene({
         label="L2"
         resistance={l2Resistance}
         brightness={metrics.l2Brightness}
-        active={metrics.l2Active}
+        active={metrics.l2Conducting}
       />
 
       <WirePath
@@ -566,8 +595,8 @@ function SeriesCircuitScene({
         flowing={focusMode === "current" && metrics.hasCircuitFlow}
       />
 
-      {!metrics.l1Active ? <FaultMark x={812} y={272} /> : null}
-      {!metrics.l2Active ? <FaultMark x={1080} y={272} /> : null}
+      {metrics.l1Faulted ? <FaultMark x={812} y={272} /> : null}
+      {metrics.l2Faulted ? <FaultMark x={1080} y={272} /> : null}
     </g>
   );
 }
@@ -594,7 +623,13 @@ function ParallelCircuitScene({
         {tt("各支路电压相等，干路电流等于各支路之和。")}
       </text>
 
-      <BatterySymbol x={188} topY={248} bottomY={556} label={tt("电源")} />
+      <BatterySymbol
+        x={188}
+        topY={248}
+        bottomY={556}
+        label={tt("电源")}
+        energized={metrics.hasCircuitFlow}
+      />
 
       <WirePath
         d="M 188 248 H 468"
@@ -604,7 +639,8 @@ function ParallelCircuitScene({
       <SwitchSymbol
         x={514}
         y={248}
-        closed={metrics.activeSegments.includes("parallel-switch")}
+        closed={metrics.switchClosed}
+        energized={metrics.hasCircuitFlow}
         label={tt("主开关")}
       />
       <WirePath
@@ -646,7 +682,7 @@ function ParallelCircuitScene({
       <WirePath
         d="M 644 286 H 722"
         active={metrics.activeSegments.includes("parallel-l1-left")}
-        flowing={focusMode === "current" && metrics.l1Active}
+        flowing={focusMode === "current" && metrics.l1Conducting}
       />
       <CircuitBulb
         cx={802}
@@ -654,18 +690,18 @@ function ParallelCircuitScene({
         label="L1"
         resistance={l1Resistance}
         brightness={metrics.l1Brightness}
-        active={metrics.l1Active}
+        active={metrics.l1Conducting}
       />
       <WirePath
         d="M 862 286 H 1148"
         active={metrics.activeSegments.includes("parallel-l1-right")}
-        flowing={focusMode === "current" && metrics.l1Active}
+        flowing={focusMode === "current" && metrics.l1Conducting}
       />
 
       <WirePath
         d="M 644 446 H 722"
         active={metrics.activeSegments.includes("parallel-l2-left")}
-        flowing={focusMode === "current" && metrics.l2Active}
+        flowing={focusMode === "current" && metrics.l2Conducting}
       />
       <CircuitBulb
         cx={802}
@@ -673,16 +709,16 @@ function ParallelCircuitScene({
         label="L2"
         resistance={l2Resistance}
         brightness={metrics.l2Brightness}
-        active={metrics.l2Active}
+        active={metrics.l2Conducting}
       />
       <WirePath
         d="M 862 446 H 1148"
         active={metrics.activeSegments.includes("parallel-l2-right")}
-        flowing={focusMode === "current" && metrics.l2Active}
+        flowing={focusMode === "current" && metrics.l2Conducting}
       />
 
-      {!metrics.l1Active ? <FaultMark x={802} y={286} /> : null}
-      {!metrics.l2Active ? <FaultMark x={802} y={446} /> : null}
+      {metrics.l1Faulted ? <FaultMark x={802} y={286} /> : null}
+      {metrics.l2Faulted ? <FaultMark x={802} y={446} /> : null}
     </g>
   );
 }
@@ -702,7 +738,8 @@ function BulbCard({
   current,
   voltage,
   brightness,
-  active,
+  conducting,
+  faulted,
   tt,
 }: {
   title: string;
@@ -710,16 +747,17 @@ function BulbCard({
   current: number | null;
   voltage: number | null;
   brightness: number;
-  active: boolean;
+  conducting: boolean;
+  faulted: boolean;
   tt: (text: string) => string;
 }) {
+  const status = resolveBulbStatus({ conducting, faulted, tt });
+
   return (
     <article className="circuit-stage-bulb-card">
       <div className="circuit-stage-bulb-head">
         <strong>{title}</strong>
-        <StatusPill tone={active ? "active" : "warning"}>
-          {active ? tt("导通") : tt("断开")}
-        </StatusPill>
+        <StatusPill tone={status.tone}>{status.label}</StatusPill>
       </div>
       <div className="circuit-stage-bulb-row">
         <span>{tt("电阻")}</span>
@@ -799,15 +837,23 @@ function BatterySymbol({
   topY,
   bottomY,
   label,
+  energized,
 }: {
   x: number;
   topY: number;
   bottomY: number;
   label: string;
+  energized: boolean;
 }) {
   return (
     <g>
-      <line x1={x} y1={topY} x2={x} y2={bottomY} className="circuit-wire is-active" />
+      <line
+        x1={x}
+        y1={topY}
+        x2={x}
+        y2={bottomY}
+        className={energized ? "circuit-wire is-active" : "circuit-wire"}
+      />
       <line x1={x - 18} y1={topY + 42} x2={x + 18} y2={topY + 42} className="circuit-battery-plate is-long" />
       <line x1={x - 10} y1={topY + 72} x2={x + 10} y2={topY + 72} className="circuit-battery-plate" />
       <text x={x + 32} y={topY + 50} className="circuit-battery-mark">
@@ -827,19 +873,37 @@ function SwitchSymbol({
   x,
   y,
   closed,
+  energized,
   label,
 }: {
   x: number;
   y: number;
   closed: boolean;
+  energized: boolean;
   label: string;
 }) {
   return (
     <g>
-      <circle cx={x - 28} cy={y} r="6" className={closed ? "circuit-node is-active" : "circuit-node"} />
-      <circle cx={x + 28} cy={y} r="6" className={closed ? "circuit-node is-active" : "circuit-node"} />
+      <circle
+        cx={x - 28}
+        cy={y}
+        r="6"
+        className={energized ? "circuit-node is-active" : "circuit-node"}
+      />
+      <circle
+        cx={x + 28}
+        cy={y}
+        r="6"
+        className={energized ? "circuit-node is-active" : "circuit-node"}
+      />
       {closed ? (
-        <line x1={x - 24} y1={y} x2={x + 24} y2={y} className="circuit-wire is-active" />
+        <line
+          x1={x - 24}
+          y1={y}
+          x2={x + 24}
+          y2={y}
+          className={energized ? "circuit-wire is-active" : "circuit-wire"}
+        />
       ) : (
         <line x1={x - 24} y1={y} x2={x + 12} y2={y - 24} className="circuit-switch-lever is-open" />
       )}
@@ -908,8 +972,8 @@ function buildCircuitMetrics({
 
   if (topology === "series") {
     const hasCircuitFlow = masterSwitchClosed && l1Enabled && l2Enabled;
-    const totalResistance = safeL1Resistance + safeL2Resistance;
-    const mainCurrent = hasCircuitFlow ? sourceVoltage / totalResistance : 0;
+    const totalResistance = hasCircuitFlow ? safeL1Resistance + safeL2Resistance : null;
+    const mainCurrent = totalResistance === null ? 0 : sourceVoltage / totalResistance;
     const l1Voltage = hasCircuitFlow ? mainCurrent * safeL1Resistance : null;
     const l2Voltage = hasCircuitFlow ? mainCurrent * safeL2Resistance : null;
     const l1Power = hasCircuitFlow ? mainCurrent * mainCurrent * safeL1Resistance : 0;
@@ -928,8 +992,11 @@ function buildCircuitMetrics({
       l2Power,
       l1Brightness: hasCircuitFlow ? l1Power / brightnessBase : 0,
       l2Brightness: hasCircuitFlow ? l2Power / brightnessBase : 0,
-      l1Active: hasCircuitFlow,
-      l2Active: hasCircuitFlow,
+      switchClosed: masterSwitchClosed,
+      l1Conducting: hasCircuitFlow,
+      l2Conducting: hasCircuitFlow,
+      l1Faulted: !l1Enabled,
+      l2Faulted: !l2Enabled,
       hasCircuitFlow,
       stateLabel: resolveStateLabel({
         topology,
@@ -973,8 +1040,11 @@ function buildCircuitMetrics({
     l2Power,
     l1Brightness: l1Active ? l1Power / brightnessBase : 0,
     l2Brightness: l2Active ? l2Power / brightnessBase : 0,
-    l1Active,
-    l2Active,
+    switchClosed: masterSwitchClosed,
+    l1Conducting: l1Active,
+    l2Conducting: l2Active,
+    l1Faulted: !l1Enabled,
+    l2Faulted: !l2Enabled,
     hasCircuitFlow: masterSwitchClosed && (l1Active || l2Active),
     stateLabel: resolveStateLabel({
       topology,
@@ -990,6 +1060,35 @@ function buildCircuitMetrics({
       ...(l1Active ? ["parallel-l1-left", "parallel-l1-right"] : []),
       ...(l2Active ? ["parallel-l2-left", "parallel-l2-right"] : []),
     ],
+  };
+}
+
+function resolveBulbStatus({
+  conducting,
+  faulted,
+  tt,
+}: {
+  conducting: boolean;
+  faulted: boolean;
+  tt: (text: string) => string;
+}) {
+  if (faulted) {
+    return {
+      label: tt("断开"),
+      tone: "warning" as const,
+    };
+  }
+
+  if (conducting) {
+    return {
+      label: tt("导通"),
+      tone: "active" as const,
+    };
+  }
+
+  return {
+    label: tt("未通电"),
+    tone: "balanced" as const,
   };
 }
 
@@ -1032,6 +1131,25 @@ function buildFormulaSummary({
 
   if (focusMode === "voltage") {
     if (topology === "series") {
+      if (!metrics.hasCircuitFlow) {
+        return {
+          kicker: isZh ? "电压规律" : "Voltage pattern",
+          expression: isZh
+            ? "回路断开，无法形成串联分压"
+            : "Open circuit, no series voltage division",
+          detail: isZh
+            ? metrics.switchClosed
+              ? "当前串联回路中已有元件断开，电流为 0，课堂演示不再按导通状态比较 U = U₁ + U₂。"
+              : "主开关未闭合，当前只保留电源电压设定，还没有形成可比较的串联分压。"
+            : metrics.switchClosed
+              ? "A component is open in the series loop, so the current is 0 and the powered U = U1 + U2 comparison no longer applies."
+              : "The main switch is open, so only the source voltage is set and no powered series voltage division is formed yet.",
+          summary: isZh
+            ? "先保证串联回路完整导通，再观察电压如何按电阻分配。"
+            : "Restore a complete series loop first, then observe how voltage is distributed by resistance.",
+        };
+      }
+
       return {
         kicker: isZh ? "电压规律" : "Voltage pattern",
         expression: "U = U₁ + U₂",
