@@ -28,6 +28,7 @@ describe("ContentSubjectPage topic delivery states", () => {
     const circuitObserverLink = screen.getByRole("link", { name: /串并联电路观察/i });
     const reflectionLink = screen.getByRole("link", { name: /光的反射定律实验/i });
     const planeMirrorLink = screen.getByRole("link", { name: /平面镜成像实验/i });
+    const evaporationLink = screen.getByRole("link", { name: /液体蒸发快慢影响因素/i });
 
     expect(within(motionTrackLink).getByText("已可用")).toBeInTheDocument();
     expect(within(motionTrackLink).getByText("直接进入")).toBeInTheDocument();
@@ -61,6 +62,11 @@ describe("ContentSubjectPage topic delivery states", () => {
     expect(within(planeMirrorLink).getByText("直接进入")).toBeInTheDocument();
     expect(within(planeMirrorLink).getByText("优先开发")).toBeInTheDocument();
     expect(planeMirrorLink).toHaveAttribute("href", "/visual/plane-mirror-lab");
+
+    expect(within(evaporationLink).getByText("已可用")).toBeInTheDocument();
+    expect(within(evaporationLink).getByText("直接进入")).toBeInTheDocument();
+    expect(within(evaporationLink).getByText("优先开发")).toBeInTheDocument();
+    expect(evaporationLink).toHaveAttribute("href", "/visual/evaporation-rate-lab");
   });
 
   it("distinguishes planned and backlog senior physics topics at the entry level", () => {

@@ -187,5 +187,9 @@ function getTopicThemeClass(topicId: string) {
     return "is-optics";
   }
 
+  if (topicId === "evaporation-rate-lab") {
+    return "is-thermo";
+  }
+
   return "";
 }

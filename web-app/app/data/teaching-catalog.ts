@@ -34,6 +34,7 @@ const IMPLEMENTED_TOPIC_IDS = new Set([
   "circuit-observer",
   "light-reflection-lab",
   "plane-mirror-lab",
+  "evaporation-rate-lab",
 ]);
 
 const TOPIC_DELIVERY_META: Record<TeachingTopicDeliveryState, TopicDeliveryMeta> = {
@@ -174,6 +175,18 @@ export const teachingStages: TeachingStage[] = [
             status: "优先开发",
             tags: ["光学", "成像", "对称"],
             highlights: ["支持拖动物距与物高", "验证虚像与等距关系", "光路与对称线同屏展示"],
+          },
+          {
+            id: "evaporation-rate-lab",
+            title: "液体蒸发快慢影响因素",
+            summary: "围绕温度、表面积和风速做控制变量对照，直观看懂蒸发快慢的三大影响因素。",
+            stageId: "junior",
+            subjectId: "physics",
+            mode: "2D",
+            deliveryState: "implemented",
+            status: "优先开发",
+            tags: ["热学", "蒸发", "控制变量"],
+            highlights: ["支持三组因素依次验证", "实时联动蒸发曲线与液面下降", "突出控制变量法的课堂链路"],
           },
         ],
       },

@@ -1457,6 +1457,11 @@ a:focus-visible {
   --topic-accent-soft: rgba(181, 118, 255, 0.18);
 }
 
+.topic-tech-card.is-thermo {
+  --topic-accent: #ff8c63;
+  --topic-accent-soft: rgba(255, 140, 99, 0.18);
+}
+
 .topic-tech-card.is-3d {
   --topic-accent: #8b5cff;
   --topic-accent-soft: rgba(139, 92, 255, 0.15);
@@ -4838,6 +4843,178 @@ html[data-theme="dark"] .force-state-pill.is-active {
   fill: rgba(93, 226, 177, 0.12);
   stroke: rgba(126, 241, 201, 0.92);
   filter: drop-shadow(0 0 14px rgba(93, 226, 177, 0.18));
+}
+
+.evaporation-lab-layout {
+  transition:
+    grid-template-columns 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    gap 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.evaporation-lab-layout.is-collapsed {
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.evaporation-control-panel {
+  gap: 12px;
+  padding: 14px;
+  border-radius: 20px;
+}
+
+.evaporation-control-panel.is-collapsed {
+  width: 44px;
+  max-width: 44px;
+  gap: 0;
+}
+
+.evaporation-control-panel.is-collapsed .force-panel-collapsed-shell {
+  width: 44px;
+}
+
+.evaporation-control-scroll {
+  gap: 12px;
+}
+
+.evaporation-lab-main {
+  gap: 10px;
+}
+
+.evaporation-stage-canvas {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(255, 172, 98, 0.16) 0%, transparent 22%),
+    radial-gradient(circle at 80% 76%, rgba(93, 226, 177, 0.14) 0%, transparent 24%),
+    linear-gradient(180deg, #081423 0%, #081926 44%, #050d17 100%);
+}
+
+.evaporation-stage-stepbar {
+  max-width: calc(100% - 160px);
+}
+
+.evaporation-stage-svg {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+}
+
+.evaporation-stage-ground-line {
+  stroke: rgba(151, 194, 255, 0.24);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.evaporation-stage-compare-copy,
+.evaporation-stage-vessel-title,
+.evaporation-stage-vessel-note,
+.evaporation-stage-vessel-value,
+.evaporation-stage-vessel-copy,
+.evaporation-stage-summary-label,
+.evaporation-stage-summary-value {
+  fill: rgba(236, 244, 255, 0.94);
+}
+
+.evaporation-stage-compare-copy {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.evaporation-stage-vessel-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.evaporation-stage-vessel-note,
+.evaporation-stage-vessel-copy,
+.evaporation-stage-summary-label {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.evaporation-stage-vessel-value,
+.evaporation-stage-summary-value {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.evaporation-stage-vessel-shadow {
+  fill: rgba(8, 16, 29, 0.48);
+}
+
+.evaporation-stage-vessel-body {
+  fill: rgba(144, 203, 255, 0.08);
+  stroke: rgba(170, 214, 255, 0.44);
+  stroke-width: 2.2;
+}
+
+.evaporation-stage-vessel-lip {
+  fill: rgba(216, 235, 255, 0.08);
+  stroke: rgba(225, 238, 255, 0.3);
+  stroke-width: 1.8;
+}
+
+.evaporation-stage-liquid-body {
+  fill: rgba(103, 198, 255, 0.32);
+  stroke: rgba(150, 219, 255, 0.18);
+  stroke-width: 1.6;
+}
+
+.evaporation-stage-liquid-surface {
+  fill: rgba(124, 214, 255, 0.74);
+  stroke: rgba(209, 237, 255, 0.42);
+  stroke-width: 1.6;
+}
+
+.evaporation-stage-vessel.is-compare .evaporation-stage-liquid-body {
+  fill: rgba(255, 160, 110, 0.34);
+}
+
+.evaporation-stage-vessel.is-compare .evaporation-stage-liquid-surface {
+  fill: rgba(255, 186, 124, 0.8);
+}
+
+.evaporation-stage-vapor {
+  fill: rgba(231, 241, 255, 0.38);
+  filter: drop-shadow(0 0 10px rgba(231, 241, 255, 0.1));
+}
+
+.evaporation-stage-vapor.is-drifting {
+  fill: rgba(220, 243, 255, 0.46);
+}
+
+.evaporation-stage-heat-wave path {
+  fill: none;
+  stroke: rgba(255, 168, 104, 0.92);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 10px rgba(255, 168, 104, 0.12));
+}
+
+.evaporation-stage-fan-body {
+  fill: rgba(217, 230, 248, 0.16);
+  stroke: rgba(217, 230, 248, 0.58);
+  stroke-width: 1.8;
+}
+
+.evaporation-stage-fan-blade {
+  fill: rgba(217, 230, 248, 0.7);
+}
+
+.evaporation-stage-airflow-line {
+  fill: none;
+  stroke: rgba(103, 198, 255, 0.84);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.evaporation-stage-legend-dot {
+  fill: rgba(103, 198, 255, 0.9);
+}
+
+.evaporation-stage-legend-dot.is-compare {
+  fill: rgba(255, 160, 110, 0.92);
 }
 
 .force-stage-stepbar {

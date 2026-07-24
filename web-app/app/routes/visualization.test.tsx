@@ -17,6 +17,12 @@ vi.mock("../components/circuit-observer-lab", () => ({
   ),
 }));
 
+vi.mock("../components/evaporation-rate-lab", () => ({
+  EvaporationRateLab: ({ topic }: { topic: { title: string } }) => (
+    <div data-testid="evaporation-rate-lab">蒸发实验页：{topic.title}</div>
+  ),
+}));
+
 vi.mock("../components/light-reflection-lab", () => ({
   LightReflectionLab: ({ topic }: { topic: { title: string } }) => (
     <div data-testid="light-reflection-lab">反射实验页：{topic.title}</div>
@@ -112,6 +118,13 @@ describe("VisualizationPage delivery routing", () => {
     renderPage("plane-mirror-lab");
 
     expect(screen.getByTestId("plane-mirror-lab")).toHaveTextContent("平面镜成像实验");
+    expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
+  });
+
+  it("routes implemented evaporation topics to the real thermo lab component", () => {
+    renderPage("evaporation-rate-lab");
+
+    expect(screen.getByTestId("evaporation-rate-lab")).toHaveTextContent("液体蒸发快慢影响因素");
     expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
   });
 

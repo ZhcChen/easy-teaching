@@ -3,6 +3,7 @@ import { Link } from "react-router";
 
 import { BasicForceLab } from "../components/basic-force-lab";
 import { CircuitObserverLab } from "../components/circuit-observer-lab";
+import { EvaporationRateLab } from "../components/evaporation-rate-lab";
 import { LightReflectionLab } from "../components/light-reflection-lab";
 import { MotionTrackLab } from "../components/motion-track-lab";
 import { NewtonFirstLawLab } from "../components/newton-first-law-lab";
@@ -167,6 +168,13 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
         />
       ) : topic.id === "plane-mirror-lab" ? (
         <PlaneMirrorLab
+          topic={topic}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+          fullscreenRef={fullscreenRef}
+        />
+      ) : topic.id === "evaporation-rate-lab" ? (
+        <EvaporationRateLab
           topic={topic}
           isFullscreen={isFullscreen}
           onToggleFullscreen={toggleFullscreen}
