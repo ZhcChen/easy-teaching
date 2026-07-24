@@ -183,7 +183,13 @@ function getTopicThemeClass(topicId: string) {
     return "is-circuit";
   }
 
-  if (topicId === "light-reflection-lab" || topicId === "plane-mirror-lab") {
+  if (
+    topicId === "light-reflection-lab" ||
+    topicId === "plane-mirror-lab" ||
+    topicId === "shadow-formation-lab" ||
+    topicId === "pinhole-imaging-lab" ||
+    topicId === "eclipse-scattering-lab"
+  ) {
     return "is-optics";
   }
 

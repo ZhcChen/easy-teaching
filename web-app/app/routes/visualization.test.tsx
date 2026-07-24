@@ -153,6 +153,30 @@ describe("VisualizationPage delivery routing", () => {
     );
   });
 
+  it("shows the junior planned-shell state for the next light-propagation topic", () => {
+    renderPage("shadow-formation-lab");
+
+    expect(screen.getByRole("heading", { name: "影子形成与本影半影" })).toBeInTheDocument();
+    expect(screen.getAllByText("规划中").length).toBeGreaterThan(0);
+    expect(screen.getByText(/当前还没有真实实验页，先保留为教学规划项。/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "返回知识点页" })).toHaveAttribute(
+      "href",
+      "/content/junior/physics",
+    );
+  });
+
+  it("shows the backlog-shell state for the deferred astronomy and scattering topic", () => {
+    renderPage("eclipse-scattering-lab");
+
+    expect(screen.getByRole("heading", { name: "日食月食与光路可见性" })).toBeInTheDocument();
+    expect(screen.getAllByText("后续扩展").length).toBeGreaterThan(0);
+    expect(screen.getByText(/当前只保留主题方向说明，后续会结合课堂主线决定是否推进。/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "返回知识点页" })).toHaveAttribute(
+      "href",
+      "/content/junior/physics",
+    );
+  });
+
   it("shows a backlog explanation instead of the old default tech shell", () => {
     renderPage("electromagnetic-field");
 

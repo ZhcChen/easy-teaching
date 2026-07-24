@@ -75,6 +75,27 @@ describe("ContentSubjectPage topic delivery states", () => {
     expect(ohmsLawLink).toHaveAttribute("href", "/visual/ohms-law-lab");
   });
 
+  it("surfaces the split light-propagation topics with planned and backlog states", () => {
+    renderPage("junior", "physics");
+
+    const shadowLink = screen.getByRole("link", { name: /影子形成与本影半影/i });
+    const pinholeLink = screen.getByRole("link", { name: /小孔成像规律观察/i });
+    const eclipseLink = screen.getByRole("link", { name: /日食月食与光路可见性/i });
+
+    expect(within(shadowLink).getByText("规划中")).toBeInTheDocument();
+    expect(within(shadowLink).getByText("查看规划")).toBeInTheDocument();
+    expect(within(shadowLink).getByText("可开始")).toBeInTheDocument();
+    expect(shadowLink).toHaveAttribute("href", "/visual/shadow-formation-lab");
+
+    expect(within(pinholeLink).getAllByText("后续扩展").length).toBeGreaterThan(0);
+    expect(within(pinholeLink).getByText("了解方向")).toBeInTheDocument();
+    expect(pinholeLink).toHaveAttribute("href", "/visual/pinhole-imaging-lab");
+
+    expect(within(eclipseLink).getAllByText("后续扩展").length).toBeGreaterThan(0);
+    expect(within(eclipseLink).getByText("了解方向")).toBeInTheDocument();
+    expect(eclipseLink).toHaveAttribute("href", "/visual/eclipse-scattering-lab");
+  });
+
   it("distinguishes planned and backlog senior physics topics at the entry level", () => {
     renderPage("senior", "physics");
 
