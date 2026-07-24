@@ -7,6 +7,16 @@ import {
   type RefObject,
 } from "react";
 
+import {
+  createInitialClassroomSessionState,
+  recordClassroomMeasurement,
+  setClassroomMeasurementEligibility,
+  updateClassroomParameters,
+  type ContactAreaKey,
+  type ForceExperimentMode,
+  type ForceViewMode,
+  type SurfacePresetKey,
+} from "./basic-force-lab-state";
 import { BasicForceThreeStage } from "./basic-force-three-stage";
 import { ControlButton } from "./control-button";
 import { ControlChipGroup } from "./control-chip-group";
@@ -22,9 +32,6 @@ import { useLocale } from "../i18n";
 type ForceKey = "gravity" | "normal" | "pull" | "friction" | "net";
 type MotionState = "rest" | "threshold" | "sliding";
 type Tone = "balanced" | "warning" | "active";
-type SurfacePresetKey = "smooth-board" | "wood-board" | "cloth" | "towel";
-type ContactAreaKey = "flat" | "side" | "upright";
-type ForceExperimentMode = "measurement" | "constant-pull" | "manual-drag";
 type ExperimentPhase =
   | "idle"
   | "ramping"
@@ -33,7 +40,6 @@ type ExperimentPhase =
   | "stuck"
   | "accelerating"
   | "complete";
-type ForceViewMode = "2d" | "3d";
 
 type BasicForceLabProps = {
   topic: TeachingTopic;
@@ -237,6 +243,8 @@ const FORCE_MODE_OPTIONS = [
   },
 ] as const;
 
+const DEFAULT_CLASSROOM_SESSION = createInitialClassroomSessionState();
+
 const SURFACE_PRESETS: SurfacePreset[] = [
   {
     key: "smooth-board",
@@ -311,20 +319,27 @@ export function BasicForceLab({
   fullscreenRef,
 }: BasicForceLabProps) {
   const { isZh, tt } = useLocale();
-  const [mode, setMode] = useState<ForceExperimentMode>(DEFAULT_VALUES.mode);
+  const [mode, setMode] = useState<ForceExperimentMode>(DEFAULT_CLASSROOM_SESSION.entry.mode);
   const [viewMode, setViewMode] = useState<ForceViewMode>(readStoredForceViewMode);
   const [isControlPanelCollapsed, setIsControlPanelCollapsed] =
     useState(readStoredForcePanelCollapsed);
-  const [pressure, setPressure] = useState(DEFAULT_VALUES.pressure);
+  const [pressure, setPressure] = useState(DEFAULT_CLASSROOM_SESSION.parameters.pressure);
   const [constantPullForce, setConstantPullForce] = useState(DEFAULT_VALUES.constantPullForce);
-  const [surfacePreset, setSurfacePreset] = useState<SurfacePresetKey>(DEFAULT_VALUES.surfacePreset);
-  const [contactArea, setContactArea] = useState<ContactAreaKey>(DEFAULT_VALUES.contactArea);
+  const [surfacePreset, setSurfacePreset] = useState<SurfacePresetKey>(
+    DEFAULT_CLASSROOM_SESSION.parameters.surfacePreset,
+  );
+  const [contactArea, setContactArea] = useState<ContactAreaKey>(
+    DEFAULT_CLASSROOM_SESSION.parameters.contactArea,
+  );
   const [activeForce, setActiveForce] = useState<ForceKey>("gravity");
   const [hasExperimentRun, setHasExperimentRun] = useState(false);
   const [isExperimentRunning, setIsExperimentRunning] = useState(false);
   const [experimentElapsedMs, setExperimentElapsedMs] = useState(0);
   const [currentRunId, setCurrentRunId] = useState(0);
   const [runRecords, setRunRecords] = useState<ExperimentRecord[]>([]);
+  const [classroomSession, setClassroomSession] = useState(() =>
+    createInitialClassroomSessionState(),
+  );
   const [manualIsRecording, setManualIsRecording] = useState(false);
   const [manualIsDragging, setManualIsDragging] = useState(false);
   const [manualSeries, setManualSeries] = useState<ForceTimelineSample[]>(() => [
@@ -366,6 +381,16 @@ export function BasicForceLab({
   );
 
   useEffect(() => {
+    setClassroomSession((current) =>
+      updateClassroomParameters(current, {
+        pressure,
+        surfacePreset,
+        contactArea,
+      }),
+    );
+  }, [contactArea, pressure, surfacePreset]);
+
+  useEffect(() => {
     if (!hasMountedRef.current) {
       hasMountedRef.current = true;
       return;
@@ -395,6 +420,18 @@ export function BasicForceLab({
       setViewMode("2d");
     }
   }, [mode, viewMode]);
+
+  useEffect(() => {
+    if (mode === "measurement") {
+      return;
+    }
+
+    setClassroomSession((current) =>
+      current.eligibility === "idle"
+        ? current
+        : setClassroomMeasurementEligibility(current, "idle"),
+    );
+  }, [mode]);
 
   const isManualMode = mode === "manual-drag";
   const totalExperimentMs =
@@ -696,6 +733,16 @@ export function BasicForceLab({
     };
 
     setRunRecords((previous) => [nextRecord, ...previous].slice(0, 6));
+    setClassroomSession((current) =>
+      recordClassroomMeasurement(
+        setClassroomMeasurementEligibility(current, "recordable"),
+        {
+          stablePullForce: metrics.kineticFriction,
+          kineticFriction: metrics.kineticFriction,
+          staticLimit: metrics.staticLimit,
+        },
+      ),
+    );
     setActiveForce("friction");
     lastRecordedRunRef.current = currentRunId;
   }, [
@@ -1024,14 +1071,18 @@ export function BasicForceLab({
 
   function resetDefaults() {
     setMode(DEFAULT_VALUES.mode);
-    setPressure(DEFAULT_VALUES.pressure);
+    setPressure(DEFAULT_CLASSROOM_SESSION.parameters.pressure);
     setConstantPullForce(DEFAULT_VALUES.constantPullForce);
-    setSurfacePreset(DEFAULT_VALUES.surfacePreset);
-    setContactArea(DEFAULT_VALUES.contactArea);
+    setSurfacePreset(DEFAULT_CLASSROOM_SESSION.parameters.surfacePreset);
+    setContactArea(DEFAULT_CLASSROOM_SESSION.parameters.contactArea);
     setActiveForce("gravity");
     setHasExperimentRun(false);
     setIsExperimentRunning(false);
     setExperimentElapsedMs(0);
+    setClassroomSession((current) => ({
+      ...createInitialClassroomSessionState(),
+      recordsByFactor: current.recordsByFactor,
+    }));
     resetManualRecordingState();
   }
 
@@ -1056,6 +1107,10 @@ export function BasicForceLab({
         lastTravelProgress: 0,
       };
       return;
+    }
+
+    if (mode === "measurement") {
+      setClassroomSession((current) => setClassroomMeasurementEligibility(current, "measuring"));
     }
 
     setHasExperimentRun(true);
@@ -1083,6 +1138,10 @@ export function BasicForceLab({
     if (experimentElapsedMs <= 0 || experimentElapsedMs >= totalExperimentMs) {
       startExperiment();
       return;
+    }
+
+    if (mode === "measurement") {
+      setClassroomSession((current) => setClassroomMeasurementEligibility(current, "measuring"));
     }
 
     setHasExperimentRun(true);
@@ -1481,7 +1540,13 @@ export function BasicForceLab({
                     </ControlButton>
                     <ControlButton
                       size="compact"
-                      onClick={() => setRunRecords([])}
+                      onClick={() => {
+                        setRunRecords([]);
+                        setClassroomSession((current) => ({
+                          ...current,
+                          recordsByFactor: createInitialClassroomSessionState().recordsByFactor,
+                        }));
+                      }}
                       disabled={runRecords.length === 0}
                     >
                       {isZh ? "清空记录" : "Clear records"}

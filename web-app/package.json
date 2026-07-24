@@ -7,6 +7,8 @@
     "dev": "react-router dev --host 0.0.0.0 --port 57001 --strictPort",
     "preview": "sirv build/client --single index.html --host 0.0.0.0 --port 57001",
     "start": "npm run preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
@@ -20,13 +22,17 @@
   "devDependencies": {
     "@react-router/dev": "8.0.0",
     "@tailwindcss/vite": "^4.2.2",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^22",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.185.1",
+    "jsdom": "^29.1.1",
     "sirv-cli": "^3.0.1",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",
-    "vite": "^8.0.3"
+    "vite": "^8.0.3",
+    "vitest": "^4.1.10"
   }
 }
