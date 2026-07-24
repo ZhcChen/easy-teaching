@@ -63,6 +63,11 @@ npm run build
 npm run typecheck
 ```
 
+其中：
+
+- `npm run build`：构建后只保留纯静态产物，部署目录为 `build/client`
+- `build/server` 若被 React Router 在构建过程中临时生成，会在构建结束后自动清理
+
 ## 目录说明
 
 ```text

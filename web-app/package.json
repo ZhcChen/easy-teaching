@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "react-router build",
+    "build": "react-router build && node ./scripts/clean-static-build.mjs",
     "dev": "react-router dev --host 0.0.0.0 --port 57001 --strictPort",
     "preview": "sirv build/client --single index.html --host 0.0.0.0 --port 57001",
     "start": "npm run preview",
