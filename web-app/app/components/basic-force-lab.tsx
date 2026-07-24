@@ -34,6 +34,10 @@ import {
   BasicForceClassroomSummary,
 } from "./basic-force-classroom-summary";
 import {
+  BasicForceComparisonChart,
+  type BasicForceComparisonBar,
+} from "./basic-force-comparison-chart";
+import {
   BasicForceRecordTable,
   type BasicForceRecordGroup,
 } from "./basic-force-record-table";
@@ -320,6 +324,26 @@ const CONTACT_AREAS: ContactAreaPreset[] = [
     blockHeight: 148,
   },
 ];
+
+const FRICTION_EQUIPMENT_ZH = [
+  "弹簧测力计",
+  "木块",
+  "砝码",
+  "长木板",
+  "棉布",
+  "毛巾",
+  "细线",
+] as const;
+
+const FRICTION_EQUIPMENT_EN = [
+  "Spring scale",
+  "Wood block",
+  "Weights",
+  "Board",
+  "Cotton cloth",
+  "Towel",
+  "String",
+] as const;
 
 export function BasicForceLab({
   topic,
@@ -1185,6 +1209,63 @@ export function BasicForceLab({
     ...item,
     title: tt(item.title),
   }));
+  const experimentEquipment = isZh
+    ? [...FRICTION_EQUIPMENT_ZH]
+    : [...FRICTION_EQUIPMENT_EN];
+  const inquiryPrompts = getFrictionInquiryPrompts({
+    studyFactor,
+    isZh,
+  });
+  const classroomComparisonBars = useMemo(
+    () =>
+      buildClassroomComparisonBars({
+        factor: studyFactor,
+        factorState: classroomTeaching.activeFactor,
+        records: classroomSession.recordsByFactor[studyFactor],
+        currentGroupKey: currentClassroomGroupKey,
+        currentObservedValue:
+          isTeachingMeasurementMode && hasPlaybackStarted ? displayedScene.pullForce : undefined,
+        currentEligibility: classroomTeaching.stability.reason,
+        isCurrentGroupCandidate: classroomSession.isClassroomCandidate,
+        currentParameters: {
+          pressure,
+          surfacePreset,
+          contactArea,
+        },
+        isZh,
+      }),
+    [
+      classroomSession.isClassroomCandidate,
+      classroomSession.recordsByFactor,
+      classroomTeaching.activeFactor,
+      classroomTeaching.stability.reason,
+      contactArea,
+      currentClassroomGroupKey,
+      displayedScene.pullForce,
+      hasPlaybackStarted,
+      isTeachingMeasurementMode,
+      isZh,
+      pressure,
+      studyFactor,
+      surfacePreset,
+    ],
+  );
+  const classroomComparisonTitle = getClassroomComparisonTitle({
+    factor: studyFactor,
+    isZh,
+  });
+  const classroomComparisonSummary =
+    studyFactor === "contact-area" && !classroomSession.isClassroomCandidate
+      ? isZh
+        ? "竖放只作为扩展观察，不写入课堂默认实验单。"
+        : "Upright placement stays in extended observation and is not written into the default classroom worksheet."
+      : hasPlaybackStarted && !currentClassroomRecord
+        ? isZh
+          ? "当前组柱形会跟随本轮读数变化；点击“记录本组”后才会写入实验单。"
+          : 'The current bar follows this run in real time and enters the worksheet only after you click "Record run".'
+        : isZh
+          ? "已记录组显示稳定读数，待测组保持占位。"
+          : "Recorded runs show stable readings, while pending runs stay as placeholders.";
   const forceGuideX = forceGraph.mapTime(currentTimelineSample.timeSeconds);
   const thresholdLineY = forceGraph.mapValue(metrics.staticLimit);
   const currentPullPoint = {
@@ -1846,20 +1927,56 @@ export function BasicForceLab({
                 {studyFactor === "contact-area" ? (
                   <ControlPanelSection
                     title={tt("摆放方式")}
-                    hint={isZh ? "课堂默认只比较正放 / 侧放" : "The classroom flow compares flat vs side placement"}
+                    hint={
+                      isZh
+                        ? "课堂默认统计正放 / 侧放，竖放用于扩展观察"
+                        : "The classroom flow records flat vs side, while upright stays for extended observation."
+                    }
                   >
                     <ControlChipGroup
-                      items={CONTACT_AREAS.filter((item) => item.key !== "upright").map((item) => ({
+                      items={CONTACT_AREAS.map((item) => ({
                         key: item.key,
                         label: tt(item.label),
                         active: contactArea === item.key,
                         title: tt(item.description),
                         onClick: () => setContactArea(item.key),
                       }))}
-                      columns={2}
+                      columns={3}
                     />
                   </ControlPanelSection>
                 ) : null}
+
+                <ControlPanelSection
+                  title={isZh ? "实验器材" : "Equipment"}
+                  hint={
+                    isZh
+                      ? "对应 Word 原始实验中的课堂器材"
+                      : "Matches the classroom equipment listed in the source Word document"
+                  }
+                >
+                  <div className="force-support-chip-list">
+                    {experimentEquipment.map((item) => (
+                      <span key={item} className="force-support-chip">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </ControlPanelSection>
+
+                <ControlPanelSection
+                  title={isZh ? "思考提示" : "Inquiry prompts"}
+                  hint={
+                    isZh
+                      ? "先观察读数，再带着问题归纳规律"
+                      : "Observe the reading first, then summarize the rule through these prompts."
+                  }
+                >
+                  <ol className="force-support-question-list">
+                    {inquiryPrompts.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ol>
+                </ControlPanelSection>
               </div>
             </>
           )}
@@ -2266,6 +2383,9 @@ export function BasicForceLab({
                     experimentStatus={experimentStatus}
                     teachingState={classroomTeaching}
                     measurementHint={classroomMeasurementHint}
+                    comparisonTitle={classroomComparisonTitle}
+                    comparisonSummary={classroomComparisonSummary}
+                    comparisonBars={classroomComparisonBars}
                     recordGroups={classroomRecordGroups}
                     recordCount={classroomRecordCount}
                     surfaceLabel={surfacePresetMeta.label}
@@ -2865,6 +2985,9 @@ function MeasurementTeachingPanels({
   experimentStatus,
   teachingState,
   measurementHint,
+  comparisonTitle,
+  comparisonSummary,
+  comparisonBars,
   recordGroups,
   recordCount,
   surfaceLabel,
@@ -2878,6 +3001,9 @@ function MeasurementTeachingPanels({
   experimentStatus: ExperimentStatus;
   teachingState: ClassroomTeachingState;
   measurementHint: string;
+  comparisonTitle: string;
+  comparisonSummary: string;
+  comparisonBars: BasicForceComparisonBar[];
   recordGroups: BasicForceRecordGroup[];
   recordCount: number;
   surfaceLabel: string;
@@ -3031,7 +3157,22 @@ function MeasurementTeachingPanels({
         x={rightX + 24}
         y={baseY + 84}
         width={stage.graphWidth - 48}
-        height={stage.graphHeight - 108}
+        height={156}
+      >
+        <BasicForceComparisonChart
+          title={comparisonTitle}
+          summary={comparisonSummary}
+          bars={comparisonBars}
+        />
+      </foreignObject>
+      <text x={rightX + 28} y={baseY + 266} className="force-teaching-kicker">
+        {isZh ? "全部记录" : "Recorded Runs"}
+      </text>
+      <foreignObject
+        x={rightX + 24}
+        y={baseY + 284}
+        width={stage.graphWidth - 48}
+        height={stage.graphHeight - 308}
       >
         <BasicForceRecordTable
           groups={recordGroups}
@@ -3292,6 +3433,205 @@ function formatClassroomRecordHelper({
   return isZh
     ? `待测：${missingLabels.join("、")}。`
     : `Waiting to measure: ${missingLabels.join(", ")}.`;
+}
+
+function getFrictionInquiryPrompts({
+  studyFactor,
+  isZh,
+}: {
+  studyFactor: StudyFactor;
+  isZh: boolean;
+}) {
+  const commonPrompt = isZh
+    ? "为什么必须匀速拉动？如果拉动忽快忽慢，测力计读数还能直接当作滑动摩擦力吗？"
+    : "Why must the pull stay uniform? If the pull speed changes, can the scale reading still be treated as sliding friction directly?";
+  const applicationPrompt = isZh
+    ? "自行车轮胎上的花纹是在增大还是减小摩擦？它和本实验中的哪一类变量对应？"
+    : "Do bicycle tire treads increase or reduce friction, and which variable in this experiment does that correspond to?";
+
+  switch (studyFactor) {
+    case "pressure":
+      return [
+        commonPrompt,
+        isZh
+          ? "如果在同一材质上把压力增加到原来的 3 倍，稳定读数大约会怎样变化？"
+          : "If the pressure on the same surface triples, how should the stable reading change?",
+        applicationPrompt,
+      ];
+    case "surface":
+      return [
+        commonPrompt,
+        isZh
+          ? "保持压力不变时，为什么毛巾面的稳定读数会比木板更大？"
+          : "Why does the towel surface produce a larger stable reading than the board when the pressure stays the same?",
+        applicationPrompt,
+      ];
+    case "contact-area":
+      return [
+        commonPrompt,
+        isZh
+          ? "怎样通过正放、侧放和竖放的对比，验证接触面积变化后读数基本不变？"
+          : "How can flat, side, and upright placement help verify that the reading stays nearly unchanged when only the contact area changes?",
+        applicationPrompt,
+      ];
+    default:
+      return [commonPrompt, applicationPrompt];
+  }
+}
+
+function getClassroomComparisonTitle({
+  factor,
+  isZh,
+}: {
+  factor: StudyFactor;
+  isZh: boolean;
+}) {
+  switch (factor) {
+    case "pressure":
+      return isZh ? "压力对照图" : "Pressure Comparison";
+    case "surface":
+      return isZh ? "材质对照图" : "Surface Comparison";
+    case "contact-area":
+      return isZh ? "接触面积对照图" : "Contact-area Comparison";
+    default:
+      return isZh ? "课堂对照图" : "Class Comparison";
+  }
+}
+
+function buildClassroomComparisonBars({
+  factor,
+  factorState,
+  records,
+  currentGroupKey,
+  currentObservedValue,
+  currentEligibility,
+  isCurrentGroupCandidate,
+  currentParameters,
+  isZh,
+}: {
+  factor: StudyFactor;
+  factorState: ClassroomFactorTeachingState;
+  records: ClassroomRecord[];
+  currentGroupKey: string;
+  currentObservedValue?: number;
+  currentEligibility: ClassroomTeachingState["stability"]["reason"];
+  isCurrentGroupCandidate: boolean;
+  currentParameters: {
+    pressure: number;
+    surfacePreset: SurfacePresetKey;
+    contactArea: ContactAreaKey;
+  };
+  isZh: boolean;
+}): BasicForceComparisonBar[] {
+  type DraftRow = {
+    key: string;
+    label: string;
+    meta: string;
+    statusLabel: string;
+    valueLabel: string;
+    rawValue: number;
+    tone: BasicForceComparisonBar["tone"];
+  };
+
+  const recordMap = new Map(records.map((record) => [record.groupKey, record]));
+  const rows: DraftRow[] = factorState.expectedGroups.map((group) => {
+    const record = recordMap.get(group.groupKey);
+    const isCurrent = group.groupKey === currentGroupKey;
+    const liveValue =
+      isCurrent && !record && typeof currentObservedValue === "number"
+        ? currentObservedValue
+        : undefined;
+    const rawValue = record?.kineticFriction ?? liveValue ?? 0;
+
+    return {
+      key: group.groupKey,
+      label: formatTeachingGroupValue(factor, group.value, isZh),
+      meta: formatClassroomRecordRowNote(factor, isZh),
+      statusLabel: formatComparisonStatusLabel({
+        hasRecord: Boolean(record),
+        isCurrent,
+        reason: currentEligibility,
+        isZh,
+      }),
+      valueLabel:
+        record || typeof liveValue === "number"
+          ? `${formatNumber(rawValue, 1)} N`
+          : isZh
+            ? "待测"
+            : "Pending",
+      rawValue,
+      tone: record ? "recorded" : isCurrent ? "current" : "pending",
+    };
+  });
+
+  if (factor === "contact-area" && !isCurrentGroupCandidate && currentParameters.contactArea === "upright") {
+    const extendedValue = typeof currentObservedValue === "number" ? currentObservedValue : 0;
+    rows.push({
+      key: "contact-area:upright:extended",
+      label: isZh ? "竖放（扩展）" : "Upright (extended)",
+      meta: `${formatSurfacePresetLabel(currentParameters.surfacePreset, isZh)} · ${formatPressureLabel(currentParameters.pressure, isZh)}`,
+      statusLabel: isZh ? "扩展观察" : "Extended",
+      valueLabel:
+        typeof currentObservedValue === "number"
+          ? `${formatNumber(extendedValue, 1)} N`
+          : isZh
+            ? "待观察"
+            : "Observe",
+      rawValue: extendedValue,
+      tone: "extended",
+    });
+  }
+
+  const domain = Math.max(
+    1,
+    ...rows.map((row) => row.rawValue),
+  );
+
+  return rows.map((row) => ({
+    key: row.key,
+    label: row.label,
+    meta: row.meta,
+    statusLabel: row.statusLabel,
+    valueLabel: row.valueLabel,
+    ratio: row.rawValue > 0 ? row.rawValue / (domain * 1.08) : 0,
+    tone: row.tone,
+  }));
+}
+
+function formatComparisonStatusLabel({
+  hasRecord,
+  isCurrent,
+  reason,
+  isZh,
+}: {
+  hasRecord: boolean;
+  isCurrent: boolean;
+  reason: ClassroomTeachingState["stability"]["reason"];
+  isZh: boolean;
+}) {
+  if (hasRecord) {
+    return isZh ? "已记录" : "Recorded";
+  }
+
+  if (!isCurrent) {
+    return isZh ? "待测" : "Pending";
+  }
+
+  switch (reason) {
+    case "recordable":
+      return isZh ? "读数稳定" : "Stable";
+    case "measuring":
+      return isZh ? "观察中" : "Observing";
+    case "invalidated":
+      return isZh ? "需重测" : "Remeasure";
+    case "extended":
+      return isZh ? "扩展观察" : "Extended";
+    case "recorded":
+      return isZh ? "已记录" : "Recorded";
+    case "idle":
+    default:
+      return isZh ? "当前组" : "Current";
+  }
 }
 
 function getClassroomStageSummaryTitle({

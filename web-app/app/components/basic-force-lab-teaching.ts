@@ -108,7 +108,11 @@ export function deriveClassroomTeachingState({
 
   return {
     currentGroupKey,
-    stability: deriveTeachingStability(session.eligibility, isTeachingMeasurementMode),
+    stability: deriveTeachingStability({
+      eligibility: session.eligibility,
+      isTeachingMeasurementMode,
+      isClassroomCandidate: session.isClassroomCandidate,
+    }),
     canRecordCurrentMeasurement,
     principleState: derivePrincipleState({
       activeFactor,
@@ -253,11 +257,16 @@ function pickNextExpectedGroup(
   return missingGroups.find((group) => group.orderIndex > currentGroup.orderIndex) ?? missingGroups[0];
 }
 
-function deriveTeachingStability(
-  eligibility: ClassroomSessionState["eligibility"],
-  isTeachingMeasurementMode: boolean,
-): ClassroomTeachingState["stability"] {
-  if (!isTeachingMeasurementMode) {
+function deriveTeachingStability({
+  eligibility,
+  isTeachingMeasurementMode,
+  isClassroomCandidate,
+}: {
+  eligibility: ClassroomSessionState["eligibility"];
+  isTeachingMeasurementMode: boolean;
+  isClassroomCandidate: boolean;
+}): ClassroomTeachingState["stability"] {
+  if (!isTeachingMeasurementMode || !isClassroomCandidate) {
     return {
       level: "building",
       reason: "extended",

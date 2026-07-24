@@ -62,6 +62,18 @@ describe("BasicForceLab classroom entry", () => {
     ).toBeGreaterThan(0);
   });
 
+  it("shows the source equipment list and inquiry prompts in the control panel", () => {
+    renderLab();
+
+    expect(screen.getByRole("heading", { name: "实验器材" })).toBeInTheDocument();
+    expect(screen.getAllByText("弹簧测力计").length).toBeGreaterThan(0);
+    expect(screen.getByText("毛巾")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "思考提示" })).toBeInTheDocument();
+    expect(
+      screen.getByText("为什么必须匀速拉动？如果拉动忽快忽慢，测力计读数还能直接当作滑动摩擦力吗？"),
+    ).toBeInTheDocument();
+  });
+
   it("switches to the recommended baseline when changing study factor", () => {
     renderLab();
 
@@ -84,6 +96,8 @@ describe("BasicForceLab classroom entry", () => {
     fireEvent.click(screen.getByRole("button", { name: "阶段 4：匀速测量" }));
 
     expect(screen.getByRole("button", { name: "记录本组" })).toBeEnabled();
+    expect(screen.getByText("压力对照图")).toBeInTheDocument();
+    expect(screen.getByText("读数稳定")).toBeInTheDocument();
     expect(
       screen.getAllByText("读数已经稳定，现在点击“记录本组”，再继续下一组对照。")
         .length,
@@ -136,6 +150,20 @@ describe("BasicForceLab classroom entry", () => {
 
     expect(screen.queryByRole("button", { name: "返回主流程" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "记录本组" })).toBeInTheDocument();
+  });
+
+  it("treats upright placement as extended observation outside the default worksheet", () => {
+    renderLab();
+
+    fireEvent.click(screen.getByRole("button", { name: "接触面积" }));
+    fireEvent.click(screen.getByRole("button", { name: "竖放" }));
+
+    expect(
+      screen.getAllByText("当前处于扩展观察模式。这里不会自动写入课堂记录，请返回“主流程”继续。").length,
+    ).toBeGreaterThan(0);
+    expect(screen.getByText("竖放（扩展）")).toBeInTheDocument();
+    expect(screen.getAllByText("扩展观察").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "记录本组" })).toBeDisabled();
   });
 
   it("promotes the pressure comparison to a formal classroom conclusion after three runs", () => {
