@@ -75,7 +75,7 @@ describe("ContentSubjectPage topic delivery states", () => {
     expect(ohmsLawLink).toHaveAttribute("href", "/visual/ohms-law-lab");
   });
 
-  it("surfaces the split light-propagation topics with implemented and backlog states", () => {
+  it("surfaces the split light-propagation topics as real implemented labs", () => {
     renderPage("junior", "physics");
 
     const shadowLink = screen.getByRole("link", { name: /影子形成与本影半影/i });
@@ -87,32 +87,42 @@ describe("ContentSubjectPage topic delivery states", () => {
     expect(within(shadowLink).getByText("优先开发")).toBeInTheDocument();
     expect(shadowLink).toHaveAttribute("href", "/visual/shadow-formation-lab");
 
-    expect(within(pinholeLink).getAllByText("后续扩展").length).toBeGreaterThan(0);
-    expect(within(pinholeLink).getByText("了解方向")).toBeInTheDocument();
+    expect(within(pinholeLink).getByText("已可用")).toBeInTheDocument();
+    expect(within(pinholeLink).getByText("直接进入")).toBeInTheDocument();
     expect(pinholeLink).toHaveAttribute("href", "/visual/pinhole-imaging-lab");
 
-    expect(within(eclipseLink).getAllByText("后续扩展").length).toBeGreaterThan(0);
-    expect(within(eclipseLink).getByText("了解方向")).toBeInTheDocument();
+    expect(within(eclipseLink).getByText("已可用")).toBeInTheDocument();
+    expect(within(eclipseLink).getByText("直接进入")).toBeInTheDocument();
     expect(eclipseLink).toHaveAttribute("href", "/visual/eclipse-scattering-lab");
   });
 
-  it("keeps the higher-complexity junior physics topics in backlog state", () => {
+  it("marks the remaining junior word-backed topics as directly available", () => {
     renderPage("junior", "physics");
 
     const buoyancyLink = screen.getByRole("link", { name: /浮力与阿基米德原理/i });
     const lensLink = screen.getByRole("link", { name: /凸透镜成像规律/i });
+    const refractionLink = screen.getByRole("link", { name: /光的折射规律/i });
+    const meltingLink = screen.getByRole("link", { name: /晶体与非晶体熔化凝固/i });
     const resistorLink = screen.getByRole("link", { name: /滑动变阻器动态调压/i });
 
-    expect(within(buoyancyLink).getAllByText("后续扩展").length).toBeGreaterThan(0);
-    expect(within(buoyancyLink).getByText("了解方向")).toBeInTheDocument();
+    expect(within(buoyancyLink).getByText("已可用")).toBeInTheDocument();
+    expect(within(buoyancyLink).getByText("直接进入")).toBeInTheDocument();
     expect(buoyancyLink).toHaveAttribute("href", "/visual/buoyancy-lab");
 
-    expect(within(lensLink).getAllByText("后续扩展").length).toBeGreaterThan(0);
-    expect(within(lensLink).getByText("了解方向")).toBeInTheDocument();
+    expect(within(lensLink).getByText("已可用")).toBeInTheDocument();
+    expect(within(lensLink).getByText("直接进入")).toBeInTheDocument();
     expect(lensLink).toHaveAttribute("href", "/visual/lens-imaging-lab");
 
-    expect(within(resistorLink).getAllByText("后续扩展").length).toBeGreaterThan(0);
-    expect(within(resistorLink).getByText("了解方向")).toBeInTheDocument();
+    expect(within(refractionLink).getByText("已可用")).toBeInTheDocument();
+    expect(within(refractionLink).getByText("直接进入")).toBeInTheDocument();
+    expect(refractionLink).toHaveAttribute("href", "/visual/light-refraction-lab");
+
+    expect(within(meltingLink).getByText("已可用")).toBeInTheDocument();
+    expect(within(meltingLink).getByText("直接进入")).toBeInTheDocument();
+    expect(meltingLink).toHaveAttribute("href", "/visual/melting-freezing-lab");
+
+    expect(within(resistorLink).getByText("已可用")).toBeInTheDocument();
+    expect(within(resistorLink).getByText("直接进入")).toBeInTheDocument();
     expect(resistorLink).toHaveAttribute("href", "/visual/variable-resistor-lab");
   });
 

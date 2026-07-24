@@ -11,9 +11,21 @@ vi.mock("../components/basic-force-lab", () => ({
   ),
 }));
 
+vi.mock("../components/buoyancy-lab", () => ({
+  BuoyancyLab: ({ topic }: { topic: { title: string } }) => (
+    <div data-testid="buoyancy-lab">浮力实验页：{topic.title}</div>
+  ),
+}));
+
 vi.mock("../components/circuit-observer-lab", () => ({
   CircuitObserverLab: ({ topic }: { topic: { title: string } }) => (
     <div data-testid="circuit-observer-lab">电路实验页：{topic.title}</div>
+  ),
+}));
+
+vi.mock("../components/eclipse-scattering-lab", () => ({
+  EclipseScatteringLab: ({ topic }: { topic: { title: string } }) => (
+    <div data-testid="eclipse-scattering-lab">食相实验页：{topic.title}</div>
   ),
 }));
 
@@ -29,15 +41,21 @@ vi.mock("../components/light-reflection-lab", () => ({
   ),
 }));
 
-vi.mock("../components/plane-mirror-lab", () => ({
-  PlaneMirrorLab: ({ topic }: { topic: { title: string } }) => (
-    <div data-testid="plane-mirror-lab">平面镜实验页：{topic.title}</div>
+vi.mock("../components/light-refraction-lab", () => ({
+  LightRefractionLab: ({ topic }: { topic: { title: string } }) => (
+    <div data-testid="light-refraction-lab">折射实验页：{topic.title}</div>
   ),
 }));
 
-vi.mock("../components/shadow-formation-lab", () => ({
-  ShadowFormationLab: ({ topic }: { topic: { title: string } }) => (
-    <div data-testid="shadow-formation-lab">影子实验页：{topic.title}</div>
+vi.mock("../components/lens-imaging-lab", () => ({
+  LensImagingLab: ({ topic }: { topic: { title: string } }) => (
+    <div data-testid="lens-imaging-lab">透镜实验页：{topic.title}</div>
+  ),
+}));
+
+vi.mock("../components/melting-freezing-lab", () => ({
+  MeltingFreezingLab: ({ topic }: { topic: { title: string } }) => (
+    <div data-testid="melting-freezing-lab">熔化实验页：{topic.title}</div>
   ),
 }));
 
@@ -59,15 +77,39 @@ vi.mock("../components/ohms-law-lab", () => ({
   ),
 }));
 
+vi.mock("../components/pinhole-imaging-lab", () => ({
+  PinholeImagingLab: ({ topic }: { topic: { title: string } }) => (
+    <div data-testid="pinhole-imaging-lab">小孔实验页：{topic.title}</div>
+  ),
+}));
+
+vi.mock("../components/plane-mirror-lab", () => ({
+  PlaneMirrorLab: ({ topic }: { topic: { title: string } }) => (
+    <div data-testid="plane-mirror-lab">平面镜实验页：{topic.title}</div>
+  ),
+}));
+
 vi.mock("../components/pressure-factors-lab", () => ({
   PressureFactorsLab: ({ topic }: { topic: { title: string } }) => (
     <div data-testid="pressure-factors-lab">压强实验页：{topic.title}</div>
   ),
 }));
 
+vi.mock("../components/shadow-formation-lab", () => ({
+  ShadowFormationLab: ({ topic }: { topic: { title: string } }) => (
+    <div data-testid="shadow-formation-lab">影子实验页：{topic.title}</div>
+  ),
+}));
+
 vi.mock("../components/two-force-balance-lab", () => ({
   TwoForceBalanceLab: ({ topic }: { topic: { title: string } }) => (
     <div data-testid="two-force-balance-lab">二力平衡实验页：{topic.title}</div>
+  ),
+}));
+
+vi.mock("../components/variable-resistor-lab", () => ({
+  VariableResistorLab: ({ topic }: { topic: { title: string } }) => (
+    <div data-testid="variable-resistor-lab">滑变实验页：{topic.title}</div>
   ),
 }));
 
@@ -119,6 +161,13 @@ describe("VisualizationPage delivery routing", () => {
     expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
   });
 
+  it("routes implemented buoyancy topics to the real buoyancy lab component", () => {
+    renderPage("buoyancy-lab");
+
+    expect(screen.getByTestId("buoyancy-lab")).toHaveTextContent("浮力与阿基米德原理");
+    expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
+  });
+
   it("routes implemented reflection topics to the real optics lab component", () => {
     renderPage("light-reflection-lab");
 
@@ -140,10 +189,45 @@ describe("VisualizationPage delivery routing", () => {
     expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
   });
 
+  it("routes implemented pinhole topics to the real optics lab component", () => {
+    renderPage("pinhole-imaging-lab");
+
+    expect(screen.getByTestId("pinhole-imaging-lab")).toHaveTextContent("小孔成像规律观察");
+    expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
+  });
+
+  it("routes implemented eclipse topics to the real optics lab component", () => {
+    renderPage("eclipse-scattering-lab");
+
+    expect(screen.getByTestId("eclipse-scattering-lab")).toHaveTextContent("日食月食与光路可见性");
+    expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
+  });
+
+  it("routes implemented lens topics to the real optics lab component", () => {
+    renderPage("lens-imaging-lab");
+
+    expect(screen.getByTestId("lens-imaging-lab")).toHaveTextContent("凸透镜成像规律");
+    expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
+  });
+
+  it("routes implemented refraction topics to the real optics lab component", () => {
+    renderPage("light-refraction-lab");
+
+    expect(screen.getByTestId("light-refraction-lab")).toHaveTextContent("光的折射规律");
+    expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
+  });
+
   it("routes implemented evaporation topics to the real thermo lab component", () => {
     renderPage("evaporation-rate-lab");
 
     expect(screen.getByTestId("evaporation-rate-lab")).toHaveTextContent("液体蒸发快慢影响因素");
+    expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
+  });
+
+  it("routes implemented melting topics to the real thermo lab component", () => {
+    renderPage("melting-freezing-lab");
+
+    expect(screen.getByTestId("melting-freezing-lab")).toHaveTextContent("晶体与非晶体熔化凝固");
     expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
   });
 
@@ -154,7 +238,14 @@ describe("VisualizationPage delivery routing", () => {
     expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
   });
 
-  it("shows an honest planning state for topics that are not implemented yet", () => {
+  it("routes implemented variable-resistor topics to the real electric lab component", () => {
+    renderPage("variable-resistor-lab");
+
+    expect(screen.getByTestId("variable-resistor-lab")).toHaveTextContent("滑动变阻器动态调压");
+    expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
+  });
+
+  it("shows an honest planning state for senior topics that are not implemented yet", () => {
     renderPage("force-analysis");
 
     expect(screen.getByRole("heading", { name: "受力分析实验台" })).toBeInTheDocument();
@@ -163,18 +254,6 @@ describe("VisualizationPage delivery routing", () => {
     expect(screen.getByRole("link", { name: "返回知识点页" })).toHaveAttribute(
       "href",
       "/content/senior/physics",
-    );
-  });
-
-  it("shows the backlog-shell state for the deferred astronomy and scattering topic", () => {
-    renderPage("eclipse-scattering-lab");
-
-    expect(screen.getByRole("heading", { name: "日食月食与光路可见性" })).toBeInTheDocument();
-    expect(screen.getAllByText("后续扩展").length).toBeGreaterThan(0);
-    expect(screen.getByText(/当前只保留主题方向说明，后续会结合课堂主线决定是否推进。/)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "返回知识点页" })).toHaveAttribute(
-      "href",
-      "/content/junior/physics",
     );
   });
 

@@ -2,17 +2,24 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 
 import { BasicForceLab } from "../components/basic-force-lab";
+import { BuoyancyLab } from "../components/buoyancy-lab";
 import { CircuitObserverLab } from "../components/circuit-observer-lab";
+import { EclipseScatteringLab } from "../components/eclipse-scattering-lab";
 import { EvaporationRateLab } from "../components/evaporation-rate-lab";
 import { LightReflectionLab } from "../components/light-reflection-lab";
+import { LightRefractionLab } from "../components/light-refraction-lab";
+import { LensImagingLab } from "../components/lens-imaging-lab";
+import { MeltingFreezingLab } from "../components/melting-freezing-lab";
 import { MotionTrackLab } from "../components/motion-track-lab";
 import { NewtonFirstLawLab } from "../components/newton-first-law-lab";
 import { OhmsLawLab } from "../components/ohms-law-lab";
+import { PinholeImagingLab } from "../components/pinhole-imaging-lab";
 import { PlaneMirrorLab } from "../components/plane-mirror-lab";
 import { PressureFactorsLab } from "../components/pressure-factors-lab";
 import { ShadowFormationLab } from "../components/shadow-formation-lab";
 import { StatusPanel } from "../components/status-panel";
 import { TwoForceBalanceLab } from "../components/two-force-balance-lab";
+import { VariableResistorLab } from "../components/variable-resistor-lab";
 import { useDocumentMeta, useLocale } from "../i18n";
 import {
   getTopicDeliveryMeta,
@@ -161,6 +168,13 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
           onToggleFullscreen={toggleFullscreen}
           fullscreenRef={fullscreenRef}
         />
+      ) : topic.id === "buoyancy-lab" ? (
+        <BuoyancyLab
+          topic={topic}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+          fullscreenRef={fullscreenRef}
+        />
       ) : topic.id === "light-reflection-lab" ? (
         <LightReflectionLab
           topic={topic}
@@ -182,6 +196,34 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
           onToggleFullscreen={toggleFullscreen}
           fullscreenRef={fullscreenRef}
         />
+      ) : topic.id === "pinhole-imaging-lab" ? (
+        <PinholeImagingLab
+          topic={topic}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+          fullscreenRef={fullscreenRef}
+        />
+      ) : topic.id === "eclipse-scattering-lab" ? (
+        <EclipseScatteringLab
+          topic={topic}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+          fullscreenRef={fullscreenRef}
+        />
+      ) : topic.id === "lens-imaging-lab" ? (
+        <LensImagingLab
+          topic={topic}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+          fullscreenRef={fullscreenRef}
+        />
+      ) : topic.id === "light-refraction-lab" ? (
+        <LightRefractionLab
+          topic={topic}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+          fullscreenRef={fullscreenRef}
+        />
       ) : topic.id === "evaporation-rate-lab" ? (
         <EvaporationRateLab
           topic={topic}
@@ -189,8 +231,22 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
           onToggleFullscreen={toggleFullscreen}
           fullscreenRef={fullscreenRef}
         />
+      ) : topic.id === "melting-freezing-lab" ? (
+        <MeltingFreezingLab
+          topic={topic}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+          fullscreenRef={fullscreenRef}
+        />
       ) : topic.id === "ohms-law-lab" ? (
         <OhmsLawLab
+          topic={topic}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+          fullscreenRef={fullscreenRef}
+        />
+      ) : topic.id === "variable-resistor-lab" ? (
+        <VariableResistorLab
           topic={topic}
           isFullscreen={isFullscreen}
           onToggleFullscreen={toggleFullscreen}
