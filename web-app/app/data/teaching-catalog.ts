@@ -32,6 +32,7 @@ const IMPLEMENTED_TOPIC_IDS = new Set([
   "pressure-factors-lab",
   "two-force-balance-lab",
   "circuit-observer",
+  "light-reflection-lab",
 ]);
 
 const TOPIC_DELIVERY_META: Record<TeachingTopicDeliveryState, TopicDeliveryMeta> = {
@@ -148,6 +149,18 @@ export const teachingStages: TeachingStage[] = [
             status: "可开始",
             tags: ["电路", "开关", "亮灭"],
             highlights: ["支持串联并联切换", "高亮电流路径与亮灭状态", "适合课堂对照讲解"],
+          },
+          {
+            id: "light-reflection-lab",
+            title: "光的反射定律实验",
+            summary: "围绕法线、入射角和反射角做课堂验证，直观看懂等角、共面、可逆与漫反射。",
+            stageId: "junior",
+            subjectId: "physics",
+            mode: "2D",
+            deliveryState: "implemented",
+            status: "优先开发",
+            tags: ["光学", "反射", "几何验证"],
+            highlights: ["支持四组课堂验证", "镜面与漫反射一页对照", "突出法线与等角关系"],
           },
         ],
       },

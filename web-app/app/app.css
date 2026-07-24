@@ -1452,6 +1452,11 @@ a:focus-visible {
   --topic-accent-soft: rgba(109, 140, 255, 0.16);
 }
 
+.topic-tech-card.is-optics {
+  --topic-accent: #b576ff;
+  --topic-accent-soft: rgba(181, 118, 255, 0.18);
+}
+
 .topic-tech-card.is-3d {
   --topic-accent: #8b5cff;
   --topic-accent-soft: rgba(139, 92, 255, 0.15);
@@ -4390,6 +4395,179 @@ html[data-theme="dark"] .force-state-pill.is-active {
   stroke-width: 4;
   stroke-linecap: round;
   stroke-dasharray: 8 8;
+}
+
+.reflection-lab-layout {
+  transition:
+    grid-template-columns 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    gap 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reflection-lab-layout.is-collapsed {
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.reflection-control-panel {
+  gap: 12px;
+  padding: 14px;
+  border-radius: 20px;
+}
+
+.reflection-control-panel.is-collapsed {
+  width: 44px;
+  max-width: 44px;
+  gap: 0;
+}
+
+.reflection-control-panel.is-collapsed .force-panel-collapsed-shell {
+  width: 44px;
+}
+
+.reflection-control-scroll {
+  gap: 12px;
+}
+
+.reflection-lab-main {
+  gap: 10px;
+}
+
+.reflection-stage-canvas {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 190, 102, 0.14) 0%, transparent 22%),
+    radial-gradient(circle at 82% 76%, rgba(181, 118, 255, 0.16) 0%, transparent 24%),
+    linear-gradient(180deg, #081323 0%, #081727 48%, #050d18 100%);
+}
+
+.reflection-stage-stepbar {
+  max-width: calc(100% - 160px);
+}
+
+.reflection-stage-summary-card {
+  min-width: min(260px, 100%);
+}
+
+.reflection-stage-summary-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.reflection-stage-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid rgba(138, 190, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(7, 17, 31, 0.32);
+}
+
+.reflection-stage-summary-item span {
+  color: var(--canvas-copy);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.reflection-stage-summary-item strong {
+  color: var(--canvas-text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.reflection-stage-svg {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+}
+
+.reflection-stage-mirror-line {
+  stroke: rgba(117, 209, 255, 0.92);
+  stroke-width: 8;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 14px rgba(103, 198, 255, 0.2));
+}
+
+.reflection-stage-mirror-line.is-diffuse {
+  stroke: rgba(255, 191, 103, 0.88);
+  stroke-dasharray: 10 10;
+}
+
+.reflection-stage-rough-surface {
+  fill: none;
+  stroke: rgba(255, 191, 103, 0.82);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 6 10;
+}
+
+.reflection-stage-normal-line {
+  stroke: rgba(235, 243, 255, 0.54);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 10 10;
+}
+
+.reflection-stage-origin-dot {
+  fill: rgba(255, 255, 255, 0.94);
+  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.2));
+}
+
+.reflection-stage-ray {
+  fill: none;
+  stroke-width: 5;
+  stroke-linecap: round;
+  transition:
+    opacity 0.24s ease,
+    d 0.28s ease;
+}
+
+.reflection-stage-ray.is-incident {
+  stroke: #ffbf67;
+  filter: drop-shadow(0 0 14px rgba(255, 191, 103, 0.22));
+}
+
+.reflection-stage-ray.is-reflected {
+  stroke: #67c6ff;
+  filter: drop-shadow(0 0 14px rgba(103, 198, 255, 0.22));
+}
+
+.reflection-stage-ray.is-diffuse {
+  stroke: rgba(153, 212, 255, 0.72);
+}
+
+.reflection-stage-angle-arc {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.reflection-stage-angle-arc.is-incident {
+  stroke: rgba(255, 191, 103, 0.92);
+}
+
+.reflection-stage-angle-arc.is-reflected {
+  stroke: rgba(103, 198, 255, 0.92);
+}
+
+.reflection-stage-fold-board {
+  fill: rgba(181, 118, 255, 0.2);
+  stroke: rgba(205, 163, 255, 0.44);
+  stroke-width: 2.5;
+}
+
+.reflection-stage-fold-note {
+  fill: rgba(255, 191, 103, 0.96);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.reflection-stage-diffuse-note {
+  fill: rgba(229, 238, 255, 0.94);
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .force-stage-stepbar {

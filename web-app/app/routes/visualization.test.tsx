@@ -17,6 +17,12 @@ vi.mock("../components/circuit-observer-lab", () => ({
   ),
 }));
 
+vi.mock("../components/light-reflection-lab", () => ({
+  LightReflectionLab: ({ topic }: { topic: { title: string } }) => (
+    <div data-testid="light-reflection-lab">反射实验页：{topic.title}</div>
+  ),
+}));
+
 vi.mock("../components/motion-track-lab", () => ({
   MotionTrackLab: ({ topic }: { topic: { title: string } }) => (
     <div data-testid="motion-track-lab">运动轨迹实验页：{topic.title}</div>
@@ -86,6 +92,13 @@ describe("VisualizationPage delivery routing", () => {
     renderPage("two-force-balance-lab");
 
     expect(screen.getByTestId("two-force-balance-lab")).toHaveTextContent("二力平衡条件探究");
+    expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
+  });
+
+  it("routes implemented reflection topics to the real optics lab component", () => {
+    renderPage("light-reflection-lab");
+
+    expect(screen.getByTestId("light-reflection-lab")).toHaveTextContent("光的反射定律实验");
     expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
   });
 

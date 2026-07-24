@@ -26,6 +26,7 @@ describe("ContentSubjectPage topic delivery states", () => {
     const balanceLink = screen.getByRole("link", { name: /二力平衡条件探究/i });
     const pressureFactorsLink = screen.getByRole("link", { name: /压强影响因素实验/i });
     const circuitObserverLink = screen.getByRole("link", { name: /串并联电路观察/i });
+    const reflectionLink = screen.getByRole("link", { name: /光的反射定律实验/i });
 
     expect(within(motionTrackLink).getByText("已可用")).toBeInTheDocument();
     expect(within(motionTrackLink).getByText("直接进入")).toBeInTheDocument();
@@ -49,6 +50,11 @@ describe("ContentSubjectPage topic delivery states", () => {
 
     expect(within(circuitObserverLink).getByText("已可用")).toBeInTheDocument();
     expect(within(circuitObserverLink).getByText("直接进入")).toBeInTheDocument();
+
+    expect(within(reflectionLink).getByText("已可用")).toBeInTheDocument();
+    expect(within(reflectionLink).getByText("直接进入")).toBeInTheDocument();
+    expect(within(reflectionLink).getByText("优先开发")).toBeInTheDocument();
+    expect(reflectionLink).toHaveAttribute("href", "/visual/light-reflection-lab");
   });
 
   it("distinguishes planned and backlog senior physics topics at the entry level", () => {
