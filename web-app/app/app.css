@@ -3235,8 +3235,117 @@ html[data-theme="dark"] .force-state-pill.is-active {
   font-weight: 600;
 }
 
+.force-scene-metric-line.is-emphasis {
+  fill: var(--canvas-text);
+  font-size: 24px;
+  font-weight: 800;
+}
+
 .force-scene-metric-line.is-accent {
   fill: var(--canvas-text);
+}
+
+.force-teaching-pill {
+  fill: color-mix(in srgb, var(--brand) 22%, rgba(7, 17, 31, 0.76));
+  stroke: color-mix(in srgb, var(--brand-strong) 52%, transparent);
+  stroke-width: 1.1;
+}
+
+.force-teaching-pill-copy {
+  fill: var(--canvas-text);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.force-teaching-kicker {
+  fill: color-mix(in srgb, var(--brand-soft) 74%, #d7e7ff);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.force-teaching-copy {
+  fill: var(--canvas-copy);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.force-teaching-copy.is-strong {
+  fill: var(--canvas-text);
+  font-weight: 700;
+}
+
+.force-teaching-divider {
+  stroke: rgba(138, 190, 255, 0.16);
+  stroke-width: 1;
+}
+
+.force-teaching-reading {
+  fill: var(--canvas-text);
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.force-teaching-note-card,
+.force-teaching-empty-card {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid rgba(138, 190, 255, 0.1);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(7, 17, 31, 0.48) 0%, rgba(7, 17, 31, 0.32) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 12px 26px rgba(2, 9, 20, 0.12);
+  color: var(--canvas-text);
+}
+
+.force-teaching-note-card strong,
+.force-teaching-empty-card strong {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.force-teaching-note-card p,
+.force-teaching-empty-card p {
+  margin: 0;
+  color: var(--canvas-copy);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.force-teaching-row-label {
+  fill: var(--canvas-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.force-teaching-row-meta {
+  fill: var(--canvas-copy);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.force-teaching-bar-track {
+  fill: rgba(255, 255, 255, 0.08);
+}
+
+.force-teaching-bar-fill {
+  fill: color-mix(in srgb, var(--brand) 84%, #ffffff 16%);
+}
+
+.force-teaching-row-value {
+  fill: var(--canvas-text);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .force-vector-hit {

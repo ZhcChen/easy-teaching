@@ -161,7 +161,7 @@ function getTopicThemeClass(topicId: string) {
     return "is-motion";
   }
 
-  if (topicId === "basic-force") {
+  if (topicId === "sliding-friction-lab" || topicId === "basic-force") {
     return "is-force";
   }
 

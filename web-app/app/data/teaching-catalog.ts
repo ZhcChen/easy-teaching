@@ -13,6 +13,10 @@ export type TeachingTopic = {
   highlights: string[];
 };
 
+const TOPIC_ID_ALIASES: Record<string, string> = {
+  "basic-force": "sliding-friction-lab",
+};
+
 export type TeachingSubject = {
   id: SubjectId;
   label: string;
@@ -50,15 +54,15 @@ export const teachingStages: TeachingStage[] = [
             highlights: ["支持播放与暂停", "展示轨迹与刻度", "适合首批演示"],
           },
           {
-            id: "basic-force",
-            title: "基础受力分析",
-            summary: "把拉力、摩擦力和受力平衡放到同一实验里，让变化过程一眼看懂。",
+            id: "sliding-friction-lab",
+            title: "滑动摩擦力影响因素实验",
+            summary: "通过匀速拉动对照压力、材质和接触面积，直观看懂滑动摩擦力大小规律。",
             stageId: "junior",
             subjectId: "physics",
             mode: "2D / 3D",
             status: "优先开发",
-            tags: ["拉力", "摩擦", "平衡"],
-            highlights: ["支持分阶段实验播放", "同步观察拉力与摩擦变化", "适合课堂实验讲解"],
+            tags: ["摩擦力", "压力", "控制变量"],
+            highlights: ["支持多组对照记录", "验证接触面积无关", "适合课堂实验讲解"],
           },
           {
             id: "circuit-observer",
@@ -276,9 +280,11 @@ export function getSubjectByStageAndId(stageId: string, subjectId: string) {
 }
 
 export function getTopicById(topicId: string) {
+  const normalizedTopicId = normalizeTopicId(topicId);
+
   for (const stage of teachingStages) {
     for (const subject of stage.subjects) {
-      const topic = subject.topics.find((item) => item.id === topicId);
+      const topic = subject.topics.find((item) => item.id === normalizedTopicId);
       if (topic) {
         return {
           stage,
@@ -290,4 +296,12 @@ export function getTopicById(topicId: string) {
   }
 
   return null;
+}
+
+export function normalizeTopicId(topicId: string) {
+  return TOPIC_ID_ALIASES[topicId] ?? topicId;
+}
+
+export function isSlidingFrictionTopicId(topicId: string) {
+  return normalizeTopicId(topicId) === "sliding-friction-lab";
 }

@@ -125,7 +125,9 @@ type ExperimentStatus = {
 
 type ExperimentRecord = {
   id: number;
+  surfaceKey: SurfacePresetKey;
   surfaceLabel: string;
+  contactAreaKey: ContactAreaKey;
   contactAreaLabel: string;
   pressure: number;
   kineticFriction: number;
@@ -684,7 +686,9 @@ export function BasicForceLab({
 
     const nextRecord: ExperimentRecord = {
       id: currentRunId,
+      surfaceKey: surfacePresetMeta.key,
       surfaceLabel: surfacePresetMeta.label,
+      contactAreaKey: contactAreaMeta.key,
       contactAreaLabel: contactAreaMeta.label,
       pressure,
       kineticFriction: metrics.kineticFriction,
@@ -695,6 +699,7 @@ export function BasicForceLab({
     setActiveForce("friction");
     lastRecordedRunRef.current = currentRunId;
   }, [
+    contactAreaMeta.key,
     contactAreaMeta.label,
     currentRunId,
     experimentElapsedMs,
@@ -703,6 +708,7 @@ export function BasicForceLab({
     metrics.staticLimit,
     mode,
     pressure,
+    surfacePresetMeta.key,
     surfacePresetMeta.label,
     totalExperimentMs,
   ]);
@@ -965,8 +971,11 @@ export function BasicForceLab({
     1,
   );
   const verticalMax = Math.max(displayedScene.weight, displayedScene.normal, 1);
+  const isTeachingMeasurementMode = mode === "measurement";
+  const advancedModeOptions = FORCE_MODE_OPTIONS.filter((item) => item.key !== "measurement");
   const currentModeLabel =
     FORCE_MODE_OPTIONS.find((item) => item.key === mode)?.label ?? "实验测量";
+  const recordCountLabel = isZh ? `已记录 ${runRecords.length} 组` : `${runRecords.length} records`;
   const forceViewOptions =
     isManualMode ? FORCE_VIEW_OPTIONS.filter((item) => item.key === "2d") : FORCE_VIEW_OPTIONS;
   const localizedForceViewOptions = forceViewOptions.map((item) => ({
@@ -1362,8 +1371,12 @@ export function BasicForceLab({
             <>
               <div className="force-control-header">
                 <div className="force-control-title-block">
-                  <h4 className="force-control-title">{tt("控制面板")}</h4>
-                  <p className="force-control-copy">{tt("先改变量，再播放实验。")}</p>
+                  <h4 className="force-control-title">{tt(topic.title)}</h4>
+                  <p className="force-control-copy">
+                    {isZh
+                      ? "先控制变量，再用匀速拉动读出摩擦力。"
+                      : "Change one variable at a time, then read friction from a uniform pull."}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -1377,37 +1390,16 @@ export function BasicForceLab({
               </div>
 
               <div className="force-control-scroll basic-force-control-scroll">
-                <ControlPanelSection title={tt("实验控制")} hint={tt("先预测，再播放，再对比")} accent>
-                  <ControlChipGroup
-                    columns={3}
-                    size="dense"
-                    items={FORCE_MODE_OPTIONS.map((item) => ({
-                      key: item.key,
-                      label: tt(item.label),
-                      active: mode === item.key,
-                      title: tt(item.title),
-                      onClick: () => setMode(item.key as ForceExperimentMode),
-                    }))}
-                  />
-
-                  {mode === "constant-pull" ? (
-                    <ControlRange
-                      id="force-constant-pull"
-                      label={tt("恒定拉力")}
-                      unit="N"
-                      min={0.2}
-                      max={8}
-                      step={0.1}
-                      value={constantPullForce}
-                      onChange={setConstantPullForce}
-                    />
-                  ) : null}
-
-                  {mode === "manual-drag" ? (
-                    <p className="force-inline-copy">
-                      {tt("先点开始记录，再到右侧 2D 实验区拖动木块。拖动越快，拉力、合力和下方图表变化越明显。")}
-                    </p>
-                  ) : null}
+                <ControlPanelSection
+                  title={isZh ? "课堂实验" : "Core Experiment"}
+                  hint={isZh ? "默认先做匀速拉动对照" : "Start with the uniform-pull comparison"}
+                  accent
+                >
+                  <p className="force-inline-copy">
+                    {isZh
+                      ? "本知识点重点：匀速拉动时，测力计稳定读数 = 滑动摩擦力。"
+                      : "Key idea: during uniform pulling, the stable spring-scale reading equals the sliding friction force."}
+                  </p>
 
                   <ControlStatusBar
                     items={[
@@ -1415,15 +1407,18 @@ export function BasicForceLab({
                         {tt(displayedScene.stateLabel)}
                       </StatusPill>,
                       <StatusPill key="mode">{tt(displayedScene.frictionModeLabel)}</StatusPill>,
-                      mode === "measurement" ? (
-                        <StatusPill key="limit">f静,max {formatNumber(metrics.staticLimit, 1)} N</StatusPill>
-                      ) : mode === "manual-drag" ? (
-                        <StatusPill key="manual">{tt("拖动画布")}</StatusPill>
-                      ) : (
-                        <StatusPill key="pull">F恒 {formatNumber(constantPullForce, 1)} N</StatusPill>
-                      ),
+                      <StatusPill key="limit">f静,max {formatNumber(metrics.staticLimit, 1)} N</StatusPill>,
                     ]}
+                    status={<StatusPill>{recordCountLabel}</StatusPill>}
                   />
+
+                  {!isTeachingMeasurementMode ? (
+                    <p className="force-inline-copy">
+                      {isZh
+                        ? "当前处于扩展观察模式。课堂讲解建议先切回“实验测量”，先完成控制变量对照。"
+                        : 'You are in an extended view. For classroom teaching, switch back to "Measurement" first to complete the controlled comparison.'}
+                    </p>
+                  ) : null}
 
                   {mode === "manual-drag" ? (
                     <ControlRange
@@ -1475,6 +1470,59 @@ export function BasicForceLab({
                       {tt("重置")}
                     </ControlButton>
                   </div>
+
+                  <div className="motion-action-row">
+                    <ControlButton
+                      size="compact"
+                      onClick={() => setMode("measurement")}
+                      disabled={isTeachingMeasurementMode}
+                    >
+                      {isZh ? "返回课堂实验" : "Back to core experiment"}
+                    </ControlButton>
+                    <ControlButton
+                      size="compact"
+                      onClick={() => setRunRecords([])}
+                      disabled={runRecords.length === 0}
+                    >
+                      {isZh ? "清空记录" : "Clear records"}
+                    </ControlButton>
+                  </div>
+                </ControlPanelSection>
+
+                <ControlPanelSection
+                  title={isZh ? "扩展观察" : "Extended Views"}
+                  hint={isZh ? "保留给选学或课后延展" : "Optional after-class extensions"}
+                >
+                  <ControlChipGroup
+                    columns={3}
+                    size="dense"
+                    items={advancedModeOptions.map((item) => ({
+                      key: item.key,
+                      label: tt(item.label),
+                      active: mode === item.key,
+                      title: tt(item.title),
+                      onClick: () => setMode(item.key as ForceExperimentMode),
+                    }))}
+                  />
+
+                  {mode === "constant-pull" ? (
+                    <ControlRange
+                      id="force-constant-pull"
+                      label={tt("恒定拉力")}
+                      unit="N"
+                      min={0.2}
+                      max={8}
+                      step={0.1}
+                      value={constantPullForce}
+                      onChange={setConstantPullForce}
+                    />
+                  ) : null}
+
+                  {mode === "manual-drag" ? (
+                    <p className="force-inline-copy">
+                      {tt("先点开始记录，再到右侧 2D 实验区拖动木块。拖动越快，拉力、合力和下方图表变化越明显。")}
+                    </p>
+                  ) : null}
                 </ControlPanelSection>
 
                 <ControlPanelSection title={tt("压力 / 正压力")} hint={tt("直接改变 N 的大小")}>
@@ -1607,7 +1655,14 @@ export function BasicForceLab({
                   className="motion-stage-panel-shell"
                 />
                 <text x={stage.panelX + 28} y={stage.panelY + 36} className="force-scene-inline-title">
-                  {tt(experimentStatus.label)}
+                  {tt(topic.title)}
+                </text>
+                <text x={stage.panelX + 28} y={stage.panelY + 62} className="force-svg-copy">
+                  {isTeachingMeasurementMode
+                    ? isZh
+                      ? "匀速拉动时，测力计稳定读数 = 滑动摩擦力"
+                      : "During uniform pulling, the stable spring-scale reading equals the sliding friction force."
+                    : tt(experimentStatus.label)}
                 </text>
                 <g transform={`translate(${stage.panelX + 184}, ${stage.panelY + 18})`}>
                   <rect width="116" height="30" rx="15" className="force-scene-inline-badge" />
@@ -1646,18 +1701,51 @@ export function BasicForceLab({
                     return node;
                   });
                 })()}
-                <g transform={`translate(${stage.panelX + stage.panelWidth - 254}, ${stage.panelY + 24})`}>
-                  <rect width="226" height="76" rx="18" className="force-scene-metric-card" />
-                  <text x="18" y="26" className="force-scene-metric-line">
-                    s = {formatNumber(displayedScene.displacement, 2)} m · v = {formatNumber(displayedScene.velocity, 2)} m/s
-                  </text>
-                  <text x="18" y="48" className="force-scene-metric-line">
-                    F = {formatNumber(displayedScene.pullForce, 1)} N · f = {formatNumber(displayedScene.frictionForce, 1)} N
-                  </text>
-                  <text x="18" y="70" className="force-scene-metric-line is-accent">
-                    R = {formatNumber(displayedScene.netForce, 2)} N · a = {formatNumber(displayedScene.acceleration, 2)} m/s²
-                  </text>
-                </g>
+                {isTeachingMeasurementMode ? (
+                  <g transform={`translate(${stage.panelX + stage.panelWidth - 278}, ${stage.panelY + 20})`}>
+                    <rect width="250" height="92" rx="18" className="force-scene-metric-card" />
+                    <text x="18" y="24" className="force-scene-metric-line">
+                      {displayedScene.phase === "uniform" || displayedScene.phase === "complete"
+                        ? isZh
+                          ? "当前稳定读数"
+                          : "Stable reading"
+                        : isZh
+                          ? "当前拉力读数"
+                          : "Current pull reading"}
+                    </text>
+                    <text x="18" y="54" className="force-scene-metric-line is-emphasis">
+                      {formatNumber(
+                        displayedScene.phase === "uniform" || displayedScene.phase === "complete"
+                          ? metrics.kineticFriction
+                          : displayedScene.pullForce,
+                        1,
+                      )}{" "}
+                      N
+                    </text>
+                    <text x="18" y="76" className="force-scene-metric-line">
+                      {displayedScene.phase === "uniform" || displayedScene.phase === "complete"
+                        ? isZh
+                          ? "匀速时：F拉 = f"
+                          : "Uniform pull: F = f"
+                        : isZh
+                          ? "先继续拉动，等待读数稳定"
+                          : "Keep pulling until the reading stabilizes"}
+                    </text>
+                  </g>
+                ) : (
+                  <g transform={`translate(${stage.panelX + stage.panelWidth - 254}, ${stage.panelY + 24})`}>
+                    <rect width="226" height="76" rx="18" className="force-scene-metric-card" />
+                    <text x="18" y="26" className="force-scene-metric-line">
+                      s = {formatNumber(displayedScene.displacement, 2)} m · v = {formatNumber(displayedScene.velocity, 2)} m/s
+                    </text>
+                    <text x="18" y="48" className="force-scene-metric-line">
+                      F = {formatNumber(displayedScene.pullForce, 1)} N · f = {formatNumber(displayedScene.frictionForce, 1)} N
+                    </text>
+                    <text x="18" y="70" className="force-scene-metric-line is-accent">
+                      R = {formatNumber(displayedScene.netForce, 2)} N · a = {formatNumber(displayedScene.acceleration, 2)} m/s²
+                    </text>
+                  </g>
+                )}
 
                 <rect
                   x={stage.panelX + 28}
@@ -1903,277 +1991,293 @@ export function BasicForceLab({
                   />
                 ) : null}
 
-                <rect
-                  x={stage.panelX}
-                  y={stage.graphY}
-                  width={stage.graphWidth}
-                  height={stage.graphHeight}
-                  rx="28"
-                  className="motion-stage-graph-shell"
-                />
-                <text x={stage.panelX + 28} y={stage.graphY + 34} className="motion-stage-panel-title">
-                  {tt("受力 - 时间")}
-                  <tspan className="motion-stage-panel-note-inline">{tt("（拉力 / 摩擦力 / 合力）")}</tspan>
-                </text>
-                <g transform={`translate(${stage.panelX + stage.graphWidth - 178}, ${stage.graphY + 26})`}>
-                  {[
-                    { label: tt("F拉"), color: FORCE_COLORS.pull, offset: 0 },
-                    { label: "f", color: FORCE_COLORS.friction, offset: 58 },
-                    { label: "R", color: FORCE_COLORS.net, offset: 108 },
-                  ].map(({ label, color, offset }) => (
-                    <g key={label} transform={`translate(${offset}, 0)`}>
-                      <circle cx="0" cy="0" r="5" fill={color} />
-                      <text x="10" y="4" className="motion-stage-graph-axis-label">
-                        {label}
-                      </text>
+                {isTeachingMeasurementMode ? (
+                  <MeasurementTeachingPanels
+                    stage={stage}
+                    displayedScene={displayedScene}
+                    metrics={metrics}
+                    experimentStatus={experimentStatus}
+                    records={runRecords}
+                    surfaceLabel={surfacePresetMeta.label}
+                    contactAreaLabel={contactAreaMeta.label}
+                    pressure={pressure}
+                    isZh={isZh}
+                  />
+                ) : (
+                  <>
+                    <rect
+                      x={stage.panelX}
+                      y={stage.graphY}
+                      width={stage.graphWidth}
+                      height={stage.graphHeight}
+                      rx="28"
+                      className="motion-stage-graph-shell"
+                    />
+                    <text x={stage.panelX + 28} y={stage.graphY + 34} className="motion-stage-panel-title">
+                      {tt("受力 - 时间")}
+                      <tspan className="motion-stage-panel-note-inline">{tt("（拉力 / 摩擦力 / 合力）")}</tspan>
+                    </text>
+                    <g transform={`translate(${stage.panelX + stage.graphWidth - 178}, ${stage.graphY + 26})`}>
+                      {[
+                        { label: tt("F拉"), color: FORCE_COLORS.pull, offset: 0 },
+                        { label: "f", color: FORCE_COLORS.friction, offset: 58 },
+                        { label: "R", color: FORCE_COLORS.net, offset: 108 },
+                      ].map(({ label, color, offset }) => (
+                        <g key={label} transform={`translate(${offset}, 0)`}>
+                          <circle cx="0" cy="0" r="5" fill={color} />
+                          <text x="10" y="4" className="motion-stage-graph-axis-label">
+                            {label}
+                          </text>
+                        </g>
+                      ))}
                     </g>
-                  ))}
-                </g>
 
-                {Array.from({ length: 5 }).map((_, index) => {
-                  const ratio = index / 4;
-                  const y =
-                    stage.graphY +
-                    FORCE_GRAPH_PADDING.top +
-                    (stage.graphHeight - FORCE_GRAPH_PADDING.top - FORCE_GRAPH_PADDING.bottom) * ratio;
-                  const value = forceDomain * (1 - ratio);
+                    {Array.from({ length: 5 }).map((_, index) => {
+                      const ratio = index / 4;
+                      const y =
+                        stage.graphY +
+                        FORCE_GRAPH_PADDING.top +
+                        (stage.graphHeight - FORCE_GRAPH_PADDING.top - FORCE_GRAPH_PADDING.bottom) * ratio;
+                      const value = forceDomain * (1 - ratio);
 
-                  return (
-                    <g key={`force-grid-${index}`}>
-                      <line
-                        x1={stage.panelX + FORCE_GRAPH_PADDING.left}
-                        y1={y}
-                        x2={stage.panelX + stage.graphWidth - FORCE_GRAPH_PADDING.right}
-                        y2={y}
-                        className="motion-stage-graph-grid"
-                      />
-                      <text
-                        x={stage.panelX + 18}
-                        y={y + 4}
-                        textAnchor="start"
-                        className="motion-stage-graph-axis-label"
-                      >
-                        {formatNumber(value, 1)}
-                      </text>
+                      return (
+                        <g key={`force-grid-${index}`}>
+                          <line
+                            x1={stage.panelX + FORCE_GRAPH_PADDING.left}
+                            y1={y}
+                            x2={stage.panelX + stage.graphWidth - FORCE_GRAPH_PADDING.right}
+                            y2={y}
+                            className="motion-stage-graph-grid"
+                          />
+                          <text
+                            x={stage.panelX + 18}
+                            y={y + 4}
+                            textAnchor="start"
+                            className="motion-stage-graph-axis-label"
+                          >
+                            {formatNumber(value, 1)}
+                          </text>
+                        </g>
+                      );
+                    })}
+
+                    {graphTimeTicks.map((tickValue, index) => {
+                      const x = forceGraph.mapTime(tickValue);
+
+                      return (
+                        <g key={`force-time-${index}`}>
+                          <line
+                            x1={x}
+                            y1={stage.graphY + FORCE_GRAPH_PADDING.top}
+                            x2={x}
+                            y2={stage.graphY + stage.graphHeight - FORCE_GRAPH_PADDING.bottom}
+                            className="motion-stage-graph-grid"
+                          />
+                          <text
+                            x={x}
+                            y={stage.graphY + stage.graphHeight - 10}
+                            textAnchor="middle"
+                            className="motion-stage-graph-axis-label"
+                          >
+                            {formatTimeLabel(tickValue)}
+                          </text>
+                        </g>
+                      );
+                    })}
+
+                    <line
+                      x1={stage.panelX + FORCE_GRAPH_PADDING.left}
+                      y1={thresholdLineY}
+                      x2={stage.panelX + stage.graphWidth - FORCE_GRAPH_PADDING.right}
+                      y2={thresholdLineY}
+                      className="motion-stage-stop-line"
+                    />
+                    <text
+                      x={stage.panelX + stage.graphWidth - FORCE_GRAPH_PADDING.right - 6}
+                      y={thresholdLineY - 10}
+                      textAnchor="end"
+                      className="motion-stage-stop-label"
+                    >
+                      {tt("f静,max")}
+                    </text>
+
+                    <polyline
+                      points={forceGraph.fullPolyline}
+                      className="motion-stage-graph-line is-muted"
+                      style={{ stroke: FORCE_COLORS.pull }}
+                    />
+                    <polyline
+                      points={forceGraph.playedPolyline}
+                      className="motion-stage-graph-line"
+                      style={{ stroke: FORCE_COLORS.pull }}
+                    />
+                    <polyline
+                      points={frictionGraph.fullPolyline}
+                      className="motion-stage-graph-line is-muted"
+                      style={{ stroke: FORCE_COLORS.friction }}
+                    />
+                    <polyline
+                      points={frictionGraph.playedPolyline}
+                      className="motion-stage-graph-line"
+                      style={{ stroke: FORCE_COLORS.friction }}
+                    />
+                    <polyline
+                      points={netGraph.fullPolyline}
+                      className="motion-stage-graph-line is-muted"
+                      style={{ stroke: FORCE_COLORS.net }}
+                    />
+                    <polyline
+                      points={netGraph.playedPolyline}
+                      className="motion-stage-graph-line"
+                      style={{ stroke: FORCE_COLORS.net }}
+                    />
+                    <line
+                      x1={forceGuideX}
+                      y1={stage.graphY + FORCE_GRAPH_PADDING.top}
+                      x2={forceGuideX}
+                      y2={stage.graphY + stage.graphHeight - FORCE_GRAPH_PADDING.bottom}
+                      className="motion-stage-guide-line is-chart"
+                    />
+                    <circle cx={currentPullPoint.x} cy={currentPullPoint.y} r="5.5" fill={FORCE_COLORS.pull} className="motion-stage-graph-point" />
+                    <circle cx={currentFrictionPoint.x} cy={currentFrictionPoint.y} r="5.5" fill={FORCE_COLORS.friction} className="motion-stage-graph-point" />
+                    <circle cx={currentNetPoint.x} cy={currentNetPoint.y} r="5.5" fill={FORCE_COLORS.net} className="motion-stage-graph-point" />
+
+                    <rect
+                      x={motionGraphX}
+                      y={stage.graphY}
+                      width={stage.graphWidth}
+                      height={stage.graphHeight}
+                      rx="28"
+                      className="motion-stage-graph-shell"
+                    />
+                    <text x={motionGraphX + 28} y={stage.graphY + 34} className="motion-stage-panel-title">
+                      {tt("位移 / 速度 - 时间")}
+                      <tspan className="motion-stage-panel-note-inline">{tt("（左轴位移，右轴速度）")}</tspan>
+                    </text>
+                    <g transform={`translate(${motionGraphX + stage.graphWidth - 126}, ${stage.graphY + 26})`}>
+                      {[
+                        { label: tt("位移"), color: "#7bc1ff", offset: 0 },
+                        { label: tt("速度"), color: "#5de2b1", offset: 72 },
+                      ].map(({ label, color, offset }) => (
+                        <g key={label} transform={`translate(${offset}, 0)`}>
+                          <circle cx="0" cy="0" r="5" fill={color} />
+                          <text x="10" y="4" className="motion-stage-graph-axis-label">
+                            {label}
+                          </text>
+                        </g>
+                      ))}
                     </g>
-                  );
-                })}
 
-                {graphTimeTicks.map((tickValue, index) => {
-                  const x = forceGraph.mapTime(tickValue);
+                    {Array.from({ length: 5 }).map((_, index) => {
+                      const ratio = index / 4;
+                      const y =
+                        stage.graphY +
+                        FORCE_GRAPH_PADDING.top +
+                        (stage.graphHeight - FORCE_GRAPH_PADDING.top - FORCE_GRAPH_PADDING.bottom) * ratio;
+                      const displacementValue = displacementDomain * (1 - ratio);
+                      const velocityValue = velocityDomain * (1 - ratio);
 
-                  return (
-                    <g key={`force-time-${index}`}>
-                      <line
-                        x1={x}
-                        y1={stage.graphY + FORCE_GRAPH_PADDING.top}
-                        x2={x}
-                        y2={stage.graphY + stage.graphHeight - FORCE_GRAPH_PADDING.bottom}
-                        className="motion-stage-graph-grid"
-                      />
-                      <text
-                        x={x}
-                        y={stage.graphY + stage.graphHeight - 10}
-                        textAnchor="middle"
-                        className="motion-stage-graph-axis-label"
-                      >
-                        {formatTimeLabel(tickValue)}
-                      </text>
-                    </g>
-                  );
-                })}
+                      return (
+                        <g key={`motion-grid-${index}`}>
+                          <line
+                            x1={motionGraphX + FORCE_GRAPH_PADDING.left}
+                            y1={y}
+                            x2={motionGraphX + stage.graphWidth - FORCE_GRAPH_PADDING.right}
+                            y2={y}
+                            className="motion-stage-graph-grid"
+                          />
+                          <text
+                            x={motionGraphX + 18}
+                            y={y + 4}
+                            textAnchor="start"
+                            className="motion-stage-graph-axis-label"
+                          >
+                            {formatNumber(displacementValue, 1)}
+                          </text>
+                          <text
+                            x={motionGraphX + stage.graphWidth - 18}
+                            y={y + 4}
+                            textAnchor="end"
+                            className="motion-stage-graph-axis-label"
+                          >
+                            {formatNumber(velocityValue, 1)}
+                          </text>
+                        </g>
+                      );
+                    })}
 
-                <line
-                  x1={stage.panelX + FORCE_GRAPH_PADDING.left}
-                  y1={thresholdLineY}
-                  x2={stage.panelX + stage.graphWidth - FORCE_GRAPH_PADDING.right}
-                  y2={thresholdLineY}
-                  className="motion-stage-stop-line"
-                />
-                <text
-                  x={stage.panelX + stage.graphWidth - FORCE_GRAPH_PADDING.right - 6}
-                  y={thresholdLineY - 10}
-                  textAnchor="end"
-                  className="motion-stage-stop-label"
-                >
-                  {tt("f静,max")}
-                </text>
+                    {graphTimeTicks.map((tickValue, index) => {
+                      const x = displacementGraph.mapTime(tickValue);
 
-                <polyline
-                  points={forceGraph.fullPolyline}
-                  className="motion-stage-graph-line is-muted"
-                  style={{ stroke: FORCE_COLORS.pull }}
-                />
-                <polyline
-                  points={forceGraph.playedPolyline}
-                  className="motion-stage-graph-line"
-                  style={{ stroke: FORCE_COLORS.pull }}
-                />
-                <polyline
-                  points={frictionGraph.fullPolyline}
-                  className="motion-stage-graph-line is-muted"
-                  style={{ stroke: FORCE_COLORS.friction }}
-                />
-                <polyline
-                  points={frictionGraph.playedPolyline}
-                  className="motion-stage-graph-line"
-                  style={{ stroke: FORCE_COLORS.friction }}
-                />
-                <polyline
-                  points={netGraph.fullPolyline}
-                  className="motion-stage-graph-line is-muted"
-                  style={{ stroke: FORCE_COLORS.net }}
-                />
-                <polyline
-                  points={netGraph.playedPolyline}
-                  className="motion-stage-graph-line"
-                  style={{ stroke: FORCE_COLORS.net }}
-                />
-                <line
-                  x1={forceGuideX}
-                  y1={stage.graphY + FORCE_GRAPH_PADDING.top}
-                  x2={forceGuideX}
-                  y2={stage.graphY + stage.graphHeight - FORCE_GRAPH_PADDING.bottom}
-                  className="motion-stage-guide-line is-chart"
-                />
-                <circle cx={currentPullPoint.x} cy={currentPullPoint.y} r="5.5" fill={FORCE_COLORS.pull} className="motion-stage-graph-point" />
-                <circle cx={currentFrictionPoint.x} cy={currentFrictionPoint.y} r="5.5" fill={FORCE_COLORS.friction} className="motion-stage-graph-point" />
-                <circle cx={currentNetPoint.x} cy={currentNetPoint.y} r="5.5" fill={FORCE_COLORS.net} className="motion-stage-graph-point" />
+                      return (
+                        <g key={`motion-time-${index}`}>
+                          <line
+                            x1={x}
+                            y1={stage.graphY + FORCE_GRAPH_PADDING.top}
+                            x2={x}
+                            y2={stage.graphY + stage.graphHeight - FORCE_GRAPH_PADDING.bottom}
+                            className="motion-stage-graph-grid"
+                          />
+                          <text
+                            x={x}
+                            y={stage.graphY + stage.graphHeight - 10}
+                            textAnchor="middle"
+                            className="motion-stage-graph-axis-label"
+                          >
+                            {formatTimeLabel(tickValue)}
+                          </text>
+                        </g>
+                      );
+                    })}
 
-                <rect
-                  x={motionGraphX}
-                  y={stage.graphY}
-                  width={stage.graphWidth}
-                  height={stage.graphHeight}
-                  rx="28"
-                  className="motion-stage-graph-shell"
-                />
-                <text x={motionGraphX + 28} y={stage.graphY + 34} className="motion-stage-panel-title">
-                  {tt("位移 / 速度 - 时间")}
-                  <tspan className="motion-stage-panel-note-inline">{tt("（左轴位移，右轴速度）")}</tspan>
-                </text>
-                <g transform={`translate(${motionGraphX + stage.graphWidth - 126}, ${stage.graphY + 26})`}>
-                  {[
-                    { label: tt("位移"), color: "#7bc1ff", offset: 0 },
-                    { label: tt("速度"), color: "#5de2b1", offset: 72 },
-                  ].map(({ label, color, offset }) => (
-                    <g key={label} transform={`translate(${offset}, 0)`}>
-                      <circle cx="0" cy="0" r="5" fill={color} />
-                      <text x="10" y="4" className="motion-stage-graph-axis-label">
-                        {label}
-                      </text>
-                    </g>
-                  ))}
-                </g>
-
-                {Array.from({ length: 5 }).map((_, index) => {
-                  const ratio = index / 4;
-                  const y =
-                    stage.graphY +
-                    FORCE_GRAPH_PADDING.top +
-                    (stage.graphHeight - FORCE_GRAPH_PADDING.top - FORCE_GRAPH_PADDING.bottom) * ratio;
-                  const displacementValue = displacementDomain * (1 - ratio);
-                  const velocityValue = velocityDomain * (1 - ratio);
-
-                  return (
-                    <g key={`motion-grid-${index}`}>
-                      <line
-                        x1={motionGraphX + FORCE_GRAPH_PADDING.left}
-                        y1={y}
-                        x2={motionGraphX + stage.graphWidth - FORCE_GRAPH_PADDING.right}
-                        y2={y}
-                        className="motion-stage-graph-grid"
-                      />
-                      <text
-                        x={motionGraphX + 18}
-                        y={y + 4}
-                        textAnchor="start"
-                        className="motion-stage-graph-axis-label"
-                      >
-                        {formatNumber(displacementValue, 1)}
-                      </text>
-                      <text
-                        x={motionGraphX + stage.graphWidth - 18}
-                        y={y + 4}
-                        textAnchor="end"
-                        className="motion-stage-graph-axis-label"
-                      >
-                        {formatNumber(velocityValue, 1)}
-                      </text>
-                    </g>
-                  );
-                })}
-
-                {graphTimeTicks.map((tickValue, index) => {
-                  const x = displacementGraph.mapTime(tickValue);
-
-                  return (
-                    <g key={`motion-time-${index}`}>
-                      <line
-                        x1={x}
-                        y1={stage.graphY + FORCE_GRAPH_PADDING.top}
-                        x2={x}
-                        y2={stage.graphY + stage.graphHeight - FORCE_GRAPH_PADDING.bottom}
-                        className="motion-stage-graph-grid"
-                      />
-                      <text
-                        x={x}
-                        y={stage.graphY + stage.graphHeight - 10}
-                        textAnchor="middle"
-                        className="motion-stage-graph-axis-label"
-                      >
-                        {formatTimeLabel(tickValue)}
-                      </text>
-                    </g>
-                  );
-                })}
-
-                <path
-                  d={displacementGraph.fullAreaPath}
-                  className="motion-stage-graph-area"
-                  fill="rgba(123, 193, 255, 0.18)"
-                />
-                <polyline
-                  points={displacementGraph.fullPolyline}
-                  className="motion-stage-graph-line is-muted"
-                  style={{ stroke: "#7bc1ff" }}
-                />
-                <polyline
-                  points={displacementGraph.playedPolyline}
-                  className="motion-stage-graph-line"
-                  style={{ stroke: "#7bc1ff" }}
-                />
-                <polyline
-                  points={velocityGraph.fullPolyline}
-                  className="motion-stage-graph-line is-secondary-muted"
-                  style={{ stroke: "#5de2b1" }}
-                />
-                <polyline
-                  points={velocityGraph.playedPolyline}
-                  className="motion-stage-graph-line is-secondary"
-                  style={{ stroke: "#5de2b1" }}
-                />
-                <line
-                  x1={motionGuideX}
-                  y1={stage.graphY + FORCE_GRAPH_PADDING.top}
-                  x2={motionGuideX}
-                  y2={stage.graphY + stage.graphHeight - FORCE_GRAPH_PADDING.bottom}
-                  className="motion-stage-guide-line is-chart"
-                />
-                <circle
-                  cx={currentDisplacementPoint.x}
-                  cy={currentDisplacementPoint.y}
-                  r="6"
-                  className="motion-stage-graph-point"
-                  fill="#7bc1ff"
-                />
-                <circle
-                  cx={currentVelocityPoint.x}
-                  cy={currentVelocityPoint.y}
-                  r="6"
-                  className="motion-stage-graph-point is-secondary"
-                  fill="#5de2b1"
-                />
+                    <path
+                      d={displacementGraph.fullAreaPath}
+                      className="motion-stage-graph-area"
+                      fill="rgba(123, 193, 255, 0.18)"
+                    />
+                    <polyline
+                      points={displacementGraph.fullPolyline}
+                      className="motion-stage-graph-line is-muted"
+                      style={{ stroke: "#7bc1ff" }}
+                    />
+                    <polyline
+                      points={displacementGraph.playedPolyline}
+                      className="motion-stage-graph-line"
+                      style={{ stroke: "#7bc1ff" }}
+                    />
+                    <polyline
+                      points={velocityGraph.fullPolyline}
+                      className="motion-stage-graph-line is-secondary-muted"
+                      style={{ stroke: "#5de2b1" }}
+                    />
+                    <polyline
+                      points={velocityGraph.playedPolyline}
+                      className="motion-stage-graph-line is-secondary"
+                      style={{ stroke: "#5de2b1" }}
+                    />
+                    <line
+                      x1={motionGuideX}
+                      y1={stage.graphY + FORCE_GRAPH_PADDING.top}
+                      x2={motionGuideX}
+                      y2={stage.graphY + stage.graphHeight - FORCE_GRAPH_PADDING.bottom}
+                      className="motion-stage-guide-line is-chart"
+                    />
+                    <circle
+                      cx={currentDisplacementPoint.x}
+                      cy={currentDisplacementPoint.y}
+                      r="6"
+                      className="motion-stage-graph-point"
+                      fill="#7bc1ff"
+                    />
+                    <circle
+                      cx={currentVelocityPoint.x}
+                      cy={currentVelocityPoint.y}
+                      r="6"
+                      className="motion-stage-graph-point is-secondary"
+                      fill="#5de2b1"
+                    />
+                  </>
+                )}
               </svg>
             ) : (
               <BasicForceThreeStage
@@ -2482,6 +2586,335 @@ function CollapseIcon() {
       <path d="M20 15l-5 5" strokeLinecap="round" />
     </svg>
   );
+}
+
+function MeasurementTeachingPanels({
+  stage,
+  displayedScene,
+  metrics,
+  experimentStatus,
+  records,
+  surfaceLabel,
+  contactAreaLabel,
+  pressure,
+  isZh,
+}: {
+  stage: StageLayout;
+  displayedScene: ExperimentScene;
+  metrics: ExperimentMetrics;
+  experimentStatus: ExperimentStatus;
+  records: ExperimentRecord[];
+  surfaceLabel: string;
+  contactAreaLabel: string;
+  pressure: number;
+  isZh: boolean;
+}) {
+  const leftX = stage.panelX;
+  const rightX = stage.panelX + stage.graphWidth + stage.graphGap;
+  const baseY = stage.graphY;
+  const stableReadout =
+    displayedScene.phase === "uniform" || displayedScene.phase === "complete";
+  const readoutValue = stableReadout
+    ? metrics.kineticFriction
+    : displayedScene.pullForce;
+  const comparisonRecords = records.slice(0, 4).reverse();
+  const comparisonMax = Math.max(
+    metrics.kineticFriction,
+    ...comparisonRecords.map((record) => record.kineticFriction),
+    1,
+  );
+  const conclusionLines = buildMeasurementInsights({ records, isZh });
+  const currentGroupLabel = isZh
+    ? `${surfaceLabel} · 压力 ${formatNumber(pressure, 1)} N · ${contactAreaLabel}`
+    : `${surfaceLabel} · Pressure ${formatNumber(pressure, 1)} N · ${contactAreaLabel}`;
+  const phaseCopy = stableReadout
+    ? isZh
+      ? "当前已经进入匀速阶段，稳定读数就是本组滑动摩擦力。"
+      : "The block is now in uniform motion, so the stable reading is the sliding friction for this run."
+    : experimentStatus.description;
+
+  return (
+    <>
+      <rect
+        x={leftX}
+        y={baseY}
+        width={stage.graphWidth}
+        height={stage.graphHeight}
+        rx="28"
+        className="motion-stage-graph-shell"
+      />
+      <text x={leftX + 28} y={baseY + 34} className="motion-stage-panel-title">
+        {isZh ? "实验原理与本组读数" : "Principle and Current Reading"}
+      </text>
+      <g transform={`translate(${leftX + stage.graphWidth - 154}, ${baseY + 20})`}>
+        <rect width="126" height="28" rx="14" className="force-teaching-pill" />
+        <text x="63" y="18" textAnchor="middle" className="force-teaching-pill-copy">
+          {isZh ? "匀速时 F拉 = f" : "Uniform: F = f"}
+        </text>
+      </g>
+
+      <text x={leftX + 28} y={baseY + 72} className="force-teaching-kicker">
+        {isZh ? "核心原理" : "Core Principle"}
+      </text>
+      <text x={leftX + 28} y={baseY + 100} className="force-teaching-copy">
+        {isZh ? "1. 匀速拉动时，测力计稳定读数就是滑动摩擦力。" : "1. During uniform pulling, the stable scale reading equals the sliding friction force."}
+      </text>
+      <text x={leftX + 28} y={baseY + 126} className="force-teaching-copy">
+        {`2. f = \u03bcN`}
+      </text>
+      <text x={leftX + 28} y={baseY + 152} className="force-teaching-copy">
+        {isZh
+          ? `3. 水平面上 N = G = ${formatNumber(metrics.normal, 1)} N`
+          : `3. On a level surface, N = G = ${formatNumber(metrics.normal, 1)} N`}
+      </text>
+
+      <line
+        x1={leftX + 28}
+        y1={baseY + 184}
+        x2={leftX + stage.graphWidth - 28}
+        y2={baseY + 184}
+        className="force-teaching-divider"
+      />
+
+      <text x={leftX + 28} y={baseY + 214} className="force-teaching-kicker">
+        {isZh ? "本组变量" : "Current Setup"}
+      </text>
+      <text x={leftX + 28} y={baseY + 242} className="force-teaching-copy">
+        {currentGroupLabel}
+      </text>
+
+      <text x={leftX + 28} y={baseY + 286} className="force-teaching-kicker">
+        {stableReadout
+          ? isZh
+            ? "当前稳定读数"
+            : "Stable Reading"
+          : isZh
+            ? "当前拉力读数"
+            : "Current Pull Reading"}
+      </text>
+      <text x={leftX + 28} y={baseY + 332} className="force-teaching-reading">
+        {formatNumber(readoutValue, 1)} N
+      </text>
+      <text x={leftX + 28} y={baseY + 362} className="force-teaching-copy is-strong">
+        {stableReadout
+          ? isZh
+            ? "可直接记录为本组滑动摩擦力"
+            : "Record this as the sliding friction for this run"
+          : isZh
+            ? "继续拉动，等待读数稳定后再记录"
+            : "Keep pulling and record after the reading stabilizes"}
+      </text>
+
+      <foreignObject
+        x={leftX + 24}
+        y={baseY + 388}
+        width={stage.graphWidth - 48}
+        height={84}
+      >
+        <div className="force-teaching-note-card">
+          <strong>{isZh ? "阶段观察" : "Phase Note"}</strong>
+          <p>{phaseCopy}</p>
+        </div>
+      </foreignObject>
+
+      <rect
+        x={rightX}
+        y={baseY}
+        width={stage.graphWidth}
+        height={stage.graphHeight}
+        rx="28"
+        className="motion-stage-graph-shell"
+      />
+      <text x={rightX + 28} y={baseY + 34} className="motion-stage-panel-title">
+        {isZh ? "对照记录与实验结论" : "Comparison Records and Conclusions"}
+      </text>
+
+      {comparisonRecords.length === 0 ? (
+        <foreignObject
+          x={rightX + 24}
+          y={baseY + 76}
+          width={stage.graphWidth - 48}
+          height={136}
+        >
+          <div className="force-teaching-empty-card">
+            <strong>{isZh ? "还没有记录" : "No records yet"}</strong>
+            <p>
+              {isZh
+                ? "先完成一组匀速拉动测量。系统会自动保留最近几组读数，用来比较压力、材质和接触面积。"
+                : "Complete one uniform-pull run first. The latest records will be kept automatically for pressure, material, and contact-area comparisons."}
+            </p>
+          </div>
+        </foreignObject>
+      ) : (
+        <>
+          {comparisonRecords.map((record, index) => {
+            const rowY = baseY + 84 + index * 68;
+            const barWidth =
+              (stage.graphWidth - 190) *
+              clamp01(record.kineticFriction / comparisonMax);
+
+            return (
+              <g key={`${record.id}-${record.surfaceKey}-${record.contactAreaKey}`}>
+                <text x={rightX + 28} y={rowY} className="force-teaching-row-label">
+                  {isZh ? `第 ${comparisonRecords.length - index} 组` : `Run ${comparisonRecords.length - index}`}
+                </text>
+                <text x={rightX + 28} y={rowY + 22} className="force-teaching-row-meta">
+                  {isZh
+                    ? `${record.surfaceLabel} · 压力 ${formatNumber(record.pressure, 1)} N · ${record.contactAreaLabel}`
+                    : `${record.surfaceLabel} · Pressure ${formatNumber(record.pressure, 1)} N · ${record.contactAreaLabel}`}
+                </text>
+                <rect
+                  x={rightX + 28}
+                  y={rowY + 34}
+                  width={stage.graphWidth - 160}
+                  height="12"
+                  rx="6"
+                  className="force-teaching-bar-track"
+                />
+                <rect
+                  x={rightX + 28}
+                  y={rowY + 34}
+                  width={Math.max(barWidth, 12)}
+                  height="12"
+                  rx="6"
+                  className="force-teaching-bar-fill"
+                />
+                <text
+                  x={rightX + stage.graphWidth - 28}
+                  y={rowY + 45}
+                  textAnchor="end"
+                  className="force-teaching-row-value"
+                >
+                  {formatNumber(record.kineticFriction, 1)} N
+                </text>
+              </g>
+            );
+          })}
+
+          <line
+            x1={rightX + 28}
+            y1={baseY + 364}
+            x2={rightX + stage.graphWidth - 28}
+            y2={baseY + 364}
+            className="force-teaching-divider"
+          />
+
+          <text x={rightX + 28} y={baseY + 394} className="force-teaching-kicker">
+            {isZh ? "当前结论" : "Current Conclusions"}
+          </text>
+          {conclusionLines.map((line, index) => (
+            <text
+              key={`${line}-${index}`}
+              x={rightX + 44}
+              y={baseY + 426 + index * 28}
+              className="force-teaching-copy"
+            >
+              {`\u2022 ${line}`}
+            </text>
+          ))}
+        </>
+      )}
+    </>
+  );
+}
+
+function buildMeasurementInsights({
+  records,
+  isZh,
+}: {
+  records: ExperimentRecord[];
+  isZh: boolean;
+}) {
+  if (records.length === 0) {
+    return [
+      isZh
+        ? "先完成一组读数，再继续改变一个变量做对照。"
+        : "Complete one run first, then change one variable for comparison.",
+    ];
+  }
+
+  const insights: string[] = [];
+  const pressureGroups = new Map<string, ExperimentRecord[]>();
+  const materialGroups = new Map<string, ExperimentRecord[]>();
+  const areaGroups = new Map<string, ExperimentRecord[]>();
+  const surfaceOrder = new Map(
+    SURFACE_PRESETS.map((preset, index) => [preset.key, index]),
+  );
+
+  for (const record of records) {
+    const pressureKey = `${record.surfaceKey}:${record.contactAreaKey}`;
+    const materialKey = `${record.pressure}:${record.contactAreaKey}`;
+    const areaKey = `${record.surfaceKey}:${record.pressure}`;
+
+    pressureGroups.set(pressureKey, [...(pressureGroups.get(pressureKey) ?? []), record]);
+    materialGroups.set(materialKey, [...(materialGroups.get(materialKey) ?? []), record]);
+    areaGroups.set(areaKey, [...(areaGroups.get(areaKey) ?? []), record]);
+  }
+
+  for (const group of pressureGroups.values()) {
+    const sorted = [...group].sort((left, right) => left.pressure - right.pressure);
+    if (
+      sorted.length >= 2 &&
+      sorted[0].pressure !== sorted[sorted.length - 1].pressure &&
+      sorted[0].kineticFriction < sorted[sorted.length - 1].kineticFriction
+    ) {
+      insights.push(
+        isZh
+          ? "同材质、同摆放下，压力越大，滑动摩擦力越大。"
+          : "With the same material and orientation, greater normal force leads to greater sliding friction.",
+      );
+      break;
+    }
+  }
+
+  for (const group of materialGroups.values()) {
+    const sorted = [...group].sort(
+      (left, right) =>
+        (surfaceOrder.get(left.surfaceKey) ?? 0) -
+        (surfaceOrder.get(right.surfaceKey) ?? 0),
+    );
+    const uniqueSurfaces = new Set(sorted.map((record) => record.surfaceKey));
+
+    if (
+      uniqueSurfaces.size >= 2 &&
+      sorted[0].kineticFriction < sorted[sorted.length - 1].kineticFriction
+    ) {
+      insights.push(
+        isZh
+          ? "同压力下，表面越粗糙，滑动摩擦力越大。"
+          : "At the same pressure, rougher surfaces produce greater sliding friction.",
+      );
+      break;
+    }
+  }
+
+  for (const group of areaGroups.values()) {
+    const uniqueAreas = new Set(group.map((record) => record.contactAreaKey));
+    if (uniqueAreas.size < 2) {
+      continue;
+    }
+
+    const values = group.map((record) => record.kineticFriction);
+    const range = Math.max(...values) - Math.min(...values);
+    if (range <= 0.05) {
+      insights.push(
+        isZh
+          ? "同材质、同压力下，接触面积改变时，滑动摩擦力基本不变。"
+          : "With the same material and pressure, changing the contact area leaves sliding friction nearly unchanged.",
+      );
+      break;
+    }
+  }
+
+  if (insights.length === 0) {
+    insights.push(
+      isZh
+        ? "继续保持其他变量不变，只改一个量，系统会更容易给出清晰对照。"
+        : "Keep other variables fixed and change only one factor to get a clearer comparison.",
+    );
+  }
+
+  return insights.slice(0, 3);
 }
 
 function getExperimentStatus({

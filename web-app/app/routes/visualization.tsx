@@ -6,7 +6,11 @@ import { CircuitObserverLab } from "../components/circuit-observer-lab";
 import { MotionTrackLab } from "../components/motion-track-lab";
 import { StatusPanel } from "../components/status-panel";
 import { useDocumentMeta, useLocale } from "../i18n";
-import { getTopicById, type TeachingTopic } from "../data/teaching-catalog";
+import {
+  getTopicById,
+  isSlidingFrictionTopicId,
+  type TeachingTopic,
+} from "../data/teaching-catalog";
 import type { Route } from "./+types/visualization";
 
 export function meta({ params }: Route.MetaArgs) {
@@ -102,13 +106,13 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
 
   const { stage, subject, topic } = topicData;
   const isImmersiveLab =
-    topic.id === "basic-force" ||
+    isSlidingFrictionTopicId(topic.id) ||
     topic.id === "motion-track" ||
     topic.id === "circuit-observer";
 
   return (
     <div className="page-stack visual-page">
-      {topic.id === "basic-force" ? (
+      {isSlidingFrictionTopicId(topic.id) ? (
         <BasicForceLab
           topic={topic}
           isFullscreen={isFullscreen}
