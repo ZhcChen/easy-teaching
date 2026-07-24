@@ -9,12 +9,15 @@ import {
 
 import {
   createInitialClassroomSessionState,
+  getClassroomVariableKey,
   recordClassroomMeasurement,
   setClassroomMeasurementEligibility,
+  switchClassroomStudyFactor,
   updateClassroomParameters,
   type ContactAreaKey,
   type ForceExperimentMode,
   type ForceViewMode,
+  type StudyFactor,
   type SurfacePresetKey,
 } from "./basic-force-lab-state";
 import { BasicForceThreeStage } from "./basic-force-three-stage";
@@ -320,9 +323,11 @@ export function BasicForceLab({
 }: BasicForceLabProps) {
   const { isZh, tt } = useLocale();
   const [mode, setMode] = useState<ForceExperimentMode>(DEFAULT_CLASSROOM_SESSION.entry.mode);
-  const [viewMode, setViewMode] = useState<ForceViewMode>(readStoredForceViewMode);
+  const [viewMode, setViewMode] = useState<ForceViewMode>(
+    DEFAULT_CLASSROOM_SESSION.entry.viewMode,
+  );
   const [isControlPanelCollapsed, setIsControlPanelCollapsed] =
-    useState(readStoredForcePanelCollapsed);
+    useState<boolean>(DEFAULT_CLASSROOM_SESSION.entry.isControlPanelCollapsed);
   const [pressure, setPressure] = useState(DEFAULT_CLASSROOM_SESSION.parameters.pressure);
   const [constantPullForce, setConstantPullForce] = useState(DEFAULT_VALUES.constantPullForce);
   const [surfacePreset, setSurfacePreset] = useState<SurfacePresetKey>(
@@ -1023,6 +1028,78 @@ export function BasicForceLab({
   const currentModeLabel =
     FORCE_MODE_OPTIONS.find((item) => item.key === mode)?.label ?? "实验测量";
   const recordCountLabel = isZh ? `已记录 ${runRecords.length} 组` : `${runRecords.length} records`;
+  const studyFactor = classroomSession.studyFactor;
+  const studyFactorLabel =
+    studyFactor === "pressure"
+      ? isZh
+        ? "压力"
+        : "Pressure"
+      : studyFactor === "surface"
+        ? isZh
+          ? "材质"
+          : "Surface"
+        : isZh
+          ? "接触面积"
+          : "Contact area";
+  const activeClassroomVariableKey = getClassroomVariableKey(studyFactor);
+  const currentPressureLabel = isZh
+    ? `压力 ${formatNumber(pressure, 1)} N`
+    : `Pressure ${formatNumber(pressure, 1)} N`;
+  const classroomVariableLabel =
+    activeClassroomVariableKey === "pressure"
+      ? `${formatNumber(pressure, 1)} N`
+      : activeClassroomVariableKey === "surfacePreset"
+        ? tt(surfacePresetMeta.label)
+        : tt(contactAreaMeta.label);
+  const classroomLockSummary =
+    studyFactor === "pressure"
+      ? isZh
+        ? `材质固定为 ${tt(surfacePresetMeta.label)}，摆放固定为 ${tt(contactAreaMeta.label)}。`
+        : `Surface stays on ${tt(surfacePresetMeta.label)} and placement stays ${tt(contactAreaMeta.label)}.`
+      : studyFactor === "surface"
+        ? isZh
+          ? `当前只改变材质，${currentPressureLabel}，摆放固定为 ${tt(contactAreaMeta.label)}。`
+          : `Only the surface changes now. ${currentPressureLabel}, placement fixed at ${tt(contactAreaMeta.label)}.`
+        : isZh
+          ? `当前只改变接触面积，材质固定为 ${tt(surfacePresetMeta.label)}，${currentPressureLabel}。`
+          : `Only the contact area changes now. Surface stays ${tt(surfacePresetMeta.label)} and ${currentPressureLabel}.`;
+  const classroomEntryHint =
+    studyFactor === "pressure"
+      ? isZh
+        ? "依次比较不同压力下的稳定读数。"
+        : "Compare stable readings under different pressures."
+      : studyFactor === "surface"
+        ? isZh
+          ? "保持压力不变，比较不同材质下的稳定读数。"
+          : "Keep pressure fixed and compare stable readings across surfaces."
+        : isZh
+          ? "保持压力和材质不变，验证接触面积变化后的读数。"
+          : "Keep pressure and surface fixed, then observe how contact-area changes affect the reading.";
+  const studyFactorOptions: Array<{
+    key: StudyFactor;
+    label: string;
+    ariaLabel: string;
+    title: string;
+  }> = [
+    {
+      key: "pressure",
+      label: isZh ? "压力" : "Pressure",
+      ariaLabel: isZh ? "研究压力" : "Study pressure",
+      title: isZh ? "只改变压力，材质与摆放保持基线。" : "Change only pressure while keeping the surface and placement fixed.",
+    },
+    {
+      key: "surface",
+      label: isZh ? "材质" : "Surface",
+      ariaLabel: isZh ? "接触材质" : "Contact surface",
+      title: isZh ? "只改变接触材质，压力与摆放回到课堂基线。" : "Change only the contact surface and reset the other classroom conditions.",
+    },
+    {
+      key: "contact-area",
+      label: isZh ? "接触面积" : "Contact area",
+      ariaLabel: isZh ? "接触面积" : "Contact area",
+      title: isZh ? "只改变摆放方式，验证接触面积是否影响滑动摩擦力。" : "Change only the placement to verify whether contact area affects sliding friction.",
+    },
+  ];
   const forceViewOptions =
     isManualMode ? FORCE_VIEW_OPTIONS.filter((item) => item.key === "2d") : FORCE_VIEW_OPTIONS;
   const localizedForceViewOptions = forceViewOptions.map((item) => ({
@@ -1070,7 +1147,9 @@ export function BasicForceLab({
   }
 
   function resetDefaults() {
-    setMode(DEFAULT_VALUES.mode);
+    setMode(DEFAULT_CLASSROOM_SESSION.entry.mode);
+    setViewMode(DEFAULT_CLASSROOM_SESSION.entry.viewMode);
+    setIsControlPanelCollapsed(DEFAULT_CLASSROOM_SESSION.entry.isControlPanelCollapsed);
     setPressure(DEFAULT_CLASSROOM_SESSION.parameters.pressure);
     setConstantPullForce(DEFAULT_VALUES.constantPullForce);
     setSurfacePreset(DEFAULT_CLASSROOM_SESSION.parameters.surfacePreset);
@@ -1083,6 +1162,35 @@ export function BasicForceLab({
       ...createInitialClassroomSessionState(),
       recordsByFactor: current.recordsByFactor,
     }));
+    resetManualRecordingState();
+  }
+
+  function clearClassroomAndLegacyRecords() {
+    setRunRecords([]);
+    setClassroomSession((current) => ({
+      ...current,
+      recordsByFactor: createInitialClassroomSessionState().recordsByFactor,
+    }));
+  }
+
+  function applyStudyFactor(nextFactor: StudyFactor) {
+    if (studyFactor === nextFactor) {
+      return;
+    }
+
+    const nextSession = switchClassroomStudyFactor(classroomSession, nextFactor);
+
+    setClassroomSession(nextSession);
+    setMode(nextSession.entry.mode);
+    setViewMode(nextSession.entry.viewMode);
+    setIsControlPanelCollapsed(nextSession.entry.isControlPanelCollapsed);
+    setPressure(nextSession.parameters.pressure);
+    setSurfacePreset(nextSession.parameters.surfacePreset);
+    setContactArea(nextSession.parameters.contactArea);
+    setActiveForce("gravity");
+    setHasExperimentRun(false);
+    setIsExperimentRunning(false);
+    setExperimentElapsedMs(0);
     resetManualRecordingState();
   }
 
@@ -1451,22 +1559,48 @@ export function BasicForceLab({
               <div className="force-control-scroll basic-force-control-scroll">
                 <ControlPanelSection
                   title={isZh ? "课堂实验" : "Core Experiment"}
-                  hint={isZh ? "默认先做匀速拉动对照" : "Start with the uniform-pull comparison"}
+                  hint={isZh ? "先选研究因素，再做匀速拉动对照" : "Choose one study factor, then begin the uniform-pull comparison"}
                   accent
                 >
+                  <ControlChipGroup
+                    columns={3}
+                    size="dense"
+                    items={studyFactorOptions.map((item) => ({
+                      key: item.key,
+                      label: item.label,
+                      active: studyFactor === item.key,
+                      ariaLabel: item.ariaLabel,
+                      title: item.title,
+                      onClick: () => applyStudyFactor(item.key),
+                    }))}
+                  />
+
+                  <div className="force-insight-grid force-insight-grid-compact force-classroom-entry-grid">
+                    <article className="force-insight-card">
+                      <span className="force-insight-label">{isZh ? "当前研究" : "Study Factor"}</span>
+                      <strong className="force-insight-value">{studyFactorLabel}</strong>
+                    </article>
+                    <article className="force-insight-card">
+                      <span className="force-insight-label">{isZh ? "当前组变量" : "Current Variable"}</span>
+                      <strong className="force-insight-value">{classroomVariableLabel}</strong>
+                    </article>
+                  </div>
+
                   <p className="force-inline-copy">
-                    {isZh
-                      ? "本知识点重点：匀速拉动时，测力计稳定读数 = 滑动摩擦力。"
-                      : "Key idea: during uniform pulling, the stable spring-scale reading equals the sliding friction force."}
+                    {classroomLockSummary}
+                    {isZh ? " " : " "}
+                    {classroomEntryHint}
                   </p>
 
                   <ControlStatusBar
                     items={[
+                      <StatusPill key="factor" tone="active">
+                        {studyFactorLabel}
+                      </StatusPill>,
                       <StatusPill key="state" tone={displayedScene.stateTone}>
                         {tt(displayedScene.stateLabel)}
                       </StatusPill>,
                       <StatusPill key="mode">{tt(displayedScene.frictionModeLabel)}</StatusPill>,
-                      <StatusPill key="limit">f静,max {formatNumber(metrics.staticLimit, 1)} N</StatusPill>,
                     ]}
                     status={<StatusPill>{recordCountLabel}</StatusPill>}
                   />
@@ -1474,41 +1608,16 @@ export function BasicForceLab({
                   {!isTeachingMeasurementMode ? (
                     <p className="force-inline-copy">
                       {isZh
-                        ? "当前处于扩展观察模式。课堂讲解建议先切回“实验测量”，先完成控制变量对照。"
-                        : 'You are in an extended view. For classroom teaching, switch back to "Measurement" first to complete the controlled comparison.'}
+                        ? "当前处于扩展观察模式。课堂讲解建议先返回“实验测量”，再完成控制变量对照。"
+                        : 'You are in an extended view. Switch back to "Measurement" before continuing the classroom comparison.'}
                     </p>
                   ) : null}
 
-                  {mode === "manual-drag" ? (
-                    <ControlRange
-                      id="force-manual-progress"
-                      label={tt("记录时长")}
-                      unit="s"
-                      min={0}
-                      max={MANUAL_TIMELINE_MAX_MS / 1000}
-                      step={0.1}
-                      value={Math.min(manualCurrentTimelineSample.timeSeconds, MANUAL_TIMELINE_MAX_MS / 1000)}
-                      valueFormatter={(value) => `${formatNumber(value, 1)} s`}
-                      disabled
-                      onChange={() => {}}
-                    />
-                  ) : (
-                    <ControlRange
-                      id="force-experiment-progress"
-                      label={tt("实验时间轴")}
-                      min={0}
-                      max={totalExperimentMs}
-                      step={10}
-                      value={hasPlaybackStarted ? experimentElapsedMs : 0}
-                      valueFormatter={(value) => `${formatNumber(value / 1000, 1)} s`}
-                      onChange={seekExperiment}
-                    />
-                  )}
-
-                  <div className="motion-action-row">
+                  <div className="force-action-grid force-classroom-action-grid">
                     <ControlButton
                       variant="primary"
                       size="compact"
+                      className="force-action-primary"
                       onClick={() => {
                         if (manualIsRecording || isExperimentRunning) {
                           pauseExperiment();
@@ -1525,28 +1634,26 @@ export function BasicForceLab({
                     >
                       {primaryActionLabel}
                     </ControlButton>
+                    {!isTeachingMeasurementMode ? (
+                      <ControlButton
+                        size="compact"
+                        onClick={() => {
+                          setMode("measurement");
+                          setViewMode(DEFAULT_CLASSROOM_SESSION.entry.viewMode);
+                          setIsControlPanelCollapsed(
+                            DEFAULT_CLASSROOM_SESSION.entry.isControlPanelCollapsed,
+                          );
+                        }}
+                      >
+                        {isZh ? "返回课堂实验" : "Back to core experiment"}
+                      </ControlButton>
+                    ) : null}
                     <ControlButton size="compact" onClick={resetDefaults}>
                       {tt("重置")}
                     </ControlButton>
-                  </div>
-
-                  <div className="motion-action-row">
                     <ControlButton
                       size="compact"
-                      onClick={() => setMode("measurement")}
-                      disabled={isTeachingMeasurementMode}
-                    >
-                      {isZh ? "返回课堂实验" : "Back to core experiment"}
-                    </ControlButton>
-                    <ControlButton
-                      size="compact"
-                      onClick={() => {
-                        setRunRecords([]);
-                        setClassroomSession((current) => ({
-                          ...current,
-                          recordsByFactor: createInitialClassroomSessionState().recordsByFactor,
-                        }));
-                      }}
+                      onClick={clearClassroomAndLegacyRecords}
                       disabled={runRecords.length === 0}
                     >
                       {isZh ? "清空记录" : "Clear records"}
@@ -1590,55 +1697,56 @@ export function BasicForceLab({
                   ) : null}
                 </ControlPanelSection>
 
-                <ControlPanelSection title={tt("压力 / 正压力")} hint={tt("直接改变 N 的大小")}>
-                  <ControlRange
-                    id="force-pressure"
-                    label={tt("当前压力")}
-                    unit="N"
-                    min={2}
-                    max={10}
-                    step={0.5}
-                    value={pressure}
-                    onChange={setPressure}
-                  />
+                {studyFactor === "pressure" ? (
+                  <ControlPanelSection
+                    title={tt("压力 / 正压力")}
+                    hint={isZh ? "课堂默认比较 2N / 4N / 6N" : "Compare 2N / 4N / 6N in the classroom flow"}
+                  >
+                    <ControlRange
+                      id="force-pressure"
+                      label={tt("当前压力")}
+                      unit="N"
+                      min={2}
+                      max={6}
+                      step={2}
+                      value={pressure}
+                      onChange={setPressure}
+                    />
+                  </ControlPanelSection>
+                ) : null}
 
-                  <div className="force-insight-grid force-insight-grid-compact">
-                    <article className="force-insight-card">
-                      <span className="force-insight-label">{tt("等效质量")}</span>
-                      <strong className="force-insight-value">{formatNumber(metrics.massEquivalent, 2)} kg</strong>
-                    </article>
-                    <article className="force-insight-card">
-                      <span className="force-insight-label">{tt("理论滑动摩擦")}</span>
-                      <strong className="force-insight-value">{formatNumber(metrics.kineticFriction, 1)} N</strong>
-                    </article>
-                  </div>
-                </ControlPanelSection>
+                {studyFactor === "surface" ? (
+                  <ControlPanelSection title={tt("接触材质")} hint={tt("改变摩擦系数 μ")}>
+                    <ControlChipGroup
+                      items={SURFACE_PRESETS.filter((preset) => preset.key !== "smooth-board").map((preset) => ({
+                        key: preset.key,
+                        label: tt(preset.label),
+                        active: surfacePreset === preset.key,
+                        title: tt(preset.description),
+                        onClick: () => setSurfacePreset(preset.key),
+                      }))}
+                      columns={2}
+                    />
+                  </ControlPanelSection>
+                ) : null}
 
-                <ControlPanelSection title={tt("接触材质")} hint={tt("改变摩擦系数 μ")}>
-                  <ControlChipGroup
-                    items={SURFACE_PRESETS.map((preset) => ({
-                      key: preset.key,
-                      label: tt(preset.label),
-                      active: surfacePreset === preset.key,
-                      title: tt(preset.description),
-                      onClick: () => setSurfacePreset(preset.key),
-                    }))}
-                    columns={2}
-                  />
-                </ControlPanelSection>
-
-                <ControlPanelSection title={tt("摆放方式")} hint={tt("验证面积是否进入公式")}>
-                  <ControlChipGroup
-                    items={CONTACT_AREAS.map((item) => ({
-                      key: item.key,
-                      label: tt(item.label),
-                      active: contactArea === item.key,
-                      title: tt(item.description),
-                      onClick: () => setContactArea(item.key),
-                    }))}
-                    columns={3}
-                  />
-                </ControlPanelSection>
+                {studyFactor === "contact-area" ? (
+                  <ControlPanelSection
+                    title={tt("摆放方式")}
+                    hint={isZh ? "课堂默认只比较正放 / 侧放" : "The classroom flow compares flat vs side placement"}
+                  >
+                    <ControlChipGroup
+                      items={CONTACT_AREAS.filter((item) => item.key !== "upright").map((item) => ({
+                        key: item.key,
+                        label: tt(item.label),
+                        active: contactArea === item.key,
+                        title: tt(item.description),
+                        onClick: () => setContactArea(item.key),
+                      }))}
+                      columns={2}
+                    />
+                  </ControlPanelSection>
+                ) : null}
               </div>
             </>
           )}
