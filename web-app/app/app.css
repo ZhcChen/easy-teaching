@@ -4741,6 +4741,36 @@ html[data-theme="dark"] .force-state-pill.is-active {
   animation: circuit-current-flow 1.2s linear infinite;
 }
 
+.circuit-hit-area {
+  fill: rgba(255, 255, 255, 0.001);
+}
+
+.circuit-toggle-target {
+  cursor: pointer;
+  outline: none;
+}
+
+.circuit-toggle-target:focus-visible .circuit-hit-area,
+.circuit-toggle-target:hover .circuit-hit-area {
+  fill: rgba(138, 190, 255, 0.08);
+}
+
+.circuit-switch-target:focus-visible .circuit-switch-link.is-closed,
+.circuit-switch-target:hover .circuit-switch-link.is-closed {
+  stroke: rgba(232, 241, 255, 0.94);
+}
+
+.circuit-switch-target:focus-visible .circuit-switch-lever.is-open,
+.circuit-switch-target:hover .circuit-switch-lever.is-open {
+  stroke: rgba(255, 205, 142, 1);
+}
+
+.circuit-bulb-target:focus-visible .circuit-bulb-shell,
+.circuit-bulb-target:hover .circuit-bulb-shell {
+  stroke: rgba(255, 255, 255, 0.82);
+  stroke-width: 3.6;
+}
+
 .circuit-node {
   fill: rgba(138, 190, 255, 0.24);
   stroke: rgba(138, 190, 255, 0.38);
@@ -4826,12 +4856,14 @@ html[data-theme="dark"] .force-state-pill.is-active {
   fill: rgba(239, 68, 68, 0.06);
   stroke: rgba(248, 113, 113, 0.22);
   stroke-width: 2;
+  pointer-events: none;
 }
 
 .circuit-fault-mark {
   stroke: #fb7185;
   stroke-width: 8;
   stroke-linecap: round;
+  pointer-events: none;
 }
 
 @keyframes circuit-current-flow {

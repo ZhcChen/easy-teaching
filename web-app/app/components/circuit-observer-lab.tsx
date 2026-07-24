@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useState, type CSSProperties, type RefObject } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type RefObject,
+} from "react";
 
 import { ControlButton } from "./control-button";
 import { ControlChipGroup } from "./control-chip-group";
@@ -161,6 +168,19 @@ export function CircuitObserverLab({
   function clearFaults() {
     setL1Enabled(true);
     setL2Enabled(true);
+  }
+
+  function toggleMasterSwitch() {
+    setMasterSwitchClosed((previous) => !previous);
+  }
+
+  function toggleLamp(target: "l1" | "l2") {
+    if (target === "l1") {
+      setL1Enabled((previous) => !previous);
+      return;
+    }
+
+    setL2Enabled((previous) => !previous);
   }
 
   return (
@@ -499,6 +519,9 @@ export function CircuitObserverLab({
                   metrics={metrics}
                   l1Resistance={l1Resistance}
                   l2Resistance={l2Resistance}
+                  onToggleMasterSwitch={toggleMasterSwitch}
+                  onToggleL1={() => toggleLamp("l1")}
+                  onToggleL2={() => toggleLamp("l2")}
                   tt={tt}
                 />
               ) : (
@@ -507,6 +530,9 @@ export function CircuitObserverLab({
                   metrics={metrics}
                   l1Resistance={l1Resistance}
                   l2Resistance={l2Resistance}
+                  onToggleMasterSwitch={toggleMasterSwitch}
+                  onToggleL1={() => toggleLamp("l1")}
+                  onToggleL2={() => toggleLamp("l2")}
                   tt={tt}
                 />
               )}
@@ -523,12 +549,18 @@ function SeriesCircuitScene({
   metrics,
   l1Resistance,
   l2Resistance,
+  onToggleMasterSwitch,
+  onToggleL1,
+  onToggleL2,
   tt,
 }: {
   focusMode: CircuitFocusMode;
   metrics: CircuitMetrics;
   l1Resistance: number;
   l2Resistance: number;
+  onToggleMasterSwitch: () => void;
+  onToggleL1: () => void;
+  onToggleL2: () => void;
   tt: (text: string) => string;
 }) {
   return (
@@ -558,6 +590,8 @@ function SeriesCircuitScene({
         y={272}
         closed={metrics.switchClosed}
         energized={metrics.hasCircuitFlow}
+        onToggle={onToggleMasterSwitch}
+        actionLabel={metrics.switchClosed ? tt("点击断开主开关") : tt("点击闭合主开关")}
         label={tt("主开关")}
       />
       <WirePath
@@ -573,6 +607,8 @@ function SeriesCircuitScene({
         resistance={l1Resistance}
         brightness={metrics.l1Brightness}
         active={metrics.l1Conducting}
+        onToggle={onToggleL1}
+        actionLabel={metrics.l1Faulted ? tt("点击恢复 L1") : tt("点击断开 L1")}
       />
       <WirePath
         d="M 872 272 H 988"
@@ -587,6 +623,8 @@ function SeriesCircuitScene({
         resistance={l2Resistance}
         brightness={metrics.l2Brightness}
         active={metrics.l2Conducting}
+        onToggle={onToggleL2}
+        actionLabel={metrics.l2Faulted ? tt("点击恢复 L2") : tt("点击断开 L2")}
       />
 
       <WirePath
@@ -606,12 +644,18 @@ function ParallelCircuitScene({
   metrics,
   l1Resistance,
   l2Resistance,
+  onToggleMasterSwitch,
+  onToggleL1,
+  onToggleL2,
   tt,
 }: {
   focusMode: CircuitFocusMode;
   metrics: CircuitMetrics;
   l1Resistance: number;
   l2Resistance: number;
+  onToggleMasterSwitch: () => void;
+  onToggleL1: () => void;
+  onToggleL2: () => void;
   tt: (text: string) => string;
 }) {
   return (
@@ -641,6 +685,8 @@ function ParallelCircuitScene({
         y={248}
         closed={metrics.switchClosed}
         energized={metrics.hasCircuitFlow}
+        onToggle={onToggleMasterSwitch}
+        actionLabel={metrics.switchClosed ? tt("点击断开主开关") : tt("点击闭合主开关")}
         label={tt("主开关")}
       />
       <WirePath
@@ -691,6 +737,8 @@ function ParallelCircuitScene({
         resistance={l1Resistance}
         brightness={metrics.l1Brightness}
         active={metrics.l1Conducting}
+        onToggle={onToggleL1}
+        actionLabel={metrics.l1Faulted ? tt("点击恢复 L1") : tt("点击断开 L1")}
       />
       <WirePath
         d="M 862 286 H 1148"
@@ -710,6 +758,8 @@ function ParallelCircuitScene({
         resistance={l2Resistance}
         brightness={metrics.l2Brightness}
         active={metrics.l2Conducting}
+        onToggle={onToggleL2}
+        actionLabel={metrics.l2Faulted ? tt("点击恢复 L2") : tt("点击断开 L2")}
       />
       <WirePath
         d="M 862 446 H 1148"
@@ -786,6 +836,8 @@ function CircuitBulb({
   resistance,
   brightness,
   active,
+  onToggle,
+  actionLabel,
 }: {
   cx: number;
   cy: number;
@@ -793,13 +845,26 @@ function CircuitBulb({
   resistance: number;
   brightness: number;
   active: boolean;
+  onToggle: () => void;
+  actionLabel: string;
 }) {
   const glowOpacity = active ? 0.14 + brightness * 0.42 : 0.05;
   const coreOpacity = active ? 0.28 + brightness * 0.56 : 0.12;
   const filamentOpacity = active ? 0.45 + brightness * 0.48 : 0.18;
 
   return (
-    <g>
+    <g
+      role="button"
+      tabIndex={0}
+      className="circuit-toggle-target circuit-bulb-target"
+      onClick={onToggle}
+      onKeyDown={(event) => {
+        handleSvgToggleKeyDown(event, onToggle);
+      }}
+      aria-label={actionLabel}
+    >
+      <title>{actionLabel}</title>
+      <circle cx={cx} cy={cy} r="74" className="circuit-hit-area" />
       <circle
         cx={cx}
         cy={cy}
@@ -874,12 +939,16 @@ function SwitchSymbol({
   y,
   closed,
   energized,
+  onToggle,
+  actionLabel,
   label,
 }: {
   x: number;
   y: number;
   closed: boolean;
   energized: boolean;
+  onToggle: () => void;
+  actionLabel: string;
   label: string;
 }) {
   const nodeClassName = energized
@@ -892,7 +961,18 @@ function SwitchSymbol({
     : "circuit-switch-link is-closed";
 
   return (
-    <g>
+    <g
+      role="button"
+      tabIndex={0}
+      className="circuit-toggle-target circuit-switch-target"
+      onClick={onToggle}
+      onKeyDown={(event) => {
+        handleSvgToggleKeyDown(event, onToggle);
+      }}
+      aria-label={actionLabel}
+    >
+      <title>{actionLabel}</title>
+      <rect x={x - 56} y={y - 42} width="112" height="68" rx="20" className="circuit-hit-area" />
       <circle cx={x - 28} cy={y} r="6" className={nodeClassName} />
       <circle cx={x + 28} cy={y} r="6" className={nodeClassName} />
       {closed ? (
@@ -939,6 +1019,18 @@ function FaultMark({ x, y }: { x: number; y: number }) {
       <path d={`M ${x + 32} ${y - 32} L ${x - 32} ${y + 32}`} className="circuit-fault-mark" />
     </g>
   );
+}
+
+function handleSvgToggleKeyDown(
+  event: ReactKeyboardEvent<SVGGElement>,
+  onToggle: () => void,
+) {
+  if (event.key !== "Enter" && event.key !== " ") {
+    return;
+  }
+
+  event.preventDefault();
+  onToggle();
 }
 
 function buildCircuitMetrics({
