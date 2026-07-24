@@ -1011,6 +1011,21 @@ export function BasicForceLab({
   const currentModeLabel =
     FORCE_MODE_OPTIONS.find((item) => item.key === mode)?.label ?? "实验测量";
   const studyFactor = classroomSession.studyFactor;
+  const mainSectionTitle = isZh ? "主流程" : "Main Flow";
+  const mainSectionHint = isTeachingMeasurementMode
+    ? isZh
+      ? "先选研究因素，再观察、记录、对照"
+      : "Choose one study factor, then observe, record, and compare."
+    : isZh
+      ? "当前处于扩展观察中，可随时返回主流程继续记录"
+      : "You are in an extended view. Return to the main flow whenever you want to continue recording.";
+  const auxiliarySectionTitle = isZh ? "辅助操作" : "Auxiliary Controls";
+  const auxiliarySectionHint = isZh
+    ? `当前模式：${tt(currentModeLabel)}`
+    : `Current mode: ${tt(currentModeLabel)}`;
+  const advancedSectionHint = isZh
+    ? "用于切换 3D、恒力拉动或手动拖动观察"
+    : "Switch to 3D, constant pull, or manual drag for alternate observation.";
   const currentClassroomGroupKey = getClassroomGroupKey(studyFactor, {
     pressure,
     surfacePreset,
@@ -1129,6 +1144,17 @@ export function BasicForceLab({
     teachingState: classroomTeaching,
     isZh,
   });
+  const phaseStepItems = phaseSteps.map((step, index) => ({
+    key: step.phase,
+    label: tt(step.label),
+    stepLabel: String(index + 1),
+    title: tt(step.detail),
+    active: activePhase === step.phase,
+    ariaLabel: isZh
+      ? `阶段 ${index + 1}：${tt(step.label)}`
+      : `Step ${index + 1}: ${tt(step.label)}`,
+    onClick: () => jumpToPhase(step.phase),
+  }));
   const forceViewOptions =
     isManualMode ? FORCE_VIEW_OPTIONS.filter((item) => item.key === "2d") : FORCE_VIEW_OPTIONS;
   const localizedForceViewOptions = forceViewOptions.map((item) => ({
@@ -1602,8 +1628,8 @@ export function BasicForceLab({
 
               <div className="force-control-scroll basic-force-control-scroll">
                 <ControlPanelSection
-                  title={isZh ? "课堂实验" : "Core Experiment"}
-                  hint={isZh ? "先选研究因素，再做匀速拉动对照" : "Choose one study factor, then begin the uniform-pull comparison"}
+                  title={mainSectionTitle}
+                  hint={mainSectionHint}
                   accent
                 >
                   <ControlChipGroup
@@ -1679,6 +1705,24 @@ export function BasicForceLab({
                         {recordCurrentMeasurementLabel}
                       </ControlButton>
                     ) : null}
+                  </div>
+
+                  <p className="force-inline-copy">{classroomMeasurementHint}</p>
+                </ControlPanelSection>
+
+                <ControlPanelSection
+                  title={auxiliarySectionTitle}
+                  hint={auxiliarySectionHint}
+                >
+                  <ControlStepGroup className="is-panel" items={phaseStepItems} />
+
+                  <p className="force-inline-copy">
+                    {isZh
+                      ? "顶部阶段条只负责显示当前进度；需要快速回看过程时，可在这里切换阶段。"
+                      : "The top step bar only shows progress. Use this area when you need to jump between stages."}
+                  </p>
+
+                  <div className="force-action-grid force-secondary-action-grid">
                     {!isTeachingMeasurementMode ? (
                       <ControlButton
                         size="compact"
@@ -1690,7 +1734,7 @@ export function BasicForceLab({
                           );
                         }}
                       >
-                        {isZh ? "返回课堂实验" : "Back to core experiment"}
+                        {isZh ? "返回主流程" : "Back to main flow"}
                       </ControlButton>
                     ) : null}
                     <ControlButton size="compact" onClick={resetDefaults}>
@@ -1704,13 +1748,11 @@ export function BasicForceLab({
                       {isZh ? "清空记录" : "Clear records"}
                     </ControlButton>
                   </div>
-
-                  <p className="force-inline-copy">{classroomMeasurementHint}</p>
                 </ControlPanelSection>
 
                 <ControlPanelSection
                   title={isZh ? "扩展观察" : "Extended Views"}
-                  hint={isZh ? "保留给选学或课后延展" : "Optional after-class extensions"}
+                  hint={advancedSectionHint}
                 >
                   <ControlChipGroup
                     columns={3}
@@ -1827,17 +1869,8 @@ export function BasicForceLab({
             />
             <ControlStepGroup
               className="force-stage-overlay is-top-center force-stage-stepbar"
-              items={phaseSteps.map((step, index) => ({
-                key: step.phase,
-                label: tt(step.label),
-                stepLabel: String(index + 1),
-                title: tt(step.detail),
-                active: activePhase === step.phase,
-                ariaLabel: isZh
-                  ? `阶段 ${index + 1}：${tt(step.label)}`
-                  : `Step ${index + 1}: ${tt(step.label)}`,
-                onClick: () => jumpToPhase(step.phase),
-              }))}
+              items={phaseStepItems}
+              readonly
             />
             <div className="visual-grid-layer" />
             <div className="visual-glow visual-glow-a" />
@@ -3161,8 +3194,8 @@ function getClassroomMeasurementHint({
   switch (teachingState.stability.reason) {
     case "extended":
       return isZh
-        ? "当前处于扩展观察模式。课堂记录不会在这里自动写入，请返回“实验测量”继续。"
-        : 'You are in an extended view. Classroom records are not written here, so return to "Measurement" to continue.';
+        ? "当前处于扩展观察模式。这里不会自动写入课堂记录，请返回“主流程”继续。"
+        : 'You are in an extended view. Classroom records are not written here, so return to "Main Flow" to continue.';
     case "recorded":
       if (nextSuggestion) {
         return isZh

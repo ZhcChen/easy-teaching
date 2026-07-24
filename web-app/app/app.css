@@ -2918,6 +2918,11 @@ html[data-theme="dark"] .force-state-pill.is-active {
   box-shadow: 0 8px 18px rgba(23, 105, 255, 0.08);
 }
 
+.control-step-button.is-readonly {
+  cursor: default;
+  pointer-events: none;
+}
+
 .control-step-button:disabled {
   opacity: 0.56;
   cursor: not-allowed;
@@ -3679,6 +3684,12 @@ html[data-theme="dark"] .force-state-pill.is-active {
   border-color: rgba(132, 188, 255, 0.4);
   background: rgba(12, 28, 48, 0.92);
   color: #f8fbff;
+}
+
+.force-stage-stepbar .control-step-button.is-readonly:hover {
+  border-color: rgba(124, 168, 255, 0.22);
+  background: rgba(7, 17, 31, 0.78);
+  color: rgba(236, 243, 255, 0.9);
 }
 
 .force-stage-stepbar .control-step-button.is-active {

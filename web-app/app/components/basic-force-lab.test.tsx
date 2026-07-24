@@ -42,7 +42,9 @@ describe("BasicForceLab classroom entry", () => {
     expect(screen.getByRole("button", { name: "收起控制面板" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "2D" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tab", { name: "3D" })).toHaveAttribute("aria-selected", "false");
-    expect(screen.getByRole("heading", { name: "课堂实验" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "主流程" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "辅助操作" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "阶段 4：匀速测量" })).toHaveLength(1);
   });
 
   it("keeps the full friction formula hidden before the first classroom record", () => {
@@ -105,6 +107,23 @@ describe("BasicForceLab classroom entry", () => {
     expect(screen.getByRole("button", { name: "更新本组" })).toBeEnabled();
     expect(screen.getAllByText("压力 4 N").length).toBeGreaterThan(0);
     expect(screen.getByText("1 / 3 组")).toBeInTheDocument();
+  });
+
+  it("keeps extended observation in the auxiliary area and can return to the main flow", () => {
+    renderLab();
+
+    fireEvent.click(screen.getByRole("button", { name: "恒力拉动" }));
+
+    expect(screen.getByRole("button", { name: "返回主流程" })).toBeInTheDocument();
+    expect(
+      screen.getAllByText("当前处于扩展观察模式。这里不会自动写入课堂记录，请返回“主流程”继续。")
+        .length,
+    ).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole("button", { name: "返回主流程" }));
+
+    expect(screen.queryByRole("button", { name: "返回主流程" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "记录本组" })).toBeInTheDocument();
   });
 
   it("promotes the pressure comparison to a formal classroom conclusion after three runs", () => {
