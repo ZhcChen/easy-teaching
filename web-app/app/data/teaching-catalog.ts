@@ -27,6 +27,7 @@ const TOPIC_ID_ALIASES: Record<string, string> = {
 
 const IMPLEMENTED_TOPIC_IDS = new Set([
   "motion-track",
+  "newton-first-law-lab",
   "sliding-friction-lab",
   "pressure-factors-lab",
   "circuit-observer",
@@ -86,6 +87,18 @@ export const teachingStages: TeachingStage[] = [
             status: "优先开发",
             tags: ["运动学", "轨迹", "图解"],
             highlights: ["支持播放与暂停", "展示轨迹与刻度", "适合首批演示"],
+          },
+          {
+            id: "newton-first-law-lab",
+            title: "牛顿第一定律实验",
+            summary: "用同一初速度对照不同阻力面上的滑行距离，并外推到理想光滑面。",
+            stageId: "junior",
+            subjectId: "physics",
+            mode: "2D",
+            deliveryState: "implemented",
+            status: "优先开发",
+            tags: ["惯性", "阻力", "小车轨道"],
+            highlights: ["支持同速释放对照", "保留理想光滑面推理", "联动速度-时间曲线"],
           },
           {
             id: "sliding-friction-lab",

@@ -22,6 +22,7 @@ describe("ContentSubjectPage topic delivery states", () => {
     renderPage("junior", "physics");
 
     const motionTrackLink = screen.getByRole("link", { name: /速度与位移轨迹/i });
+    const newtonLink = screen.getByRole("link", { name: /牛顿第一定律实验/i });
     const pressureFactorsLink = screen.getByRole("link", { name: /压强影响因素实验/i });
     const circuitObserverLink = screen.getByRole("link", { name: /串并联电路观察/i });
 
@@ -29,6 +30,11 @@ describe("ContentSubjectPage topic delivery states", () => {
     expect(within(motionTrackLink).getByText("直接进入")).toBeInTheDocument();
     expect(within(motionTrackLink).getByText("优先开发")).toBeInTheDocument();
     expect(motionTrackLink).toHaveAttribute("href", "/visual/motion-track");
+
+    expect(within(newtonLink).getByText("已可用")).toBeInTheDocument();
+    expect(within(newtonLink).getByText("直接进入")).toBeInTheDocument();
+    expect(within(newtonLink).getByText("优先开发")).toBeInTheDocument();
+    expect(newtonLink).toHaveAttribute("href", "/visual/newton-first-law-lab");
 
     expect(within(pressureFactorsLink).getByText("已可用")).toBeInTheDocument();
     expect(within(pressureFactorsLink).getByText("直接进入")).toBeInTheDocument();

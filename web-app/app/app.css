@@ -4172,6 +4172,58 @@ html[data-theme="dark"] .force-state-pill.is-active {
   font-weight: 700;
 }
 
+.newton-lab-main {
+  gap: 10px;
+}
+
+.newton-stage-canvas {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 184, 107, 0.14) 0%, transparent 22%),
+    radial-gradient(circle at 82% 72%, rgba(103, 198, 255, 0.14) 0%, transparent 24%),
+    linear-gradient(180deg, #081423 0%, #09192b 46%, #06101c 100%);
+}
+
+.newton-stage-ramp {
+  fill: rgba(117, 140, 171, 0.2);
+  stroke: rgba(167, 196, 232, 0.34);
+  stroke-width: 2;
+}
+
+.newton-stage-surface-fill {
+  stroke: rgba(220, 234, 255, 0.16);
+  stroke-width: 1.5;
+  opacity: 0.9;
+}
+
+.newton-stage-surface-fill.is-towel {
+  fill: rgba(255, 123, 114, 0.3);
+}
+
+.newton-stage-surface-fill.is-cotton {
+  fill: rgba(255, 191, 103, 0.3);
+}
+
+.newton-stage-surface-fill.is-board {
+  fill: rgba(93, 226, 177, 0.28);
+}
+
+.newton-stage-surface-fill.is-ideal {
+  fill: rgba(103, 198, 255, 0.24);
+}
+
+.newton-stage-stop-line {
+  stroke: rgba(255, 204, 138, 0.82);
+  stroke-width: 2.5;
+  stroke-dasharray: 8 8;
+}
+
+.newton-stage-ideal-line {
+  stroke: rgba(103, 198, 255, 0.86);
+  stroke-width: 2.5;
+  stroke-dasharray: 10 10;
+  stroke-linecap: round;
+}
+
 .force-stage-stepbar {
   justify-content: center;
   align-items: center;

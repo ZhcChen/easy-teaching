@@ -23,6 +23,12 @@ vi.mock("../components/motion-track-lab", () => ({
   ),
 }));
 
+vi.mock("../components/newton-first-law-lab", () => ({
+  NewtonFirstLawLab: ({ topic }: { topic: { title: string } }) => (
+    <div data-testid="newton-first-law-lab">牛顿实验页：{topic.title}</div>
+  ),
+}));
+
 vi.mock("../components/pressure-factors-lab", () => ({
   PressureFactorsLab: ({ topic }: { topic: { title: string } }) => (
     <div data-testid="pressure-factors-lab">压强实验页：{topic.title}</div>
@@ -54,6 +60,13 @@ describe("VisualizationPage delivery routing", () => {
 
     expect(screen.getByTestId("motion-track-lab")).toHaveTextContent("速度与位移轨迹");
     expect(screen.queryByText("当前还没有真实实验页")).not.toBeInTheDocument();
+  });
+
+  it("routes implemented newton topics to the real newton lab component", () => {
+    renderPage("newton-first-law-lab");
+
+    expect(screen.getByTestId("newton-first-law-lab")).toHaveTextContent("牛顿第一定律实验");
+    expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
   });
 
   it("routes implemented pressure topics to the real pressure lab component", () => {
