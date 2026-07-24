@@ -1,7 +1,7 @@
 ---
 title: feat: Prioritize remaining teaching modules for classroom-first rollout
 type: feat
-status: active
+status: completed
 date: 2026-07-24
 deepened: 2026-07-24
 ---
