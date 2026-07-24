@@ -1,9 +1,12 @@
-name: Release App
+name: Release App (Paused)
 
+# 桌面应用暂时停止开发，先关闭基于 tag 的自动构建。
+# 恢复桌面端时，可重新打开下面这段触发配置：
+# on:
+#   push:
+#     tags:
+#       - "v*.*.*"
 on:
-  push:
-    tags:
-      - "v*.*.*"
   workflow_dispatch:
     inputs:
       release_tag:
