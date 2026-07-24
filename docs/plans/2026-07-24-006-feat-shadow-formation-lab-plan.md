@@ -1,7 +1,7 @@
 ---
 title: feat: Implement shadow formation lab
 type: feat
-status: active
+status: completed
 date: 2026-07-24
 ---
 
@@ -69,7 +69,7 @@ date: 2026-07-24
   - 右侧单一 SVG 舞台
   - 支持点光源 / 面光源、本影 / 半影、位置变化
 
-- [ ] **Unit 3: 完成验证与部署**
+- [x] **Unit 3: 完成验证与部署**
   - 补单测
   - 跑 `npm test` / `typecheck` / `build`
   - 提交推送
