@@ -1902,6 +1902,7 @@ export function BasicForceLab({
                   progress={experimentStatus.progress}
                   meta={[studyFactorLabel, classroomVariableLabel, activeFactorProgressLabel]}
                   note={classroomSummaryNote}
+                  compact
                 />
               </div>
             ) : null}

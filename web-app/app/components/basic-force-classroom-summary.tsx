@@ -11,6 +11,7 @@ type BasicForceClassroomSummaryProps = {
   progress: number;
   meta: string[];
   note?: string;
+  compact?: boolean;
 };
 
 export function BasicForceClassroomSummary({
@@ -22,20 +23,23 @@ export function BasicForceClassroomSummary({
   progress,
   meta,
   note,
+  compact = false,
 }: BasicForceClassroomSummaryProps) {
   return (
-    <section className="force-classroom-summary">
+    <section className={compact ? "force-classroom-summary is-compact" : "force-classroom-summary"}>
       <div className="force-classroom-summary-head">
         <span className="force-classroom-summary-kicker">{heading}</span>
         <StatusPill tone={statusTone}>{statusLabel}</StatusPill>
       </div>
 
       <strong className="force-classroom-summary-title">{title}</strong>
-      <p className="force-classroom-summary-copy">{copy}</p>
+      {!compact ? <p className="force-classroom-summary-copy">{copy}</p> : null}
 
-      <div className="force-classroom-summary-progress" aria-hidden="true">
-        <span style={{ width: `${Math.max(0, Math.min(progress, 1)) * 100}%` }} />
-      </div>
+      {!compact ? (
+        <div className="force-classroom-summary-progress" aria-hidden="true">
+          <span style={{ width: `${Math.max(0, Math.min(progress, 1)) * 100}%` }} />
+        </div>
+      ) : null}
 
       <div className="force-classroom-summary-meta">
         {meta.map((item) => (
@@ -45,7 +49,7 @@ export function BasicForceClassroomSummary({
         ))}
       </div>
 
-      {note ? <p className="force-classroom-summary-note">{note}</p> : null}
+      {!compact && note ? <p className="force-classroom-summary-note">{note}</p> : null}
     </section>
   );
 }
