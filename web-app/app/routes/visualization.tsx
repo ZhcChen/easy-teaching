@@ -7,6 +7,7 @@ import { EvaporationRateLab } from "../components/evaporation-rate-lab";
 import { LightReflectionLab } from "../components/light-reflection-lab";
 import { MotionTrackLab } from "../components/motion-track-lab";
 import { NewtonFirstLawLab } from "../components/newton-first-law-lab";
+import { OhmsLawLab } from "../components/ohms-law-lab";
 import { PlaneMirrorLab } from "../components/plane-mirror-lab";
 import { PressureFactorsLab } from "../components/pressure-factors-lab";
 import { StatusPanel } from "../components/status-panel";
@@ -175,6 +176,13 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
         />
       ) : topic.id === "evaporation-rate-lab" ? (
         <EvaporationRateLab
+          topic={topic}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+          fullscreenRef={fullscreenRef}
+        />
+      ) : topic.id === "ohms-law-lab" ? (
+        <OhmsLawLab
           topic={topic}
           isFullscreen={isFullscreen}
           onToggleFullscreen={toggleFullscreen}

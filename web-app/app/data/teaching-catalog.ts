@@ -35,6 +35,7 @@ const IMPLEMENTED_TOPIC_IDS = new Set([
   "light-reflection-lab",
   "plane-mirror-lab",
   "evaporation-rate-lab",
+  "ohms-law-lab",
 ]);
 
 const TOPIC_DELIVERY_META: Record<TeachingTopicDeliveryState, TopicDeliveryMeta> = {
@@ -187,6 +188,18 @@ export const teachingStages: TeachingStage[] = [
             status: "优先开发",
             tags: ["热学", "蒸发", "控制变量"],
             highlights: ["支持三组因素依次验证", "实时联动蒸发曲线与液面下降", "突出控制变量法的课堂链路"],
+          },
+          {
+            id: "ohms-law-lab",
+            title: "欧姆定律探究实验",
+            summary: "围绕 I-U 与 I-R 两种固定实验模式，直观看懂欧姆定律的定量关系与控制变量法。",
+            stageId: "junior",
+            subjectId: "physics",
+            mode: "2D",
+            deliveryState: "implemented",
+            status: "优先开发",
+            tags: ["电学", "欧姆定律", "图表"],
+            highlights: ["支持 I-U 与 I-R 两组实验", "实时联动电表读数与图像", "突出控制变量法和比例关系"],
           },
         ],
       },

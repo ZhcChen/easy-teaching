@@ -47,6 +47,12 @@ vi.mock("../components/newton-first-law-lab", () => ({
   ),
 }));
 
+vi.mock("../components/ohms-law-lab", () => ({
+  OhmsLawLab: ({ topic }: { topic: { title: string } }) => (
+    <div data-testid="ohms-law-lab">欧姆实验页：{topic.title}</div>
+  ),
+}));
+
 vi.mock("../components/pressure-factors-lab", () => ({
   PressureFactorsLab: ({ topic }: { topic: { title: string } }) => (
     <div data-testid="pressure-factors-lab">压强实验页：{topic.title}</div>
@@ -125,6 +131,13 @@ describe("VisualizationPage delivery routing", () => {
     renderPage("evaporation-rate-lab");
 
     expect(screen.getByTestId("evaporation-rate-lab")).toHaveTextContent("液体蒸发快慢影响因素");
+    expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
+  });
+
+  it("routes implemented ohms-law topics to the real electric lab component", () => {
+    renderPage("ohms-law-lab");
+
+    expect(screen.getByTestId("ohms-law-lab")).toHaveTextContent("欧姆定律探究实验");
     expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
   });
 

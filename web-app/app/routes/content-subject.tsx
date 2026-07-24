@@ -179,7 +179,7 @@ function getTopicThemeClass(topicId: string) {
     return "is-force";
   }
 
-  if (topicId === "circuit-observer") {
+  if (topicId === "circuit-observer" || topicId === "ohms-law-lab") {
     return "is-circuit";
   }
 
