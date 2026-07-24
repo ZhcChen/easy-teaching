@@ -118,6 +118,12 @@ export function getClassroomVariableKey(
   return CLASSROOM_FACTOR_CONFIG[studyFactor].variableKey;
 }
 
+export function getClassroomGroupOrder(
+  studyFactor: StudyFactor,
+): ReadonlyArray<number | string> {
+  return CLASSROOM_FACTOR_CONFIG[studyFactor].order;
+}
+
 export function isClassroomCandidateForFactor(
   studyFactor: StudyFactor,
   parameters: ClassroomParameters,
@@ -272,7 +278,7 @@ function sortClassroomRecords(
 function getEligibilityAfterParameterChange(
   eligibility: MeasurementEligibility,
 ): MeasurementEligibility {
-  if (eligibility === "recordable") {
+  if (eligibility === "recordable" || eligibility === "recorded") {
     return "invalidated";
   }
 

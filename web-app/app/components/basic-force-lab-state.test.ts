@@ -72,4 +72,19 @@ describe("basic-force-lab classroom state", () => {
     expect(session.parameters.pressure).toBe(6);
     expect(session.eligibility).toBe("invalidated");
   });
+
+  it("keeps the classroom flow in a remeasure state after editing parameters on a recorded run", () => {
+    const recorded = recordClassroomMeasurement(
+      setClassroomMeasurementEligibility(createInitialClassroomSessionState(), "recordable"),
+      {
+        stablePullForce: 0.8,
+        kineticFriction: 0.8,
+        staticLimit: 1.1,
+      },
+    );
+    const session = updateClassroomParameters(recorded, { pressure: 6 });
+
+    expect(session.parameters.pressure).toBe(6);
+    expect(session.eligibility).toBe("invalidated");
+  });
 });

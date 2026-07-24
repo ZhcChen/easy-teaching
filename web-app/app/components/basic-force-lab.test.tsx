@@ -45,6 +45,12 @@ describe("BasicForceLab classroom entry", () => {
     expect(screen.getByRole("heading", { name: "课堂实验" })).toBeInTheDocument();
   });
 
+  it("keeps the full friction formula hidden before the first classroom record", () => {
+    renderLab();
+
+    expect(screen.queryByText("2. f = μN")).not.toBeInTheDocument();
+  });
+
   it("switches to the recommended baseline when changing study factor", () => {
     renderLab();
 
@@ -68,8 +74,9 @@ describe("BasicForceLab classroom entry", () => {
 
     expect(screen.getByRole("button", { name: "记录本组" })).toBeEnabled();
     expect(
-      screen.getByText("读数已经稳定，现在点击“记录本组”，再继续下一组对照。"),
-    ).toBeInTheDocument();
+      screen.getAllByText("读数已经稳定，现在点击“记录本组”，再继续下一组对照。")
+        .length,
+    ).toBeGreaterThan(0);
   });
 
   it("invalidates the current stable reading after changing the study parameter", () => {
@@ -84,8 +91,9 @@ describe("BasicForceLab classroom entry", () => {
 
     expect(screen.getByRole("button", { name: "记录本组" })).toBeDisabled();
     expect(
-      screen.getByText("参数刚刚变化，上一轮稳定读数已失效，请重新开始测量。"),
-    ).toBeInTheDocument();
+      screen.getAllByText("参数刚刚变化，上一轮稳定读数已失效，请重新开始测量。")
+        .length,
+    ).toBeGreaterThan(0);
   });
 
   it("records the current classroom run into the grouped comparison table", () => {
@@ -97,5 +105,32 @@ describe("BasicForceLab classroom entry", () => {
     expect(screen.getByRole("button", { name: "更新本组" })).toBeEnabled();
     expect(screen.getAllByText("压力 4 N").length).toBeGreaterThan(0);
     expect(screen.getByText("1 / 3 组")).toBeInTheDocument();
+  });
+
+  it("promotes the pressure comparison to a formal classroom conclusion after three runs", () => {
+    renderLab();
+
+    fireEvent.change(screen.getByLabelText("当前压力"), {
+      target: { value: "2" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "阶段 4：匀速测量" }));
+    fireEvent.click(screen.getByRole("button", { name: "记录本组" }));
+
+    fireEvent.change(screen.getByLabelText("当前压力"), {
+      target: { value: "4" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "阶段 4：匀速测量" }));
+    fireEvent.click(screen.getByRole("button", { name: "记录本组" }));
+
+    fireEvent.change(screen.getByLabelText("当前压力"), {
+      target: { value: "6" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "阶段 4：匀速测量" }));
+    fireEvent.click(screen.getByRole("button", { name: "记录本组" }));
+
+    expect(
+      screen.getAllByText("课堂结论：保持材质和摆放不变时，压力越大，滑动摩擦力越大。")
+        .length,
+    ).toBeGreaterThan(0);
   });
 });
