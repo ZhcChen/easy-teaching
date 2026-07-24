@@ -6,6 +6,7 @@ import { CircuitObserverLab } from "../components/circuit-observer-lab";
 import { LightReflectionLab } from "../components/light-reflection-lab";
 import { MotionTrackLab } from "../components/motion-track-lab";
 import { NewtonFirstLawLab } from "../components/newton-first-law-lab";
+import { PlaneMirrorLab } from "../components/plane-mirror-lab";
 import { PressureFactorsLab } from "../components/pressure-factors-lab";
 import { StatusPanel } from "../components/status-panel";
 import { TwoForceBalanceLab } from "../components/two-force-balance-lab";
@@ -159,6 +160,13 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
         />
       ) : topic.id === "light-reflection-lab" ? (
         <LightReflectionLab
+          topic={topic}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+          fullscreenRef={fullscreenRef}
+        />
+      ) : topic.id === "plane-mirror-lab" ? (
+        <PlaneMirrorLab
           topic={topic}
           isFullscreen={isFullscreen}
           onToggleFullscreen={toggleFullscreen}

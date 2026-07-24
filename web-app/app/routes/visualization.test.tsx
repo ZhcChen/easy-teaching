@@ -23,6 +23,12 @@ vi.mock("../components/light-reflection-lab", () => ({
   ),
 }));
 
+vi.mock("../components/plane-mirror-lab", () => ({
+  PlaneMirrorLab: ({ topic }: { topic: { title: string } }) => (
+    <div data-testid="plane-mirror-lab">平面镜实验页：{topic.title}</div>
+  ),
+}));
+
 vi.mock("../components/motion-track-lab", () => ({
   MotionTrackLab: ({ topic }: { topic: { title: string } }) => (
     <div data-testid="motion-track-lab">运动轨迹实验页：{topic.title}</div>
@@ -99,6 +105,13 @@ describe("VisualizationPage delivery routing", () => {
     renderPage("light-reflection-lab");
 
     expect(screen.getByTestId("light-reflection-lab")).toHaveTextContent("光的反射定律实验");
+    expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
+  });
+
+  it("routes implemented plane-mirror topics to the real optics lab component", () => {
+    renderPage("plane-mirror-lab");
+
+    expect(screen.getByTestId("plane-mirror-lab")).toHaveTextContent("平面镜成像实验");
     expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
   });
 

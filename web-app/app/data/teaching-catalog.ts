@@ -33,6 +33,7 @@ const IMPLEMENTED_TOPIC_IDS = new Set([
   "two-force-balance-lab",
   "circuit-observer",
   "light-reflection-lab",
+  "plane-mirror-lab",
 ]);
 
 const TOPIC_DELIVERY_META: Record<TeachingTopicDeliveryState, TopicDeliveryMeta> = {
@@ -161,6 +162,18 @@ export const teachingStages: TeachingStage[] = [
             status: "优先开发",
             tags: ["光学", "反射", "几何验证"],
             highlights: ["支持四组课堂验证", "镜面与漫反射一页对照", "突出法线与等角关系"],
+          },
+          {
+            id: "plane-mirror-lab",
+            title: "平面镜成像实验",
+            summary: "围绕重合法、等距等大、虚像和对称关系，直观看懂平面镜成像规律。",
+            stageId: "junior",
+            subjectId: "physics",
+            mode: "2D",
+            deliveryState: "implemented",
+            status: "优先开发",
+            tags: ["光学", "成像", "对称"],
+            highlights: ["支持拖动物距与物高", "验证虚像与等距关系", "光路与对称线同屏展示"],
           },
         ],
       },
