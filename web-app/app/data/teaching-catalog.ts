@@ -28,6 +28,7 @@ const TOPIC_ID_ALIASES: Record<string, string> = {
 const IMPLEMENTED_TOPIC_IDS = new Set([
   "motion-track",
   "sliding-friction-lab",
+  "pressure-factors-lab",
   "circuit-observer",
 ]);
 
@@ -97,6 +98,18 @@ export const teachingStages: TeachingStage[] = [
             status: "优先开发",
             tags: ["摩擦力", "压力", "控制变量"],
             highlights: ["支持多组对照记录", "验证接触面积无关", "适合课堂实验讲解"],
+          },
+          {
+            id: "pressure-factors-lab",
+            title: "压强影响因素实验",
+            summary: "用小桌、海绵和砝码对照压力与受力面积，直观看懂压强大小规律。",
+            stageId: "junior",
+            subjectId: "physics",
+            mode: "2D",
+            deliveryState: "implemented",
+            status: "优先开发",
+            tags: ["压强", "控制变量", "形变"],
+            highlights: ["支持压力与面积双对照", "实时联动 P = F / S", "适合课堂首批演示"],
           },
           {
             id: "circuit-observer",

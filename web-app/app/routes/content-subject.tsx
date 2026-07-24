@@ -166,7 +166,11 @@ function getTopicThemeClass(topicId: string) {
     return "is-motion";
   }
 
-  if (topicId === "sliding-friction-lab" || topicId === "basic-force") {
+  if (
+    topicId === "sliding-friction-lab" ||
+    topicId === "basic-force" ||
+    topicId === "pressure-factors-lab"
+  ) {
     return "is-force";
   }
 

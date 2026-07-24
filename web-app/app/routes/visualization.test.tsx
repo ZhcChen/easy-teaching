@@ -23,6 +23,12 @@ vi.mock("../components/motion-track-lab", () => ({
   ),
 }));
 
+vi.mock("../components/pressure-factors-lab", () => ({
+  PressureFactorsLab: ({ topic }: { topic: { title: string } }) => (
+    <div data-testid="pressure-factors-lab">压强实验页：{topic.title}</div>
+  ),
+}));
+
 function renderPage(topicId: string) {
   const props = { params: { topicId } } as Parameters<typeof VisualizationPage>[0];
 
@@ -48,6 +54,13 @@ describe("VisualizationPage delivery routing", () => {
 
     expect(screen.getByTestId("motion-track-lab")).toHaveTextContent("速度与位移轨迹");
     expect(screen.queryByText("当前还没有真实实验页")).not.toBeInTheDocument();
+  });
+
+  it("routes implemented pressure topics to the real pressure lab component", () => {
+    renderPage("pressure-factors-lab");
+
+    expect(screen.getByTestId("pressure-factors-lab")).toHaveTextContent("压强影响因素实验");
+    expect(screen.queryByRole("link", { name: "返回知识点页" })).not.toBeInTheDocument();
   });
 
   it("shows an honest planning state for topics that are not implemented yet", () => {

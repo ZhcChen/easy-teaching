@@ -1,5 +1,3 @@
-import type { StudyFactor } from "./basic-force-lab-state";
-
 export type BasicForceRecordRow = {
   key: string;
   label: string;
@@ -10,7 +8,7 @@ export type BasicForceRecordRow = {
 };
 
 export type BasicForceRecordGroup = {
-  key: StudyFactor;
+  key: string;
   title: string;
   countLabel: string;
   isActive?: boolean;
