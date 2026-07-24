@@ -174,12 +174,13 @@ function getTopicThemeClass(topicId: string) {
     topicId === "sliding-friction-lab" ||
     topicId === "basic-force" ||
     topicId === "pressure-factors-lab" ||
-    topicId === "two-force-balance-lab"
+    topicId === "two-force-balance-lab" ||
+    topicId === "buoyancy-lab"
   ) {
     return "is-force";
   }
 
-  if (topicId === "circuit-observer" || topicId === "ohms-law-lab") {
+  if (topicId === "circuit-observer" || topicId === "ohms-law-lab" || topicId === "variable-resistor-lab") {
     return "is-circuit";
   }
 
@@ -188,12 +189,14 @@ function getTopicThemeClass(topicId: string) {
     topicId === "plane-mirror-lab" ||
     topicId === "shadow-formation-lab" ||
     topicId === "pinhole-imaging-lab" ||
-    topicId === "eclipse-scattering-lab"
+    topicId === "eclipse-scattering-lab" ||
+    topicId === "lens-imaging-lab" ||
+    topicId === "light-refraction-lab"
   ) {
     return "is-optics";
   }
 
-  if (topicId === "evaporation-rate-lab") {
+  if (topicId === "evaporation-rate-lab" || topicId === "melting-freezing-lab") {
     return "is-thermo";
   }
 

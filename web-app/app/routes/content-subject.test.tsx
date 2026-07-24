@@ -96,6 +96,26 @@ describe("ContentSubjectPage topic delivery states", () => {
     expect(eclipseLink).toHaveAttribute("href", "/visual/eclipse-scattering-lab");
   });
 
+  it("keeps the higher-complexity junior physics topics in backlog state", () => {
+    renderPage("junior", "physics");
+
+    const buoyancyLink = screen.getByRole("link", { name: /浮力与阿基米德原理/i });
+    const lensLink = screen.getByRole("link", { name: /凸透镜成像规律/i });
+    const resistorLink = screen.getByRole("link", { name: /滑动变阻器动态调压/i });
+
+    expect(within(buoyancyLink).getAllByText("后续扩展").length).toBeGreaterThan(0);
+    expect(within(buoyancyLink).getByText("了解方向")).toBeInTheDocument();
+    expect(buoyancyLink).toHaveAttribute("href", "/visual/buoyancy-lab");
+
+    expect(within(lensLink).getAllByText("后续扩展").length).toBeGreaterThan(0);
+    expect(within(lensLink).getByText("了解方向")).toBeInTheDocument();
+    expect(lensLink).toHaveAttribute("href", "/visual/lens-imaging-lab");
+
+    expect(within(resistorLink).getAllByText("后续扩展").length).toBeGreaterThan(0);
+    expect(within(resistorLink).getByText("了解方向")).toBeInTheDocument();
+    expect(resistorLink).toHaveAttribute("href", "/visual/variable-resistor-lab");
+  });
+
   it("distinguishes planned and backlog senior physics topics at the entry level", () => {
     renderPage("senior", "physics");
 
