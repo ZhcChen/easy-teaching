@@ -1,7 +1,7 @@
 ---
 date: 2026-07-23
 title: feat: Add series and parallel circuit observer lab
-status: active
+status: completed
 ---
 
 # feat: 为串并联电路观察新增沉浸式 2D 实验页
@@ -178,7 +178,7 @@ status: active
 
 ## Implementation Units
 
-- [ ] Unit 1: 接入 `circuit-observer` 实验页入口
+- [x] Unit 1: 接入 `circuit-observer` 实验页入口
   - Goal: 让 `/visual/circuit-observer` 渲染专用实验组件，而不是默认占位壳层。
   - Files:
     - `web-app/app/routes/visualization.tsx`
@@ -199,7 +199,7 @@ status: active
   - Verification:
     - 手工验证 `/content/junior/physics` -> `串并联电路观察` -> 实验页跳转链路
 
-- [ ] Unit 2: 构建串并联电路派生计算模型
+- [x] Unit 2: 构建串并联电路派生计算模型
   - Goal: 用确定性公式驱动串联/并联的电流、电压、亮度与故障差异。
   - Files:
     - `web-app/app/components/circuit-observer-lab.tsx`
@@ -216,7 +216,7 @@ status: active
   - Verification:
     - 对照归档示例数据手工验算与页面数值一致
 
-- [ ] Unit 3: 实现沉浸式 2D 电路画布与路径高亮
+- [x] Unit 3: 实现沉浸式 2D 电路画布与路径高亮
   - Goal: 在右侧实验区中清楚表达电路结构、通电路径和灯泡亮灭差异。
   - Files:
     - `web-app/app/components/circuit-observer-lab.tsx`
@@ -235,7 +235,7 @@ status: active
   - Verification:
     - 手工验证亮暗主题、普通态、全屏态的视觉可读性
 
-- [ ] Unit 4: 接入控制面板、观察重点与课堂结论 HUD
+- [x] Unit 4: 接入控制面板、观察重点与课堂结论 HUD
   - Goal: 让左侧操作面板与右侧说明浮层形成可教学的观察流程。
   - Files:
     - `web-app/app/components/circuit-observer-lab.tsx`

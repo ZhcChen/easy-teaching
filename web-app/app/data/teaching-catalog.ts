@@ -67,7 +67,7 @@ export const teachingStages: TeachingStage[] = [
             stageId: "junior",
             subjectId: "physics",
             mode: "2D",
-            status: "后续扩展",
+            status: "可开始",
             tags: ["电路", "开关", "亮灭"],
             highlights: ["支持串联并联切换", "高亮电流路径与亮灭状态", "适合课堂对照讲解"],
           },

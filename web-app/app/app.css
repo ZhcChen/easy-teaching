@@ -4473,6 +4473,365 @@ html[data-theme="dark"] .force-state-pill.is-active {
   stroke: rgba(255, 255, 255, 0.36);
 }
 
+.circuit-lab-layout {
+  grid-template-columns: minmax(0, 304px) minmax(0, 1fr);
+  transition:
+    grid-template-columns 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    gap 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.circuit-lab-layout.is-collapsed {
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.circuit-control-panel {
+  gap: 12px;
+  padding: 14px;
+  border-radius: 20px;
+}
+
+.circuit-control-panel.is-collapsed {
+  width: 44px;
+  max-width: 44px;
+  gap: 0;
+}
+
+.circuit-control-panel.is-collapsed .force-panel-collapsed-shell {
+  width: 44px;
+}
+
+.circuit-control-scroll {
+  gap: 12px;
+}
+
+.circuit-panel-section {
+  gap: 10px;
+  padding: 12px;
+  border-radius: 16px;
+}
+
+.circuit-lab-main {
+  min-width: 0;
+  min-height: 0;
+}
+
+.circuit-stage-canvas {
+  display: flex;
+  flex: 1;
+  min-height: clamp(620px, calc(100vh - 170px), 820px);
+  isolation: isolate;
+}
+
+.circuit-stage-canvas .visual-grid-layer {
+  background-size: 64px 64px;
+  opacity: 0.1;
+  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.94) 0%, rgba(0, 0, 0, 0.72) 28%, rgba(0, 0, 0, 0.2) 58%, transparent 76%);
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.94) 0%, rgba(0, 0, 0, 0.72) 28%, rgba(0, 0, 0, 0.2) 58%, transparent 76%);
+}
+
+.circuit-stage-canvas .visual-glow-a {
+  opacity: 0.18;
+}
+
+.circuit-stage-canvas .visual-glow-b {
+  opacity: 0.12;
+}
+
+.circuit-stage-canvas::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--circuit-accent-soft) 88%, transparent) 0%, transparent 32%),
+    radial-gradient(circle at 76% 72%, color-mix(in srgb, var(--circuit-accent) 18%, transparent) 0%, transparent 26%);
+  pointer-events: none;
+}
+
+.circuit-stage-svg {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+}
+
+.circuit-stage-hud {
+  position: absolute;
+  z-index: 2;
+  max-width: 320px;
+}
+
+.circuit-stage-hud.is-top-left {
+  top: 18px;
+  left: 18px;
+}
+
+.circuit-stage-hud.is-top-right {
+  top: 18px;
+  right: 82px;
+}
+
+.circuit-stage-hud.is-bottom-edge {
+  right: 20px;
+  bottom: 20px;
+  left: 20px;
+  max-width: none;
+}
+
+.circuit-stage-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.circuit-stage-note {
+  max-width: 310px;
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(138, 190, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(7, 17, 31, 0.5);
+  color: var(--canvas-copy);
+  font-size: 11px;
+  line-height: 1.6;
+  backdrop-filter: blur(14px);
+}
+
+.circuit-stage-metric-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 110px);
+  gap: 8px;
+}
+
+.circuit-stage-metric-card {
+  padding: 10px 12px;
+  border: 1px solid rgba(138, 190, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(7, 17, 31, 0.52);
+  text-align: left;
+  backdrop-filter: blur(14px);
+}
+
+.circuit-stage-metric-label {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--canvas-copy);
+}
+
+.circuit-stage-metric-value {
+  margin: 5px 0 0;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--canvas-text);
+}
+
+.circuit-stage-info-dock {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.circuit-stage-formula-card {
+  display: grid;
+  flex: 1 1 260px;
+  gap: 6px;
+  min-height: 116px;
+  padding: 12px 14px;
+  border: 1px solid rgba(138, 190, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(7, 17, 31, 0.54);
+  backdrop-filter: blur(14px);
+}
+
+.circuit-stage-formula-kicker {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--circuit-accent) 82%, white);
+}
+
+.circuit-stage-formula-main {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--canvas-text);
+}
+
+.circuit-stage-formula-copy {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--canvas-copy);
+}
+
+.circuit-stage-bulb-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(164px, 182px));
+  gap: 10px;
+  justify-content: end;
+  min-width: 0;
+}
+
+.circuit-stage-bulb-card {
+  display: grid;
+  gap: 6px;
+  min-height: 116px;
+  padding: 12px 14px;
+  border: 1px solid rgba(138, 190, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(7, 17, 31, 0.52);
+  backdrop-filter: blur(14px);
+}
+
+.circuit-stage-bulb-head,
+.circuit-stage-bulb-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.circuit-stage-bulb-head strong,
+.circuit-stage-bulb-row strong {
+  color: var(--canvas-text);
+}
+
+.circuit-stage-bulb-row span {
+  color: var(--canvas-copy);
+  font-size: 11px;
+}
+
+.circuit-scene-title {
+  fill: var(--canvas-text);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.circuit-scene-copy {
+  fill: var(--canvas-copy);
+  font-size: 13px;
+}
+
+.circuit-wire {
+  fill: none;
+  stroke: rgba(138, 190, 255, 0.24);
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.circuit-wire.is-active {
+  stroke: var(--circuit-accent);
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--circuit-accent) 52%, transparent));
+}
+
+.circuit-wire.is-flowing {
+  stroke-dasharray: 24 14;
+  animation: circuit-current-flow 1.2s linear infinite;
+}
+
+.circuit-node {
+  fill: rgba(138, 190, 255, 0.24);
+  stroke: rgba(138, 190, 255, 0.38);
+  stroke-width: 2;
+}
+
+.circuit-node.is-active {
+  fill: color-mix(in srgb, var(--circuit-accent) 84%, white);
+  stroke: rgba(255, 255, 255, 0.38);
+}
+
+.circuit-switch-lever.is-open {
+  stroke: rgba(255, 185, 107, 0.94);
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.circuit-device-label,
+.circuit-bulb-label,
+.circuit-battery-mark,
+.circuit-bulb-resistance {
+  fill: var(--canvas-copy);
+}
+
+.circuit-device-label,
+.circuit-bulb-label,
+.circuit-bulb-resistance {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.circuit-battery-mark {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.circuit-battery-plate {
+  stroke: rgba(255, 255, 255, 0.78);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.circuit-battery-plate.is-long {
+  stroke-width: 6;
+}
+
+.circuit-bulb-glow {
+  fill: color-mix(in srgb, #ffd76a 82%, white);
+  filter: blur(20px);
+}
+
+.circuit-bulb-shell {
+  fill: rgba(16, 32, 51, 0.18);
+  stroke: rgba(223, 238, 255, 0.56);
+  stroke-width: 3;
+}
+
+.circuit-bulb-core {
+  fill: rgba(255, 223, 111, 0.88);
+}
+
+.circuit-bulb-filament,
+.circuit-bulb-support {
+  stroke: rgba(255, 248, 216, 0.92);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.circuit-fault-ring {
+  fill: rgba(239, 68, 68, 0.06);
+  stroke: rgba(248, 113, 113, 0.22);
+  stroke-width: 2;
+}
+
+.circuit-fault-mark {
+  stroke: #fb7185;
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+@keyframes circuit-current-flow {
+  from {
+    stroke-dashoffset: 0;
+  }
+
+  to {
+    stroke-dashoffset: -76;
+  }
+}
+
 .motion-stage-stop-line {
   stroke: rgba(255, 191, 103, 0.72);
   stroke-width: 2;
@@ -5044,6 +5403,10 @@ html[data-theme="dark"] .force-state-pill.is-active {
   .force-lab-layout,
   .force-control-panel,
   .force-lab-main,
+  .circuit-lab-shell,
+  .circuit-lab-layout,
+  .circuit-control-panel,
+  .circuit-lab-main,
   .motion-lab-shell,
   .motion-lab-layout,
   .motion-control-panel,
@@ -5056,6 +5419,9 @@ html[data-theme="dark"] .force-state-pill.is-active {
   .force-lab-shell,
   .force-control-panel,
   .force-lab-main,
+  .circuit-lab-shell,
+  .circuit-control-panel,
+  .circuit-lab-main,
   .motion-lab-shell,
   .motion-control-panel,
   .motion-lab-main {
@@ -5098,6 +5464,11 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
   .motion-lab-layout,
   .motion-lab-layout.is-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  .circuit-lab-layout,
+  .circuit-lab-layout.is-collapsed {
     grid-template-columns: 1fr;
   }
 
@@ -5201,6 +5572,14 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
   .motion-stage-svg {
     min-height: 860px;
+  }
+
+  .circuit-stage-canvas {
+    min-height: 900px;
+  }
+
+  .circuit-stage-svg {
+    min-height: 900px;
   }
 
   .subject-card-kicker-row {
@@ -5322,6 +5701,42 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
   .motion-stage-svg {
     min-height: 1100px;
+  }
+
+  .circuit-stage-canvas {
+    min-height: 1180px;
+  }
+
+  .circuit-stage-svg {
+    min-height: 1180px;
+  }
+
+  .circuit-stage-hud.is-top-left,
+  .circuit-stage-hud.is-top-right,
+  .circuit-stage-hud.is-bottom-edge {
+    position: static;
+    max-width: none;
+  }
+
+  .circuit-stage-hud.is-top-left {
+    margin: 88px 16px 0;
+  }
+
+  .circuit-stage-hud.is-top-right,
+  .circuit-stage-hud.is-bottom-edge {
+    margin: 12px 16px 0;
+  }
+
+  .circuit-stage-bulb-grid,
+  .circuit-stage-metric-grid {
+    grid-template-columns: 1fr;
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+  }
+
+  .circuit-stage-info-dock {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .force-stage-metric-grid {

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import { Link } from "react-router";
 
 import { BasicForceLab } from "../components/basic-force-lab";
+import { CircuitObserverLab } from "../components/circuit-observer-lab";
 import { MotionTrackLab } from "../components/motion-track-lab";
 import { StatusPanel } from "../components/status-panel";
 import { useDocumentMeta, useLocale } from "../i18n";
@@ -100,12 +101,22 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
   }
 
   const { stage, subject, topic } = topicData;
-  const isImmersiveLab = topic.id === "basic-force" || topic.id === "motion-track";
+  const isImmersiveLab =
+    topic.id === "basic-force" ||
+    topic.id === "motion-track" ||
+    topic.id === "circuit-observer";
 
   return (
     <div className="page-stack visual-page">
       {topic.id === "basic-force" ? (
         <BasicForceLab
+          topic={topic}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
+          fullscreenRef={fullscreenRef}
+        />
+      ) : topic.id === "circuit-observer" ? (
+        <CircuitObserverLab
           topic={topic}
           isFullscreen={isFullscreen}
           onToggleFullscreen={toggleFullscreen}
