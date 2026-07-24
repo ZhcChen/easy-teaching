@@ -61,7 +61,7 @@ const CIRCUIT_STAGE = {
   panelX: 72,
   panelY: 86,
   panelWidth: 1216,
-  panelHeight: 654,
+  panelHeight: 580,
 };
 
 const SERIES_EXAMPLE: CircuitExamplePreset = {
@@ -437,7 +437,6 @@ export function CircuitObserverLab({
                 <StatusPill>{focusLabel}</StatusPill>
                 <StatusPill tone={metrics.stateTone}>{metrics.stateLabel}</StatusPill>
               </div>
-              <p className="circuit-stage-note">{formulaSummary.summary}</p>
             </div>
 
             <div className="circuit-stage-hud is-top-right">
