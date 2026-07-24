@@ -6,6 +6,7 @@ export type BasicForceRecordRow = {
   value: string;
   note: string;
   isCurrent?: boolean;
+  isPending?: boolean;
 };
 
 export type BasicForceRecordGroup = {
@@ -14,6 +15,7 @@ export type BasicForceRecordGroup = {
   countLabel: string;
   isActive?: boolean;
   rows: BasicForceRecordRow[];
+  helper?: string;
   conclusion?: string;
 };
 
@@ -30,11 +32,13 @@ export function BasicForceRecordTable({
   emptyCopy,
   pendingCopy = "Waiting for record",
 }: BasicForceRecordTableProps) {
-  const hasAnyRows = groups.some((group) => group.rows.length > 0);
+  const hasAnyRecordedRows = groups.some((group) =>
+    group.rows.some((row) => !row.isPending),
+  );
 
   return (
     <div className="force-record-table-shell">
-      {!hasAnyRows ? (
+      {!hasAnyRecordedRows ? (
         <div className="force-record-table-empty">
           <strong>{emptyTitle}</strong>
           <p>{emptyCopy}</p>
@@ -57,6 +61,10 @@ export function BasicForceRecordTable({
                 <span>{group.countLabel}</span>
               </header>
 
+              {group.helper ? (
+                <p className="force-record-group-helper">{group.helper}</p>
+              ) : null}
+
               {group.rows.length === 0 ? (
                 <p className="force-record-group-empty">{pendingCopy}</p>
               ) : (
@@ -64,13 +72,27 @@ export function BasicForceRecordTable({
                   {group.rows.map((row) => (
                     <article
                       key={row.key}
-                      className={row.isCurrent ? "force-record-row is-current" : "force-record-row"}
+                      className={[
+                        "force-record-row",
+                        row.isCurrent ? "is-current" : "",
+                        row.isPending ? "is-pending" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
                     >
                       <div className="force-record-row-main">
                         <strong>{row.label}</strong>
                         <span>{row.note}</span>
                       </div>
-                      <div className="force-record-row-value">{row.value}</div>
+                      <div
+                        className={
+                          row.isPending
+                            ? "force-record-row-value is-pending"
+                            : "force-record-row-value"
+                        }
+                      >
+                        {row.isPending ? pendingCopy : row.value}
+                      </div>
                     </article>
                   ))}
                 </div>

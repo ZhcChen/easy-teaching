@@ -11,6 +11,7 @@ import {
   createInitialClassroomSessionState,
   getClassroomGroupKey,
   getClassroomVariableKey,
+  getRecommendedParametersForFactor,
   recordClassroomMeasurement,
   setClassroomMeasurementEligibility,
   switchClassroomStudyFactor,
@@ -29,6 +30,9 @@ import {
   type ClassroomGroupValue,
   type ClassroomTeachingState,
 } from "./basic-force-lab-teaching";
+import {
+  BasicForceClassroomSummary,
+} from "./basic-force-classroom-summary";
 import {
   BasicForceRecordTable,
   type BasicForceRecordGroup,
@@ -1144,6 +1148,26 @@ export function BasicForceLab({
     teachingState: classroomTeaching,
     isZh,
   });
+  const activeFactorProgressLabel = isZh
+    ? `已完成 ${formatClassroomRecordCount(
+        classroomTeaching.activeFactor.completedCount,
+        classroomTeaching.activeFactor.totalRequired,
+        true,
+      )}`
+    : `${formatClassroomRecordCount(
+        classroomTeaching.activeFactor.completedCount,
+        classroomTeaching.activeFactor.totalRequired,
+        false,
+      )} completed`;
+  const classroomSummaryTitle = getClassroomStageSummaryTitle({
+    teachingState: classroomTeaching,
+    isZh,
+  });
+  const classroomSummaryNote =
+    formatClassroomRecordHelper({
+      factorState: classroomTeaching.activeFactor,
+      isZh,
+    }) ?? classroomEntryHint;
   const phaseStepItems = phaseSteps.map((step, index) => ({
     key: step.phase,
     label: tt(step.label),
@@ -1867,6 +1891,20 @@ export function BasicForceLab({
               options={localizedForceViewOptions}
               onChange={(nextValue) => setViewMode(nextValue as ForceViewMode)}
             />
+            {viewMode === "2d" && isTeachingMeasurementMode ? (
+              <div className="force-stage-overlay is-top-left">
+                <BasicForceClassroomSummary
+                  heading={isZh ? "当前任务" : "Current Task"}
+                  title={classroomSummaryTitle}
+                  copy={classroomLockSummary}
+                  statusLabel={tt(displayedScene.stateLabel)}
+                  statusTone={displayedScene.stateTone}
+                  progress={experimentStatus.progress}
+                  meta={[studyFactorLabel, classroomVariableLabel, activeFactorProgressLabel]}
+                  note={classroomSummaryNote}
+                />
+              </div>
+            ) : null}
             <ControlStepGroup
               className="force-stage-overlay is-top-center force-stage-stepbar"
               items={phaseStepItems}
@@ -1907,85 +1945,60 @@ export function BasicForceLab({
                   rx="28"
                   className="motion-stage-panel-shell"
                 />
-                <text x={stage.panelX + 28} y={stage.panelY + 36} className="force-scene-inline-title">
-                  {tt(topic.title)}
-                </text>
-                <text x={stage.panelX + 28} y={stage.panelY + 62} className="force-svg-copy">
-                  {isTeachingMeasurementMode
-                    ? isZh
-                      ? "匀速拉动时，测力计稳定读数 = 滑动摩擦力"
-                      : "During uniform pulling, the stable spring-scale reading equals the sliding friction force."
-                    : tt(experimentStatus.label)}
-                </text>
-                <g transform={`translate(${stage.panelX + 184}, ${stage.panelY + 18})`}>
-                  <rect width="116" height="30" rx="15" className="force-scene-inline-badge" />
-                  <text x="58" y="20" textAnchor="middle" className="force-scene-inline-badge-copy">
-                    {tt(experimentStatus.badge)}
-                  </text>
-                </g>
-                <g transform={`translate(${stage.panelX + 28}, ${stage.panelY + 60})`}>
-                  <rect width="284" height="6" rx="3" className="force-scene-inline-progress-track" />
-                  <rect
-                    width={284 * experimentStatus.progress}
-                    height="6"
-                    rx="3"
-                    className="force-scene-inline-progress-fill"
-                  />
-                </g>
-                {(() => {
-                  const chipLabels = [
-                    tt(surfacePresetMeta.label),
-                    tt(contactAreaMeta.label),
-                    isZh ? `压力 ${formatNumber(pressure, 1)} N` : `Pressure ${formatNumber(pressure, 1)} N`,
-                  ];
-                  let cursorX = stage.panelX + 28;
+                {!isTeachingMeasurementMode ? (
+                  <>
+                    <text
+                      x={stage.panelX + 28}
+                      y={stage.panelY + 36}
+                      className="force-scene-inline-title"
+                    >
+                      {tt(topic.title)}
+                    </text>
+                    <text x={stage.panelX + 28} y={stage.panelY + 62} className="force-svg-copy">
+                      {tt(experimentStatus.label)}
+                    </text>
+                    <g transform={`translate(${stage.panelX + 184}, ${stage.panelY + 18})`}>
+                      <rect width="116" height="30" rx="15" className="force-scene-inline-badge" />
+                      <text x="58" y="20" textAnchor="middle" className="force-scene-inline-badge-copy">
+                        {tt(experimentStatus.badge)}
+                      </text>
+                    </g>
+                    <g transform={`translate(${stage.panelX + 28}, ${stage.panelY + 60})`}>
+                      <rect width="284" height="6" rx="3" className="force-scene-inline-progress-track" />
+                      <rect
+                        width={284 * experimentStatus.progress}
+                        height="6"
+                        rx="3"
+                        className="force-scene-inline-progress-fill"
+                      />
+                    </g>
+                    {(() => {
+                      const chipLabels = [
+                        tt(surfacePresetMeta.label),
+                        tt(contactAreaMeta.label),
+                        isZh
+                          ? `压力 ${formatNumber(pressure, 1)} N`
+                          : `Pressure ${formatNumber(pressure, 1)} N`,
+                      ];
+                      let cursorX = stage.panelX + 28;
 
-                  return chipLabels.map((label) => {
-                    const width = getPillWidth(label);
-                    const node = (
-                      <g key={label} transform={`translate(${cursorX}, ${stage.panelY + 84})`}>
-                        <rect width={width} height="28" rx="14" className="force-scene-inline-pill" />
-                        <text x={width / 2} y="18" textAnchor="middle" className="force-scene-inline-pill-copy">
-                          {label}
-                        </text>
-                      </g>
-                    );
-                    cursorX += width + 10;
-                    return node;
-                  });
-                })()}
-                {isTeachingMeasurementMode ? (
-                  <g transform={`translate(${stage.panelX + stage.panelWidth - 278}, ${stage.panelY + 20})`}>
-                    <rect width="250" height="92" rx="18" className="force-scene-metric-card" />
-                    <text x="18" y="24" className="force-scene-metric-line">
-                      {displayedScene.phase === "uniform" || displayedScene.phase === "complete"
-                        ? isZh
-                          ? "当前稳定读数"
-                          : "Stable reading"
-                        : isZh
-                          ? "当前拉力读数"
-                          : "Current pull reading"}
-                    </text>
-                    <text x="18" y="54" className="force-scene-metric-line is-emphasis">
-                      {formatNumber(
-                        displayedScene.phase === "uniform" || displayedScene.phase === "complete"
-                          ? metrics.kineticFriction
-                          : displayedScene.pullForce,
-                        1,
-                      )}{" "}
-                      N
-                    </text>
-                    <text x="18" y="76" className="force-scene-metric-line">
-                      {displayedScene.phase === "uniform" || displayedScene.phase === "complete"
-                        ? isZh
-                          ? "匀速时：F拉 = f"
-                          : "Uniform pull: F = f"
-                        : isZh
-                          ? "先继续拉动，等待读数稳定"
-                          : "Keep pulling until the reading stabilizes"}
-                    </text>
-                  </g>
-                ) : (
+                      return chipLabels.map((label) => {
+                        const width = getPillWidth(label);
+                        const node = (
+                          <g key={label} transform={`translate(${cursorX}, ${stage.panelY + 84})`}>
+                            <rect width={width} height="28" rx="14" className="force-scene-inline-pill" />
+                            <text x={width / 2} y="18" textAnchor="middle" className="force-scene-inline-pill-copy">
+                              {label}
+                            </text>
+                          </g>
+                        );
+                        cursorX += width + 10;
+                        return node;
+                      });
+                    })()}
+                  </>
+                ) : null}
+                {!isTeachingMeasurementMode ? (
                   <g transform={`translate(${stage.panelX + stage.panelWidth - 254}, ${stage.panelY + 24})`}>
                     <rect width="226" height="76" rx="18" className="force-scene-metric-card" />
                     <text x="18" y="26" className="force-scene-metric-line">
@@ -1998,7 +2011,7 @@ export function BasicForceLab({
                       R = {formatNumber(displayedScene.netForce, 2)} N · a = {formatNumber(displayedScene.acceleration, 2)} m/s²
                     </text>
                   </g>
-                )}
+                ) : null}
 
                 <rect
                   x={stage.panelX + 28}
@@ -2929,7 +2942,7 @@ function MeasurementTeachingPanels({
         className="motion-stage-graph-shell"
       />
       <text x={leftX + 28} y={baseY + 34} className="motion-stage-panel-title">
-        {isZh ? "本组读数与记录" : "Current Reading and Recording"}
+        {isZh ? "本组读数与任务" : "Reading and Task"}
       </text>
       {teachingState.principleState !== "hidden" ? (
         <g transform={`translate(${leftX + stage.graphWidth - 154}, ${baseY + 20})`}>
@@ -3006,10 +3019,12 @@ function MeasurementTeachingPanels({
         className="motion-stage-graph-shell"
       />
       <text x={rightX + 28} y={baseY + 34} className="motion-stage-panel-title">
-        {isZh ? "按因素记录课堂对照" : "Classroom Record Groups"}
+        {isZh ? "课堂实验单" : "Classroom Worksheet"}
       </text>
       <text x={rightX + 28} y={baseY + 66} className="force-teaching-kicker">
-        {isZh ? `已归档 ${recordCount} 组课堂记录` : `${recordCount} classroom records`}
+        {isZh
+          ? `已记录 ${recordCount} 组，其余项目保持待测`
+          : `${recordCount} recorded runs, with the rest still pending`}
       </text>
       <foreignObject
         x={rightX + 24}
@@ -3025,7 +3040,7 @@ function MeasurementTeachingPanels({
               ? "完成稳定读数后点击“记录本组”，再继续下一组对照。"
               : 'After the reading stabilizes, click "Record run" before moving to the next comparison.'
           }
-          pendingCopy={isZh ? "等待记录" : "Waiting for record"}
+          pendingCopy={isZh ? "待测" : "Pending"}
         />
       </foreignObject>
     </>
@@ -3059,22 +3074,16 @@ function buildClassroomRecordGroups({
         isZh,
       ),
       isActive: studyFactor === "pressure",
-      rows: teachingStates.pressure.expectedGroups
-        .map((group) => pressureRecords.get(group.groupKey))
-        .filter((record): record is ClassroomRecord => Boolean(record))
-        .map((record) => ({
-          key: record.groupKey,
-          label: isZh
-            ? `压力 ${formatNumber(record.pressure, 1)} N`
-            : `Pressure ${formatNumber(record.pressure, 1)} N`,
-          note: `${formatSurfacePresetLabel(record.surfacePreset, isZh)} · ${formatContactAreaLabel(record.contactArea, isZh)}`,
-          value: `${formatNumber(record.kineticFriction, 1)} N`,
-          isCurrent:
-            studyFactor === "pressure" &&
-            teachingStates.pressure.expectedGroups.some(
-              (group) => group.groupKey === record.groupKey && group.isCurrent,
-            ),
-        })),
+      rows: buildClassroomRecordRows({
+        factor: "pressure",
+        factorState: teachingStates.pressure,
+        recordMap: pressureRecords,
+        isZh,
+      }),
+      helper: formatClassroomRecordHelper({
+        factorState: teachingStates.pressure,
+        isZh,
+      }),
       conclusion: formatTeachingConclusionCopy(teachingStates.pressure.conclusion, isZh),
     },
     {
@@ -3086,20 +3095,16 @@ function buildClassroomRecordGroups({
         isZh,
       ),
       isActive: studyFactor === "surface",
-      rows: teachingStates.surface.expectedGroups
-        .map((group) => surfaceRecords.get(group.groupKey))
-        .filter((record): record is ClassroomRecord => Boolean(record))
-        .map((record) => ({
-          key: record.groupKey,
-          label: formatSurfacePresetLabel(record.surfacePreset, isZh),
-          note: `${formatPressureLabel(record.pressure, isZh)} · ${formatContactAreaLabel(record.contactArea, isZh)}`,
-          value: `${formatNumber(record.kineticFriction, 1)} N`,
-          isCurrent:
-            studyFactor === "surface" &&
-            teachingStates.surface.expectedGroups.some(
-              (group) => group.groupKey === record.groupKey && group.isCurrent,
-            ),
-        })),
+      rows: buildClassroomRecordRows({
+        factor: "surface",
+        factorState: teachingStates.surface,
+        recordMap: surfaceRecords,
+        isZh,
+      }),
+      helper: formatClassroomRecordHelper({
+        factorState: teachingStates.surface,
+        isZh,
+      }),
       conclusion: formatTeachingConclusionCopy(teachingStates.surface.conclusion, isZh),
     },
     {
@@ -3111,20 +3116,16 @@ function buildClassroomRecordGroups({
         isZh,
       ),
       isActive: studyFactor === "contact-area",
-      rows: teachingStates["contact-area"].expectedGroups
-        .map((group) => contactAreaRecords.get(group.groupKey))
-        .filter((record): record is ClassroomRecord => Boolean(record))
-        .map((record) => ({
-          key: record.groupKey,
-          label: formatContactAreaLabel(record.contactArea, isZh),
-          note: `${formatSurfacePresetLabel(record.surfacePreset, isZh)} · ${formatPressureLabel(record.pressure, isZh)}`,
-          value: `${formatNumber(record.kineticFriction, 1)} N`,
-          isCurrent:
-            studyFactor === "contact-area" &&
-            teachingStates["contact-area"].expectedGroups.some(
-              (group) => group.groupKey === record.groupKey && group.isCurrent,
-            ),
-        })),
+      rows: buildClassroomRecordRows({
+        factor: "contact-area",
+        factorState: teachingStates["contact-area"],
+        recordMap: contactAreaRecords,
+        isZh,
+      }),
+      helper: formatClassroomRecordHelper({
+        factorState: teachingStates["contact-area"],
+        isZh,
+      }),
       conclusion: formatTeachingConclusionCopy(
         teachingStates["contact-area"].conclusion,
         isZh,
@@ -3176,6 +3177,157 @@ function formatContactAreaLabel(contactArea: ContactAreaKey, isZh: boolean) {
       return "Upright";
     default:
       return contactArea;
+  }
+}
+
+function buildClassroomRecordRows({
+  factor,
+  factorState,
+  recordMap,
+  isZh,
+}: {
+  factor: StudyFactor;
+  factorState: ClassroomFactorTeachingState;
+  recordMap: Map<string, ClassroomRecord>;
+  isZh: boolean;
+}) {
+  return factorState.expectedGroups.map((group) => {
+    const record = recordMap.get(group.groupKey);
+
+    return {
+      key: group.groupKey,
+      label: formatTeachingGroupValue(factor, group.value, isZh),
+      note: formatClassroomRecordRowNote(factor, isZh),
+      value: record ? `${formatNumber(record.kineticFriction, 1)} N` : "",
+      isCurrent: group.isCurrent,
+      isPending: !record,
+    };
+  });
+}
+
+function formatClassroomRecordRowNote(
+  factor: StudyFactor,
+  isZh: boolean,
+) {
+  const baseline = getRecommendedParametersForFactor(factor);
+
+  switch (factor) {
+    case "pressure":
+      return `${formatSurfacePresetLabel(baseline.surfacePreset, isZh)} · ${formatContactAreaLabel(baseline.contactArea, isZh)}`;
+    case "surface":
+      return `${formatPressureLabel(baseline.pressure, isZh)} · ${formatContactAreaLabel(baseline.contactArea, isZh)}`;
+    case "contact-area":
+      return `${formatSurfacePresetLabel(baseline.surfacePreset, isZh)} · ${formatPressureLabel(baseline.pressure, isZh)}`;
+    default:
+      return "";
+  }
+}
+
+function formatClassroomRecordHelper({
+  factorState,
+  isZh,
+}: {
+  factorState: ClassroomFactorTeachingState;
+  isZh: boolean;
+}) {
+  if (factorState.conclusionLevel === "formal") {
+    return isZh
+      ? "本组对照已完整，可结合下方结论归纳规律。"
+      : "This comparison set is complete. Use the conclusion below to summarize the rule.";
+  }
+
+  const missingGroups = factorState.expectedGroups.filter((group) =>
+    factorState.missingGroupKeys.includes(group.groupKey),
+  );
+  const missingLabels = missingGroups.map((group) =>
+    formatTeachingGroupValue(factorState.factor, group.value, isZh),
+  );
+
+  if (missingLabels.length === 0) {
+    return undefined;
+  }
+
+  const currentPendingGroup = missingGroups.find((group) => group.isCurrent);
+  if (currentPendingGroup) {
+    const remainingLabels = missingLabels.filter(
+      (label) =>
+        label !== formatTeachingGroupValue(factorState.factor, currentPendingGroup.value, isZh),
+    );
+
+    if (remainingLabels.length > 0) {
+      return isZh
+        ? `先完成当前组：${formatTeachingGroupValue(factorState.factor, currentPendingGroup.value, isZh)}；其余待测：${remainingLabels.join("、")}。`
+        : `Measure the current run first: ${formatTeachingGroupValue(factorState.factor, currentPendingGroup.value, isZh)}; remaining: ${remainingLabels.join(", ")}.`;
+    }
+
+    return isZh
+      ? `先完成当前组：${formatTeachingGroupValue(factorState.factor, currentPendingGroup.value, isZh)}。`
+      : `Measure the current run first: ${formatTeachingGroupValue(factorState.factor, currentPendingGroup.value, isZh)}.`;
+  }
+
+  if (factorState.nextGroupKey) {
+    const nextGroup = factorState.expectedGroups.find(
+      (group) => group.groupKey === factorState.nextGroupKey,
+    );
+
+    if (nextGroup) {
+      const remainingLabels = missingLabels.filter(
+        (label) =>
+          label !== formatTeachingGroupValue(factorState.factor, nextGroup.value, isZh),
+      );
+
+      if (remainingLabels.length > 0) {
+        return isZh
+          ? `下一组建议：${formatTeachingGroupValue(factorState.factor, nextGroup.value, isZh)}；剩余待测：${remainingLabels.join("、")}。`
+          : `Next suggested run: ${formatTeachingGroupValue(factorState.factor, nextGroup.value, isZh)}; remaining: ${remainingLabels.join(", ")}.`;
+      }
+
+      return isZh
+        ? `下一组建议：${formatTeachingGroupValue(factorState.factor, nextGroup.value, isZh)}。`
+        : `Next suggested run: ${formatTeachingGroupValue(factorState.factor, nextGroup.value, isZh)}.`;
+    }
+  }
+
+  return isZh
+    ? `待测：${missingLabels.join("、")}。`
+    : `Waiting to measure: ${missingLabels.join(", ")}.`;
+}
+
+function getClassroomStageSummaryTitle({
+  teachingState,
+  isZh,
+}: {
+  teachingState: ClassroomTeachingState;
+  isZh: boolean;
+}) {
+  switch (teachingState.stability.reason) {
+    case "recorded":
+      return teachingState.activeFactor.nextGroupKey
+        ? isZh
+          ? "本组已记录，准备下一组对照"
+          : "This run is saved. Move to the next comparison."
+        : isZh
+          ? "本因素对照已完成，可以归纳结论"
+          : "This factor is complete. You can summarize the conclusion.";
+    case "recordable":
+      return isZh
+        ? "当前读数稳定，可以记录本组"
+        : "The reading is stable. Record this run now.";
+    case "invalidated":
+      return isZh
+        ? "变量已变化，需要重新测量"
+        : "The variable changed. Measure this run again.";
+    case "measuring":
+      return isZh
+        ? "保持匀速拉动，等待读数稳定"
+        : "Keep the pull uniform and wait for a stable reading.";
+    case "extended":
+      return isZh ? "当前处于扩展观察" : "You are in an extended view.";
+    case "idle":
+    default:
+      return isZh
+        ? "先开始实验，再进入匀速测量"
+        : "Start the experiment, then move into uniform measurement.";
   }
 }
 

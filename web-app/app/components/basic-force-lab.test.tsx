@@ -53,6 +53,15 @@ describe("BasicForceLab classroom entry", () => {
     expect(screen.queryByText("2. f = μN")).not.toBeInTheDocument();
   });
 
+  it("shows the full classroom worksheet with pending rows before any record", () => {
+    renderLab();
+
+    expect(screen.getAllByText("待测").length).toBeGreaterThanOrEqual(8);
+    expect(
+      screen.getAllByText("先完成当前组：压力 4 N；其余待测：压力 2 N、压力 6 N。").length,
+    ).toBeGreaterThan(0);
+  });
+
   it("switches to the recommended baseline when changing study factor", () => {
     renderLab();
 
@@ -107,6 +116,9 @@ describe("BasicForceLab classroom entry", () => {
     expect(screen.getByRole("button", { name: "更新本组" })).toBeEnabled();
     expect(screen.getAllByText("压力 4 N").length).toBeGreaterThan(0);
     expect(screen.getByText("1 / 3 组")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("下一组建议：压力 6 N；剩余待测：压力 2 N。").length,
+    ).toBeGreaterThan(0);
   });
 
   it("keeps extended observation in the auxiliary area and can return to the main flow", () => {

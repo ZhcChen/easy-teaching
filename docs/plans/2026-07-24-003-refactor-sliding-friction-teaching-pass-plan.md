@@ -1,7 +1,7 @@
 ---
 title: refactor: Deepen sliding friction teaching flow
 type: refactor
-status: active
+status: completed
 date: 2026-07-24
 origin: docs/brainstorms/2026-07-24-sliding-friction-lab-teaching-pass-requirements.md
 ---
@@ -90,7 +90,7 @@ origin: docs/brainstorms/2026-07-24-sliding-friction-lab-teaching-pass-requireme
 - 决策 4：记录区升级为预制实验单时，优先高亮当前研究因素，但保留三类因素的整体完成度
   - 原因：这样既能告诉用户“现在先做什么”，又能保留完整课堂全局感
 - 决策 5：公式后置采用“记录后可展开 / 完整对照后正式归纳”的双层策略
-  - 原因：既避免首屏剧透，也不影响老师在需要时补充原理讲解
+  - 原因：既避免首屏剧透，也保留在需要时补充原理讲解的空间
 
 ## Open Questions
 
@@ -203,7 +203,7 @@ flowchart TB
 **Verification:**
 - 统一主流程不再鼓励跳过程，二级辅助操作仍保留快捷控制
 
-- [ ] **Unit 3: 重排 2D 主舞台信息层级并后置公式揭示**
+- [x] **Unit 3: 重排 2D 主舞台信息层级并后置公式揭示**
 
 **Goal:** 让 2D 主舞台回到“器材 + 读数 + 当前任务”中心，同时把原理与公式挪到更合适的揭示时机。
 
@@ -239,7 +239,7 @@ flowchart TB
 **Verification:**
 - 2D 主舞台的第一视觉层变成器材和读数，原理解释退到更合适的时机与位置
 
-- [ ] **Unit 4: 把分组记录区升级为预制课堂实验单**
+- [x] **Unit 4: 把分组记录区升级为预制课堂实验单**
 
 **Goal:** 让当前按因素分组记录区升级成更明确的课堂实验单，显示待测组、下一组建议与分层结论。
 
@@ -276,7 +276,7 @@ flowchart TB
 - Integration — 清空记录后，三类因素实验单全部回到待测状态
 
 **Verification:**
-- 学生能直接从记录区看出“现在做到了哪一组、下一组该做什么、当前能否归纳结论”
+- 用户能直接从记录区看出“现在做到了哪一组、下一组该做什么、当前能否归纳结论”
 
 ## System-Wide Impact
 
@@ -284,14 +284,14 @@ flowchart TB
 - **Error propagation:** 若稳定判定阈值过严或过松，会直接影响可记录门槛与课堂结论层级，虽然视觉展示仍可能看起来正常
 - **State lifecycle risks:** 公式后置、趋势结论和下一组建议一旦与 `recordsByFactor` 同步不一致，会导致“界面提示”和“实验单内容”脱节
 - **API surface parity:** `sliding-friction-lab` 与 `basic-force` 的入口、全屏壳层、亮暗主题和扩展模式兼容关系保持不变
-- **Integration coverage:** 重点验证“学生默认不可跳阶段”“修改参数使当前读数失效”“记录后才揭示原理”“完整组数后才给正式结论”“清空记录后实验单重置”
+- **Integration coverage:** 重点验证“顶部步骤条不再直接跳阶段”“修改参数使当前读数失效”“记录后才揭示原理”“完整组数后才给正式结论”“清空记录后实验单重置”
 - **Unchanged invariants:** 2D/3D 共用物理量派生链、课堂记录按因素分组、扩展模式与课堂记录隔离这些第二轮已经建立的边界不应被本轮回退
 
 ## Risks & Dependencies
 
 | Risk | Mitigation |
 |------|------------|
-| 过度弱化教师快捷操作，影响老师演示效率 | 将快捷能力下沉到教师工具，而不是物理删除 |
+| 过度弱化快捷操作，影响回看与讲解效率 | 将快捷能力下沉到辅助操作，而不是物理删除 |
 | 稳定判定阈值设置不当，导致“太难记录”或“过早可记” | 先把稳定判定抽成纯逻辑并补测试，执行期通过现有样本数据做小范围标定 |
 | 主舞台减负过程中，信息隐藏过深导致用户迷路 | 保留“当前研究因素 / 当前组条件 / 当前下一步”三条最小课堂主线 |
 | 继续在 `basic-force-lab.tsx` 内堆逻辑导致维护压力回升 | 优先把教学派生层和课堂 summary 抽出为独立纯逻辑 / 子组件 |
