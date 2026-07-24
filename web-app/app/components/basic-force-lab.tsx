@@ -9,17 +9,24 @@ import {
 
 import {
   createInitialClassroomSessionState,
+  getClassroomGroupKey,
   getClassroomVariableKey,
   recordClassroomMeasurement,
   setClassroomMeasurementEligibility,
   switchClassroomStudyFactor,
   updateClassroomParameters,
   type ContactAreaKey,
+  type ClassroomRecord,
   type ForceExperimentMode,
   type ForceViewMode,
+  type MeasurementEligibility,
   type StudyFactor,
   type SurfacePresetKey,
 } from "./basic-force-lab-state";
+import {
+  BasicForceRecordTable,
+  type BasicForceRecordGroup,
+} from "./basic-force-record-table";
 import { BasicForceThreeStage } from "./basic-force-three-stage";
 import { ControlButton } from "./control-button";
 import { ControlChipGroup } from "./control-chip-group";
@@ -130,17 +137,6 @@ type ExperimentStatus = {
   description: string;
   formula: string;
   progress: number;
-};
-
-type ExperimentRecord = {
-  id: number;
-  surfaceKey: SurfacePresetKey;
-  surfaceLabel: string;
-  contactAreaKey: ContactAreaKey;
-  contactAreaLabel: string;
-  pressure: number;
-  kineticFriction: number;
-  staticLimit: number;
 };
 
 type StageLayout = {
@@ -340,8 +336,6 @@ export function BasicForceLab({
   const [hasExperimentRun, setHasExperimentRun] = useState(false);
   const [isExperimentRunning, setIsExperimentRunning] = useState(false);
   const [experimentElapsedMs, setExperimentElapsedMs] = useState(0);
-  const [currentRunId, setCurrentRunId] = useState(0);
-  const [runRecords, setRunRecords] = useState<ExperimentRecord[]>([]);
   const [classroomSession, setClassroomSession] = useState(() =>
     createInitialClassroomSessionState(),
   );
@@ -351,7 +345,6 @@ export function BasicForceLab({
     createIdleForceSample(),
   ]);
   const hasMountedRef = useRef(false);
-  const lastRecordedRunRef = useRef(0);
   const playbackFrameRef = useRef<number | null>(null);
   const playbackElapsedRef = useRef(0);
   const stageCanvasRef = useRef<HTMLDivElement | null>(null);
@@ -595,6 +588,8 @@ export function BasicForceLab({
   const currentTimelineSample = isManualMode
     ? manualCurrentTimelineSample
     : autoCurrentTimelineSample;
+  const stableMeasurementReadout =
+    displayedScene.phase === "uniform" || displayedScene.phase === "complete";
   const timelineSeries = isManualMode ? manualTimelineSeries : autoTimelineSeries;
   const playedTimelineSeries = isManualMode ? manualTimelineSeries : autoPlayedTimelineSeries;
 
@@ -716,53 +711,36 @@ export function BasicForceLab({
   );
 
   useEffect(() => {
-    if (
-      mode !== "measurement" ||
-      currentRunId === 0 ||
-      lastRecordedRunRef.current === currentRunId ||
-      isExperimentRunning ||
-      experimentElapsedMs < totalExperimentMs
-    ) {
+    if (mode !== "measurement") {
       return;
     }
 
-    const nextRecord: ExperimentRecord = {
-      id: currentRunId,
-      surfaceKey: surfacePresetMeta.key,
-      surfaceLabel: surfacePresetMeta.label,
-      contactAreaKey: contactAreaMeta.key,
-      contactAreaLabel: contactAreaMeta.label,
-      pressure,
-      kineticFriction: metrics.kineticFriction,
-      staticLimit: metrics.staticLimit,
-    };
+    if (isExperimentRunning) {
+      setClassroomSession((current) =>
+        current.eligibility === "measuring"
+          ? current
+          : setClassroomMeasurementEligibility(current, "measuring"),
+      );
+      return;
+    }
 
-    setRunRecords((previous) => [nextRecord, ...previous].slice(0, 6));
     setClassroomSession((current) =>
-      recordClassroomMeasurement(
-        setClassroomMeasurementEligibility(current, "recordable"),
-        {
-          stablePullForce: metrics.kineticFriction,
-          kineticFriction: metrics.kineticFriction,
-          staticLimit: metrics.staticLimit,
-        },
-      ),
+      current.eligibility === "recorded" ||
+      (current.eligibility === "invalidated" && experimentElapsedMs === 0)
+        ? current
+        : current.eligibility ===
+            (stableMeasurementReadout && experimentElapsedMs > 0 ? "recordable" : "idle")
+          ? current
+          : setClassroomMeasurementEligibility(
+              current,
+              stableMeasurementReadout && experimentElapsedMs > 0 ? "recordable" : "idle",
+            ),
     );
-    setActiveForce("friction");
-    lastRecordedRunRef.current = currentRunId;
   }, [
-    contactAreaMeta.key,
-    contactAreaMeta.label,
-    currentRunId,
     experimentElapsedMs,
     isExperimentRunning,
-    metrics.kineticFriction,
-    metrics.staticLimit,
     mode,
-    pressure,
-    surfacePresetMeta.key,
-    surfacePresetMeta.label,
-    totalExperimentMs,
+    stableMeasurementReadout,
   ]);
 
   useEffect(() => {
@@ -843,7 +821,6 @@ export function BasicForceLab({
     },
   ];
 
-  const latestRecord = runRecords[0] ?? null;
   const canBreakaway = constantPullForce > metrics.staticLimit;
 
   const visibleForces = {
@@ -1027,8 +1004,23 @@ export function BasicForceLab({
   const advancedModeOptions = FORCE_MODE_OPTIONS.filter((item) => item.key !== "measurement");
   const currentModeLabel =
     FORCE_MODE_OPTIONS.find((item) => item.key === mode)?.label ?? "实验测量";
-  const recordCountLabel = isZh ? `已记录 ${runRecords.length} 组` : `${runRecords.length} records`;
   const studyFactor = classroomSession.studyFactor;
+  const currentClassroomGroupKey = getClassroomGroupKey(studyFactor, {
+    pressure,
+    surfacePreset,
+    contactArea,
+  });
+  const classroomRecordCount =
+    classroomSession.recordsByFactor.pressure.length +
+    classroomSession.recordsByFactor.surface.length +
+    classroomSession.recordsByFactor["contact-area"].length;
+  const recordCountLabel = isZh
+    ? `已记录 ${classroomRecordCount} 组`
+    : `${classroomRecordCount} records`;
+  const currentClassroomRecord =
+    classroomSession.recordsByFactor[studyFactor].find(
+      (record) => record.groupKey === currentClassroomGroupKey,
+    ) ?? null;
   const studyFactorLabel =
     studyFactor === "pressure"
       ? isZh
@@ -1100,6 +1092,52 @@ export function BasicForceLab({
       title: isZh ? "只改变摆放方式，验证接触面积是否影响滑动摩擦力。" : "Change only the placement to verify whether contact area affects sliding friction.",
     },
   ];
+  const canRecordCurrentMeasurement =
+    isTeachingMeasurementMode &&
+    classroomSession.isClassroomCandidate &&
+    (classroomSession.eligibility === "recordable" ||
+      classroomSession.eligibility === "recorded");
+  const recordCurrentMeasurementLabel =
+    classroomSession.eligibility === "recorded"
+      ? isZh
+        ? "更新本组"
+        : "Update run"
+      : isZh
+        ? "记录本组"
+        : "Record run";
+  const classroomRecordGroups = useMemo<BasicForceRecordGroup[]>(
+    () =>
+      buildClassroomRecordGroups({
+        recordsByFactor: classroomSession.recordsByFactor,
+        studyFactor,
+        activeGroupKey: currentClassroomGroupKey,
+        isZh,
+      }),
+    [classroomSession.recordsByFactor, currentClassroomGroupKey, isZh, studyFactor],
+  );
+  const classroomMeasurementHint = !isTeachingMeasurementMode
+    ? isZh
+      ? "当前处于扩展观察模式。课堂记录不会在这里自动写入，请返回“实验测量”继续。"
+      : 'You are in an extended view. Classroom records are not written here, so return to "Measurement" to continue.'
+    : classroomSession.eligibility === "recorded"
+      ? isZh
+        ? "本组已经记录，可切换下一组继续对照；若重新测量了本组，可直接点击“更新本组”。"
+        : 'This run is already recorded. Move to the next comparison, or click "Update run" after remeasuring it.'
+      : classroomSession.eligibility === "recordable"
+        ? isZh
+          ? "读数已经稳定，现在点击“记录本组”，再继续下一组对照。"
+          : 'The reading is now stable. Click "Record run" before moving to the next comparison.'
+        : classroomSession.eligibility === "invalidated"
+          ? isZh
+            ? "参数刚刚变化，上一轮稳定读数已失效，请重新开始测量。"
+            : "Parameters changed, so the previous stable reading is no longer valid. Measure again."
+          : classroomSession.eligibility === "measuring"
+            ? isZh
+              ? "保持匀速拉动，等待读数稳定后再记录本组。"
+              : "Keep the pull uniform and wait for a stable reading before recording this run."
+            : isZh
+              ? "先点击“开始实验”，到匀速阶段后再记录本组。"
+              : 'Click "Start" first, then record this run during the uniform-motion phase.';
   const forceViewOptions =
     isManualMode ? FORCE_VIEW_OPTIONS.filter((item) => item.key === "2d") : FORCE_VIEW_OPTIONS;
   const localizedForceViewOptions = forceViewOptions.map((item) => ({
@@ -1165,10 +1203,13 @@ export function BasicForceLab({
     resetManualRecordingState();
   }
 
-  function clearClassroomAndLegacyRecords() {
-    setRunRecords([]);
+  function clearClassroomRecords() {
     setClassroomSession((current) => ({
       ...current,
+      eligibility:
+        mode === "measurement" && stableMeasurementReadout && experimentElapsedMs > 0
+          ? "recordable"
+          : "idle",
       recordsByFactor: createInitialClassroomSessionState().recordsByFactor,
     }));
   }
@@ -1192,6 +1233,24 @@ export function BasicForceLab({
     setIsExperimentRunning(false);
     setExperimentElapsedMs(0);
     resetManualRecordingState();
+  }
+
+  function recordCurrentMeasurement() {
+    if (!canRecordCurrentMeasurement) {
+      return;
+    }
+
+    setClassroomSession((current) =>
+      recordClassroomMeasurement(
+        setClassroomMeasurementEligibility(current, "recordable"),
+        {
+          stablePullForce: displayedScene.pullForce,
+          kineticFriction: metrics.kineticFriction,
+          staticLimit: metrics.staticLimit,
+        },
+      ),
+    );
+    setActiveForce("friction");
   }
 
   function startExperiment() {
@@ -1224,7 +1283,6 @@ export function BasicForceLab({
     setHasExperimentRun(true);
     setIsExperimentRunning(true);
     setExperimentElapsedMs(0);
-    setCurrentRunId((previous) => previous + 1);
     setActiveForce(mode === "measurement" ? "pull" : canBreakaway ? "net" : "friction");
   }
 
@@ -1254,11 +1312,6 @@ export function BasicForceLab({
 
     setHasExperimentRun(true);
     setIsExperimentRunning(true);
-
-    if (currentRunId === 0 || lastRecordedRunRef.current === currentRunId) {
-      setCurrentRunId((previous) => previous + 1);
-    }
-
     setActiveForce(getSuggestedForceForPhase(displayedScene.phase));
   }
 
@@ -1605,14 +1658,6 @@ export function BasicForceLab({
                     status={<StatusPill>{recordCountLabel}</StatusPill>}
                   />
 
-                  {!isTeachingMeasurementMode ? (
-                    <p className="force-inline-copy">
-                      {isZh
-                        ? "当前处于扩展观察模式。课堂讲解建议先返回“实验测量”，再完成控制变量对照。"
-                        : 'You are in an extended view. Switch back to "Measurement" before continuing the classroom comparison.'}
-                    </p>
-                  ) : null}
-
                   <div className="force-action-grid force-classroom-action-grid">
                     <ControlButton
                       variant="primary"
@@ -1634,6 +1679,15 @@ export function BasicForceLab({
                     >
                       {primaryActionLabel}
                     </ControlButton>
+                    {isTeachingMeasurementMode ? (
+                      <ControlButton
+                        size="compact"
+                        onClick={recordCurrentMeasurement}
+                        disabled={!canRecordCurrentMeasurement}
+                      >
+                        {recordCurrentMeasurementLabel}
+                      </ControlButton>
+                    ) : null}
                     {!isTeachingMeasurementMode ? (
                       <ControlButton
                         size="compact"
@@ -1653,12 +1707,14 @@ export function BasicForceLab({
                     </ControlButton>
                     <ControlButton
                       size="compact"
-                      onClick={clearClassroomAndLegacyRecords}
-                      disabled={runRecords.length === 0}
+                      onClick={clearClassroomRecords}
+                      disabled={classroomRecordCount === 0}
                     >
                       {isZh ? "清空记录" : "Clear records"}
                     </ControlButton>
                   </div>
+
+                  <p className="force-inline-copy">{classroomMeasurementHint}</p>
                 </ControlPanelSection>
 
                 <ControlPanelSection
@@ -2170,7 +2226,9 @@ export function BasicForceLab({
                     displayedScene={displayedScene}
                     metrics={metrics}
                     experimentStatus={experimentStatus}
-                    records={runRecords}
+                    measurementEligibility={classroomSession.eligibility}
+                    recordGroups={classroomRecordGroups}
+                    recordCount={classroomRecordCount}
                     surfaceLabel={surfacePresetMeta.label}
                     contactAreaLabel={contactAreaMeta.label}
                     pressure={pressure}
@@ -2545,18 +2603,18 @@ export function BasicForceLab({
                     <div className="force-stage-result-pill">
                       <strong>
                         {mode === "measurement"
-                          ? latestRecord
-                            ? `${formatNumber(latestRecord.kineticFriction, 1)} N`
+                          ? currentClassroomRecord
+                            ? `${formatNumber(currentClassroomRecord.kineticFriction, 1)} N`
                             : tt("等待稳定读数")
                           : `${formatNumber(displayedScene.netForce, 2)} N`}
                       </strong>
                       <span>
                         {mode === "measurement"
-                          ? latestRecord
+                          ? currentClassroomRecord
                             ? isZh
-                              ? `${tt(latestRecord.surfaceLabel)} · 压力 ${formatNumber(latestRecord.pressure, 1)} N · ${tt(latestRecord.contactAreaLabel)}`
-                              : `${tt(latestRecord.surfaceLabel)} · Pressure ${formatNumber(latestRecord.pressure, 1)} N · ${tt(latestRecord.contactAreaLabel)}`
-                            : tt("完成一次实验后记录匀速阶段读数")
+                              ? `${tt(surfacePresetMeta.label)} · 压力 ${formatNumber(pressure, 1)} N · ${tt(contactAreaMeta.label)}`
+                              : `${tt(surfacePresetMeta.label)} · Pressure ${formatNumber(pressure, 1)} N · ${tt(contactAreaMeta.label)}`
+                            : tt("完成匀速阶段后点击记录本组")
                           : canBreakaway
                             ? tt("恒定拉力已超过静摩擦阈值，当前木块持续加速前进。")
                             : tt("恒定拉力未超过最大静摩擦，木块保持静止。")}
@@ -2766,7 +2824,9 @@ function MeasurementTeachingPanels({
   displayedScene,
   metrics,
   experimentStatus,
-  records,
+  measurementEligibility,
+  recordGroups,
+  recordCount,
   surfaceLabel,
   contactAreaLabel,
   pressure,
@@ -2776,7 +2836,9 @@ function MeasurementTeachingPanels({
   displayedScene: ExperimentScene;
   metrics: ExperimentMetrics;
   experimentStatus: ExperimentStatus;
-  records: ExperimentRecord[];
+  measurementEligibility: MeasurementEligibility;
+  recordGroups: BasicForceRecordGroup[];
+  recordCount: number;
   surfaceLabel: string;
   contactAreaLabel: string;
   pressure: number;
@@ -2790,21 +2852,39 @@ function MeasurementTeachingPanels({
   const readoutValue = stableReadout
     ? metrics.kineticFriction
     : displayedScene.pullForce;
-  const comparisonRecords = records.slice(0, 4).reverse();
-  const comparisonMax = Math.max(
-    metrics.kineticFriction,
-    ...comparisonRecords.map((record) => record.kineticFriction),
-    1,
-  );
-  const conclusionLines = buildMeasurementInsights({ records, isZh });
   const currentGroupLabel = isZh
     ? `${surfaceLabel} · 压力 ${formatNumber(pressure, 1)} N · ${contactAreaLabel}`
     : `${surfaceLabel} · Pressure ${formatNumber(pressure, 1)} N · ${contactAreaLabel}`;
-  const phaseCopy = stableReadout
-    ? isZh
-      ? "当前已经进入匀速阶段，稳定读数就是本组滑动摩擦力。"
-      : "The block is now in uniform motion, so the stable reading is the sliding friction for this run."
-    : experimentStatus.description;
+  const readoutHint =
+    measurementEligibility === "recorded"
+      ? isZh
+        ? "本组已经记录，可继续下一组，或再次点击“更新本组”。"
+        : 'This run is already recorded. Move on, or click "Update run" after remeasuring it.'
+      : measurementEligibility === "recordable"
+        ? isZh
+          ? "当前已经稳定，现在可以点击“记录本组”。"
+          : 'The reading is stable now. You can click "Record run".'
+        : measurementEligibility === "invalidated"
+          ? isZh
+            ? "参数刚刚变化，当前读数已失效，请重新测量。"
+            : "Parameters changed, so this reading is no longer valid. Measure again."
+          : stableReadout
+            ? isZh
+              ? "保持当前匀速状态，确认稳定后再记录本组。"
+              : "Keep the pull uniform, then record the run after confirming the stable reading."
+            : isZh
+              ? "继续拉动，等待读数稳定后再记录。"
+              : "Keep pulling and wait for the reading to stabilize before recording.";
+  const phaseCopy =
+    measurementEligibility === "invalidated"
+      ? isZh
+        ? "研究变量已经变化，上一轮稳定读数不再适用于当前这组条件。"
+        : "The study variable changed, so the previous stable reading no longer applies to this setup."
+      : stableReadout
+        ? isZh
+          ? "当前已经进入匀速阶段，稳定读数就是本组滑动摩擦力。"
+          : "The block is now in uniform motion, so the stable reading is the sliding friction for this run."
+        : experimentStatus.description;
 
   return (
     <>
@@ -2817,7 +2897,7 @@ function MeasurementTeachingPanels({
         className="motion-stage-graph-shell"
       />
       <text x={leftX + 28} y={baseY + 34} className="motion-stage-panel-title">
-        {isZh ? "实验原理与本组读数" : "Principle and Current Reading"}
+        {isZh ? "本组读数与记录" : "Current Reading and Recording"}
       </text>
       <g transform={`translate(${leftX + stage.graphWidth - 154}, ${baseY + 20})`}>
         <rect width="126" height="28" rx="14" className="force-teaching-pill" />
@@ -2869,13 +2949,7 @@ function MeasurementTeachingPanels({
         {formatNumber(readoutValue, 1)} N
       </text>
       <text x={leftX + 28} y={baseY + 362} className="force-teaching-copy is-strong">
-        {stableReadout
-          ? isZh
-            ? "可直接记录为本组滑动摩擦力"
-            : "Record this as the sliding friction for this run"
-          : isZh
-            ? "继续拉动，等待读数稳定后再记录"
-            : "Keep pulling and record after the reading stabilizes"}
+        {readoutHint}
       </text>
 
       <foreignObject
@@ -2899,195 +2973,213 @@ function MeasurementTeachingPanels({
         className="motion-stage-graph-shell"
       />
       <text x={rightX + 28} y={baseY + 34} className="motion-stage-panel-title">
-        {isZh ? "对照记录与实验结论" : "Comparison Records and Conclusions"}
+        {isZh ? "按因素记录课堂对照" : "Classroom Record Groups"}
       </text>
-
-      {comparisonRecords.length === 0 ? (
-        <foreignObject
-          x={rightX + 24}
-          y={baseY + 76}
-          width={stage.graphWidth - 48}
-          height={136}
-        >
-          <div className="force-teaching-empty-card">
-            <strong>{isZh ? "还没有记录" : "No records yet"}</strong>
-            <p>
-              {isZh
-                ? "先完成一组匀速拉动测量。系统会自动保留最近几组读数，用来比较压力、材质和接触面积。"
-                : "Complete one uniform-pull run first. The latest records will be kept automatically for pressure, material, and contact-area comparisons."}
-            </p>
-          </div>
-        </foreignObject>
-      ) : (
-        <>
-          {comparisonRecords.map((record, index) => {
-            const rowY = baseY + 84 + index * 68;
-            const barWidth =
-              (stage.graphWidth - 190) *
-              clamp01(record.kineticFriction / comparisonMax);
-
-            return (
-              <g key={`${record.id}-${record.surfaceKey}-${record.contactAreaKey}`}>
-                <text x={rightX + 28} y={rowY} className="force-teaching-row-label">
-                  {isZh ? `第 ${comparisonRecords.length - index} 组` : `Run ${comparisonRecords.length - index}`}
-                </text>
-                <text x={rightX + 28} y={rowY + 22} className="force-teaching-row-meta">
-                  {isZh
-                    ? `${record.surfaceLabel} · 压力 ${formatNumber(record.pressure, 1)} N · ${record.contactAreaLabel}`
-                    : `${record.surfaceLabel} · Pressure ${formatNumber(record.pressure, 1)} N · ${record.contactAreaLabel}`}
-                </text>
-                <rect
-                  x={rightX + 28}
-                  y={rowY + 34}
-                  width={stage.graphWidth - 160}
-                  height="12"
-                  rx="6"
-                  className="force-teaching-bar-track"
-                />
-                <rect
-                  x={rightX + 28}
-                  y={rowY + 34}
-                  width={Math.max(barWidth, 12)}
-                  height="12"
-                  rx="6"
-                  className="force-teaching-bar-fill"
-                />
-                <text
-                  x={rightX + stage.graphWidth - 28}
-                  y={rowY + 45}
-                  textAnchor="end"
-                  className="force-teaching-row-value"
-                >
-                  {formatNumber(record.kineticFriction, 1)} N
-                </text>
-              </g>
-            );
-          })}
-
-          <line
-            x1={rightX + 28}
-            y1={baseY + 364}
-            x2={rightX + stage.graphWidth - 28}
-            y2={baseY + 364}
-            className="force-teaching-divider"
-          />
-
-          <text x={rightX + 28} y={baseY + 394} className="force-teaching-kicker">
-            {isZh ? "当前结论" : "Current Conclusions"}
-          </text>
-          {conclusionLines.map((line, index) => (
-            <text
-              key={`${line}-${index}`}
-              x={rightX + 44}
-              y={baseY + 426 + index * 28}
-              className="force-teaching-copy"
-            >
-              {`\u2022 ${line}`}
-            </text>
-          ))}
-        </>
-      )}
+      <text x={rightX + 28} y={baseY + 66} className="force-teaching-kicker">
+        {isZh ? `已归档 ${recordCount} 组课堂记录` : `${recordCount} classroom records`}
+      </text>
+      <foreignObject
+        x={rightX + 24}
+        y={baseY + 84}
+        width={stage.graphWidth - 48}
+        height={stage.graphHeight - 108}
+      >
+        <BasicForceRecordTable
+          groups={recordGroups}
+          emptyTitle={isZh ? "还没有记录" : "No records yet"}
+          emptyCopy={
+            isZh
+              ? "完成稳定读数后点击“记录本组”，再继续下一组对照。"
+              : 'After the reading stabilizes, click "Record run" before moving to the next comparison.'
+          }
+          pendingCopy={isZh ? "等待记录" : "Waiting for record"}
+        />
+      </foreignObject>
     </>
   );
 }
 
-function buildMeasurementInsights({
-  records,
+function buildClassroomRecordGroups({
+  recordsByFactor,
+  studyFactor,
+  activeGroupKey,
   isZh,
 }: {
-  records: ExperimentRecord[];
+  recordsByFactor: Record<StudyFactor, ClassroomRecord[]>;
+  studyFactor: StudyFactor;
+  activeGroupKey: string;
   isZh: boolean;
-}) {
-  if (records.length === 0) {
-    return [
-      isZh
-        ? "先完成一组读数，再继续改变一个变量做对照。"
-        : "Complete one run first, then change one variable for comparison.",
-    ];
-  }
-
-  const insights: string[] = [];
-  const pressureGroups = new Map<string, ExperimentRecord[]>();
-  const materialGroups = new Map<string, ExperimentRecord[]>();
-  const areaGroups = new Map<string, ExperimentRecord[]>();
-  const surfaceOrder = new Map(
-    SURFACE_PRESETS.map((preset, index) => [preset.key, index]),
+}): BasicForceRecordGroup[] {
+  const pressureRecords = [...recordsByFactor.pressure].sort((left, right) => left.pressure - right.pressure);
+  const surfaceOrder = new Map<SurfacePresetKey, number>([
+    ["wood-board", 0],
+    ["cloth", 1],
+    ["towel", 2],
+  ]);
+  const surfaceRecords = [...recordsByFactor.surface].sort(
+    (left, right) =>
+      (surfaceOrder.get(left.surfacePreset) ?? Number.POSITIVE_INFINITY) -
+      (surfaceOrder.get(right.surfacePreset) ?? Number.POSITIVE_INFINITY),
+  );
+  const contactAreaOrder = new Map<ContactAreaKey, number>([
+    ["flat", 0],
+    ["side", 1],
+  ]);
+  const contactAreaRecords = [...recordsByFactor["contact-area"]].sort(
+    (left, right) =>
+      (contactAreaOrder.get(left.contactArea) ?? Number.POSITIVE_INFINITY) -
+      (contactAreaOrder.get(right.contactArea) ?? Number.POSITIVE_INFINITY),
   );
 
-  for (const record of records) {
-    const pressureKey = `${record.surfaceKey}:${record.contactAreaKey}`;
-    const materialKey = `${record.pressure}:${record.contactAreaKey}`;
-    const areaKey = `${record.surfaceKey}:${record.pressure}`;
+  return [
+    {
+      key: "pressure",
+      title: isZh ? "压力对照" : "Pressure comparison",
+      countLabel: formatClassroomRecordCount(pressureRecords.length, 3, isZh),
+      isActive: studyFactor === "pressure",
+      rows: pressureRecords.map((record) => ({
+        key: record.groupKey,
+        label: isZh
+          ? `压力 ${formatNumber(record.pressure, 1)} N`
+          : `Pressure ${formatNumber(record.pressure, 1)} N`,
+        note: `${formatSurfacePresetLabel(record.surfacePreset, isZh)} · ${formatContactAreaLabel(record.contactArea, isZh)}`,
+        value: `${formatNumber(record.kineticFriction, 1)} N`,
+        isCurrent: studyFactor === "pressure" && record.groupKey === activeGroupKey,
+      })),
+      conclusion: buildPressureConclusion(pressureRecords, isZh),
+    },
+    {
+      key: "surface",
+      title: isZh ? "材质对照" : "Surface comparison",
+      countLabel: formatClassroomRecordCount(surfaceRecords.length, 3, isZh),
+      isActive: studyFactor === "surface",
+      rows: surfaceRecords.map((record) => ({
+        key: record.groupKey,
+        label: formatSurfacePresetLabel(record.surfacePreset, isZh),
+        note: `${formatPressureLabel(record.pressure, isZh)} · ${formatContactAreaLabel(record.contactArea, isZh)}`,
+        value: `${formatNumber(record.kineticFriction, 1)} N`,
+        isCurrent: studyFactor === "surface" && record.groupKey === activeGroupKey,
+      })),
+      conclusion: buildSurfaceConclusion(surfaceRecords, isZh),
+    },
+    {
+      key: "contact-area",
+      title: isZh ? "接触面积对照" : "Contact-area comparison",
+      countLabel: formatClassroomRecordCount(contactAreaRecords.length, 2, isZh),
+      isActive: studyFactor === "contact-area",
+      rows: contactAreaRecords.map((record) => ({
+        key: record.groupKey,
+        label: formatContactAreaLabel(record.contactArea, isZh),
+        note: `${formatSurfacePresetLabel(record.surfacePreset, isZh)} · ${formatPressureLabel(record.pressure, isZh)}`,
+        value: `${formatNumber(record.kineticFriction, 1)} N`,
+        isCurrent: studyFactor === "contact-area" && record.groupKey === activeGroupKey,
+      })),
+      conclusion: buildContactAreaConclusion(contactAreaRecords, isZh),
+    },
+  ];
+}
 
-    pressureGroups.set(pressureKey, [...(pressureGroups.get(pressureKey) ?? []), record]);
-    materialGroups.set(materialKey, [...(materialGroups.get(materialKey) ?? []), record]);
-    areaGroups.set(areaKey, [...(areaGroups.get(areaKey) ?? []), record]);
+function formatClassroomRecordCount(count: number, total: number, isZh: boolean) {
+  return isZh ? `${count} / ${total} 组` : `${count} / ${total} runs`;
+}
+
+function formatPressureLabel(pressure: number, isZh: boolean) {
+  return isZh
+    ? `压力 ${formatNumber(pressure, 1)} N`
+    : `Pressure ${formatNumber(pressure, 1)} N`;
+}
+
+function formatSurfacePresetLabel(surfacePreset: SurfacePresetKey, isZh: boolean) {
+  if (isZh) {
+    return SURFACE_PRESETS.find((item) => item.key === surfacePreset)?.label ?? surfacePreset;
   }
 
-  for (const group of pressureGroups.values()) {
-    const sorted = [...group].sort((left, right) => left.pressure - right.pressure);
-    if (
-      sorted.length >= 2 &&
-      sorted[0].pressure !== sorted[sorted.length - 1].pressure &&
-      sorted[0].kineticFriction < sorted[sorted.length - 1].kineticFriction
-    ) {
-      insights.push(
-        isZh
-          ? "同材质、同摆放下，压力越大，滑动摩擦力越大。"
-          : "With the same material and orientation, greater normal force leads to greater sliding friction.",
-      );
-      break;
-    }
+  switch (surfacePreset) {
+    case "smooth-board":
+      return "Smooth board";
+    case "wood-board":
+      return "Wood board";
+    case "cloth":
+      return "Cloth";
+    case "towel":
+      return "Towel";
+    default:
+      return surfacePreset;
+  }
+}
+
+function formatContactAreaLabel(contactArea: ContactAreaKey, isZh: boolean) {
+  if (isZh) {
+    return CONTACT_AREAS.find((item) => item.key === contactArea)?.label ?? contactArea;
   }
 
-  for (const group of materialGroups.values()) {
-    const sorted = [...group].sort(
-      (left, right) =>
-        (surfaceOrder.get(left.surfaceKey) ?? 0) -
-        (surfaceOrder.get(right.surfaceKey) ?? 0),
-    );
-    const uniqueSurfaces = new Set(sorted.map((record) => record.surfaceKey));
+  switch (contactArea) {
+    case "flat":
+      return "Flat";
+    case "side":
+      return "Side";
+    case "upright":
+      return "Upright";
+    default:
+      return contactArea;
+  }
+}
 
-    if (
-      uniqueSurfaces.size >= 2 &&
-      sorted[0].kineticFriction < sorted[sorted.length - 1].kineticFriction
-    ) {
-      insights.push(
-        isZh
-          ? "同压力下，表面越粗糙，滑动摩擦力越大。"
-          : "At the same pressure, rougher surfaces produce greater sliding friction.",
-      );
-      break;
-    }
+function buildPressureConclusion(records: ClassroomRecord[], isZh: boolean) {
+  if (records.length < 2) {
+    return undefined;
   }
 
-  for (const group of areaGroups.values()) {
-    const uniqueAreas = new Set(group.map((record) => record.contactAreaKey));
-    if (uniqueAreas.size < 2) {
-      continue;
-    }
+  const first = records[0];
+  const last = records[records.length - 1];
 
-    const values = group.map((record) => record.kineticFriction);
-    const range = Math.max(...values) - Math.min(...values);
-    if (range <= 0.05) {
-      insights.push(
-        isZh
-          ? "同材质、同压力下，接触面积改变时，滑动摩擦力基本不变。"
-          : "With the same material and pressure, changing the contact area leaves sliding friction nearly unchanged.",
-      );
-      break;
-    }
+  if (last.kineticFriction > first.kineticFriction + 0.05) {
+    return isZh
+      ? "当前记录显示：保持材质和摆放不变时，压力越大，滑动摩擦力越大。"
+      : "Current records show that with the same surface and placement, greater pressure leads to greater sliding friction.";
   }
 
-  if (insights.length === 0) {
-    insights.push(
-      isZh
-        ? "继续保持其他变量不变，只改一个量，系统会更容易给出清晰对照。"
-        : "Keep other variables fixed and change only one factor to get a clearer comparison.",
-    );
+  return isZh
+    ? "这组压力对照差异还不够明显，可再检查是否保持匀速并重新测量。"
+    : "The pressure contrast is not clear enough yet. Recheck the uniform pull and measure again.";
+}
+
+function buildSurfaceConclusion(records: ClassroomRecord[], isZh: boolean) {
+  if (records.length < 2) {
+    return undefined;
   }
 
-  return insights.slice(0, 3);
+  const first = records[0];
+  const last = records[records.length - 1];
+
+  if (last.kineticFriction > first.kineticFriction + 0.05) {
+    return isZh
+      ? "当前记录显示：保持压力和摆放不变时，接触面越粗糙，滑动摩擦力越大。"
+      : "Current records show that with the same pressure and placement, rougher surfaces produce greater sliding friction.";
+  }
+
+  return isZh
+    ? "材质对照差异还不够明显，可再检查是否只改变了接触材质。"
+    : "The surface contrast is not clear enough yet. Recheck whether only the surface changed.";
+}
+
+function buildContactAreaConclusion(records: ClassroomRecord[], isZh: boolean) {
+  if (records.length < 2) {
+    return undefined;
+  }
+
+  const values = records.map((record) => record.kineticFriction);
+  const valueRange = Math.max(...values) - Math.min(...values);
+
+  if (valueRange <= 0.08) {
+    return isZh
+      ? "当前记录显示：保持材质和压力不变时，接触面积变化后，滑动摩擦力基本不变。"
+      : "Current records show that with the same surface and pressure, changing the contact area leaves sliding friction nearly unchanged.";
+  }
+
+  return isZh
+    ? "面积对照的差异偏大，可再检查是否保持压力、材质和匀速拉动都一致。"
+    : "The contact-area readings differ more than expected. Recheck the pressure, surface, and uniform pull.";
 }
 
 function getExperimentStatus({

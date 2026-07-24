@@ -6,13 +6,30 @@ import { teachingStages } from "../data/teaching-catalog";
 import { LocaleProvider } from "../i18n";
 import { BasicForceLab } from "./basic-force-lab";
 
-const topic = teachingStages
-  .flatMap((stage) => stage.subjects)
-  .flatMap((subject) => subject.topics)
-  .find((item) => item.id === "sliding-friction-lab");
+const topic = (() => {
+  const foundTopic = teachingStages
+    .flatMap((stage) => stage.subjects)
+    .flatMap((subject) => subject.topics)
+    .find((item) => item.id === "sliding-friction-lab");
 
-if (!topic) {
-  throw new Error("sliding-friction-lab topic not found");
+  if (!foundTopic) {
+    throw new Error("sliding-friction-lab topic not found");
+  }
+
+  return foundTopic;
+})();
+
+function renderLab() {
+  return render(
+    <LocaleProvider>
+      <BasicForceLab
+        topic={topic}
+        isFullscreen={false}
+        onToggleFullscreen={() => {}}
+        fullscreenRef={createRef<HTMLDivElement>()}
+      />
+    </LocaleProvider>,
+  );
 }
 
 describe("BasicForceLab classroom entry", () => {
@@ -20,16 +37,7 @@ describe("BasicForceLab classroom entry", () => {
     window.localStorage.setItem("easy-teaching.basic-force.view-mode", "3d");
     window.localStorage.setItem("easy-teaching.basic-force.panel-collapsed", "1");
 
-    render(
-      <LocaleProvider>
-        <BasicForceLab
-          topic={topic}
-          isFullscreen={false}
-          onToggleFullscreen={() => {}}
-          fullscreenRef={createRef<HTMLDivElement>()}
-        />
-      </LocaleProvider>,
-    );
+    renderLab();
 
     expect(screen.getByRole("button", { name: "收起控制面板" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "2D" })).toHaveAttribute("aria-selected", "true");
@@ -38,16 +46,7 @@ describe("BasicForceLab classroom entry", () => {
   });
 
   it("switches to the recommended baseline when changing study factor", () => {
-    render(
-      <LocaleProvider>
-        <BasicForceLab
-          topic={topic}
-          isFullscreen={false}
-          onToggleFullscreen={() => {}}
-          fullscreenRef={createRef<HTMLDivElement>()}
-        />
-      </LocaleProvider>,
-    );
+    renderLab();
 
     fireEvent.click(screen.getByRole("button", { name: "接触材质" }));
 
@@ -57,5 +56,46 @@ describe("BasicForceLab classroom entry", () => {
     expect(screen.getAllByText("普通木板").length).toBeGreaterThan(0);
     expect(screen.getAllByText("正放").length).toBeGreaterThan(0);
     expect(screen.getAllByText(/压力 2 N/).length).toBeGreaterThan(0);
+  });
+
+  it("only enables manual classroom recording after the reading reaches the uniform stage", () => {
+    renderLab();
+
+    const recordButton = screen.getByRole("button", { name: "记录本组" });
+    expect(recordButton).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "阶段 4：匀速测量" }));
+
+    expect(screen.getByRole("button", { name: "记录本组" })).toBeEnabled();
+    expect(
+      screen.getByText("读数已经稳定，现在点击“记录本组”，再继续下一组对照。"),
+    ).toBeInTheDocument();
+  });
+
+  it("invalidates the current stable reading after changing the study parameter", () => {
+    renderLab();
+
+    fireEvent.click(screen.getByRole("button", { name: "阶段 4：匀速测量" }));
+    expect(screen.getByRole("button", { name: "记录本组" })).toBeEnabled();
+
+    fireEvent.change(screen.getByLabelText("当前压力"), {
+      target: { value: "6" },
+    });
+
+    expect(screen.getByRole("button", { name: "记录本组" })).toBeDisabled();
+    expect(
+      screen.getByText("参数刚刚变化，上一轮稳定读数已失效，请重新开始测量。"),
+    ).toBeInTheDocument();
+  });
+
+  it("records the current classroom run into the grouped comparison table", () => {
+    renderLab();
+
+    fireEvent.click(screen.getByRole("button", { name: "阶段 4：匀速测量" }));
+    fireEvent.click(screen.getByRole("button", { name: "记录本组" }));
+
+    expect(screen.getByRole("button", { name: "更新本组" })).toBeEnabled();
+    expect(screen.getAllByText("压力 4 N").length).toBeGreaterThan(0);
+    expect(screen.getByText("1 / 3 组")).toBeInTheDocument();
   });
 });
