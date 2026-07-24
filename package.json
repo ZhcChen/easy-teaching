@@ -5,6 +5,7 @@
     "dev:web-app": "npm --prefix web-app run dev",
     "build:web-app": "npm --prefix web-app run build",
     "typecheck:web-app": "npm --prefix web-app run typecheck",
+    "deploy:test": "./scripts/deploy-testing.sh",
     "dev:app": "npm --prefix app run dev",
     "build:app": "npm --prefix app run dist",
     "check:app": "npm --prefix app run check",
