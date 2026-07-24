@@ -882,28 +882,21 @@ function SwitchSymbol({
   energized: boolean;
   label: string;
 }) {
+  const nodeClassName = energized
+    ? "circuit-node is-active"
+    : closed
+      ? "circuit-node is-closed"
+      : "circuit-node";
+  const closedLinkClassName = energized
+    ? "circuit-wire is-active"
+    : "circuit-switch-link is-closed";
+
   return (
     <g>
-      <circle
-        cx={x - 28}
-        cy={y}
-        r="6"
-        className={energized ? "circuit-node is-active" : "circuit-node"}
-      />
-      <circle
-        cx={x + 28}
-        cy={y}
-        r="6"
-        className={energized ? "circuit-node is-active" : "circuit-node"}
-      />
+      <circle cx={x - 28} cy={y} r="6" className={nodeClassName} />
+      <circle cx={x + 28} cy={y} r="6" className={nodeClassName} />
       {closed ? (
-        <line
-          x1={x - 24}
-          y1={y}
-          x2={x + 24}
-          y2={y}
-          className={energized ? "circuit-wire is-active" : "circuit-wire"}
-        />
+        <line x1={x - 24} y1={y} x2={x + 24} y2={y} className={closedLinkClassName} />
       ) : (
         <line x1={x - 24} y1={y} x2={x + 12} y2={y - 24} className="circuit-switch-lever is-open" />
       )}
@@ -1092,6 +1085,39 @@ function resolveBulbStatus({
   };
 }
 
+function getParallelConductingState(metrics: CircuitMetrics) {
+  const conductingBranches = [
+    metrics.l1Conducting ? "L1" : null,
+    metrics.l2Conducting ? "L2" : null,
+  ].filter((branch): branch is "L1" | "L2" => branch !== null);
+
+  const activeBranch = conductingBranches[0] ?? null;
+  const activeBranchCurrent =
+    activeBranch === "L1"
+      ? metrics.l1Current
+      : activeBranch === "L2"
+        ? metrics.l2Current
+        : null;
+
+  return {
+    conductingBranchCount: conductingBranches.length,
+    activeBranch,
+    activeBranchCurrent,
+  };
+}
+
+function getBranchSubscript(branch: "L1" | "L2" | null) {
+  if (branch === "L1") {
+    return "₁";
+  }
+
+  if (branch === "L2") {
+    return "₂";
+  }
+
+  return "";
+}
+
 function buildFormulaSummary({
   topology,
   focusMode,
@@ -1114,6 +1140,50 @@ function buildFormulaSummary({
         summary: isZh
           ? "串联电路中，电流不会在灯泡之间分开。"
           : "In a series circuit, the current does not split between bulbs.",
+      };
+    }
+
+    const { conductingBranchCount, activeBranch, activeBranchCurrent } =
+      getParallelConductingState(metrics);
+
+    if (!metrics.switchClosed) {
+      return {
+        kicker: isZh ? "电流规律" : "Current pattern",
+        expression: isZh ? "主开关断开 -> I = 0" : "Main switch open -> I = 0",
+        detail: isZh
+          ? "主开关还没闭合，干路与各支路都没有形成闭合回路，所以电流全部为 0。"
+          : "The main switch is open, so neither the main line nor the branches form a closed path and all currents stay at 0.",
+        summary: isZh
+          ? "先闭合总开关，再观察并联电流如何在各支路分流。"
+          : "Close the main switch first, then observe how current splits across the branches.",
+      };
+    }
+
+    if (conductingBranchCount === 0) {
+      return {
+        kicker: isZh ? "电流规律" : "Current pattern",
+        expression: isZh ? "全部支路断开 -> I = 0" : "All branches open -> I = 0",
+        detail: isZh
+          ? "虽然总开关已闭合，但每条支路都断开了，电流没有任何可走的通路。"
+          : "Even though the main switch is closed, every branch is open, so current has no path to travel.",
+        summary: isZh
+          ? "并联电流分流的前提，是至少保留一条完整支路。"
+          : "Current splitting in parallel requires at least one intact branch.",
+      };
+    }
+
+    if (conductingBranchCount === 1 && activeBranch && activeBranchCurrent !== null) {
+      const subscript = getBranchSubscript(activeBranch);
+
+      return {
+        kicker: isZh ? "电流规律" : "Current pattern",
+        expression: `I = I${subscript}`,
+        detail: isZh
+          ? `当前只剩 ${activeBranch} 支路导通，干路电流 ${formatNumber(metrics.mainCurrent, 2)} A 全部流经这一路，不再发生分流。`
+          : `Only ${activeBranch} is conducting now, so the full main current ${formatNumber(metrics.mainCurrent, 2)} A goes through that single branch without splitting.`,
+        summary: isZh
+          ? "并联里只要还保留一条完整支路，其他支路断开后，这条支路仍可单独工作。"
+          : "In parallel, as long as one intact branch remains, it can keep working independently when others open.",
       };
     }
 
@@ -1162,6 +1232,53 @@ function buildFormulaSummary({
       };
     }
 
+    const { conductingBranchCount, activeBranch } = getParallelConductingState(metrics);
+
+    if (!metrics.switchClosed) {
+      return {
+        kicker: isZh ? "电压规律" : "Voltage pattern",
+        expression: isZh
+          ? "主开关断开，暂不比较并联等压"
+          : "Main switch open, parallel equal-voltage comparison paused",
+        detail: isZh
+          ? "当前主开关未闭合，支路还没有真正接入电源，课堂演示先不按 U = U₁ = U₂ 比较。"
+          : "The main switch is open, so the branches are not yet connected to the source for a powered U = U1 = U2 comparison.",
+        summary: isZh
+          ? "先闭合总开关，再观察每条并联支路如何同时接到同一个电源两端。"
+          : "Close the main switch first, then observe how each parallel branch connects across the same source.",
+      };
+    }
+
+    if (conductingBranchCount === 0) {
+      return {
+        kicker: isZh ? "电压规律" : "Voltage pattern",
+        expression: isZh
+          ? "全部支路断开，暂无可比较的通电支路"
+          : "All branches open, no powered branch to compare",
+        detail: isZh
+          ? "两条支路都已断开，当前看不到并联等压的课堂效果，需先恢复至少一条支路。"
+          : "Both branches are open, so the classroom equal-voltage effect of parallel wiring cannot be observed until at least one branch is restored.",
+        summary: isZh
+          ? "并联等压的观察对象，是仍然接在电源两端的通电支路。"
+          : "Equal voltage in parallel is observed on branches that remain connected across the source.",
+      };
+    }
+
+    if (conductingBranchCount === 1 && activeBranch) {
+      const subscript = getBranchSubscript(activeBranch);
+
+      return {
+        kicker: isZh ? "电压规律" : "Voltage pattern",
+        expression: `U = U${subscript}`,
+        detail: isZh
+          ? `当前只有 ${activeBranch} 支路仍接在电源两端，因此它保持 ${formatNumber(metrics.totalVoltage, 1)} V；断开的支路不再参与并联等压比较。`
+          : `Only ${activeBranch} remains connected across the source, so it stays at ${formatNumber(metrics.totalVoltage, 1)} V while the open branch no longer participates in the equal-voltage comparison.`,
+        summary: isZh
+          ? "并联的关键不是“每条画出来的支路都等压”，而是“仍接在电源两端的支路等压”。"
+          : "The key idea is not that every drawn branch has equal voltage, but that branches still connected across the source share that voltage.",
+      };
+    }
+
     return {
       kicker: isZh ? "电压规律" : "Voltage pattern",
       expression: "U = U₁ = U₂",
@@ -1184,6 +1301,49 @@ function buildFormulaSummary({
       summary: isZh
         ? "这是串联和并联最直观的区别之一。"
         : "This is one of the clearest contrasts between series and parallel circuits.",
+    };
+  }
+
+  const { conductingBranchCount, activeBranch } = getParallelConductingState(metrics);
+
+  if (!metrics.switchClosed) {
+    return {
+      kicker: isZh ? "故障对比" : "Fault comparison",
+      expression: isZh ? "主开关断开 -> 所有支路停止工作" : "Main switch open -> all branches stop",
+      detail: isZh
+        ? "这不是某一条支路自身损坏，而是总开关把整个并联电路一起切断了。"
+        : "This is not a single-branch fault; the main switch disconnects the entire parallel circuit at once.",
+      summary: isZh
+        ? "先区分“总开关切断全局”与“单支路断开”的差别。"
+        : "First distinguish a global cutoff by the main switch from a single-branch disconnection.",
+    };
+  }
+
+  if (conductingBranchCount === 0) {
+    return {
+      kicker: isZh ? "故障对比" : "Fault comparison",
+      expression: isZh ? "全部支路断开 -> 全部熄灭" : "All branches open -> all bulbs off",
+      detail: isZh
+        ? "虽然结构仍是并联，但每条支路都已断开，所以没有任何一条能单独工作。"
+        : "The layout is still parallel, but every branch is open, so none can work independently.",
+      summary: isZh
+        ? "并联能独立工作的前提，是至少保留一条完整支路。"
+        : "Independent operation in parallel still requires at least one intact branch.",
+    };
+  }
+
+  if (conductingBranchCount === 1 && activeBranch) {
+    return {
+      kicker: isZh ? "故障对比" : "Fault comparison",
+      expression: isZh
+        ? `只剩 ${activeBranch} 支路工作`
+        : `Only ${activeBranch} remains active`,
+      detail: isZh
+        ? `当前另一条支路虽然断开了，但 ${activeBranch} 仍保留自己的闭合回路，所以不会被一起熄灭。`
+        : `The other branch is open, but ${activeBranch} still keeps its own closed path and therefore does not turn off with it.`,
+      summary: isZh
+        ? "这正是并联比串联更适合独立用电器的核心原因。"
+        : "This is exactly why parallel wiring suits independently operating devices better than series wiring.",
     };
   }
 
