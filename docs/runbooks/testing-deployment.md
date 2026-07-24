@@ -30,7 +30,28 @@ Caddy 站点文件：/etc/caddy/Caddyfile.d/e-teach.codelib.cc.caddy
 - 每次发布生成独立 release 目录，再切换 `current` 软链，降低回滚成本。
 - 默认保留最近 3 个 release 目录。
 
-## 一键部署
+## 首次初始化
+
+首次接入测试机或需要重建 Caddy 站点文件时，执行：
+
+```bash
+./scripts/init-testing-env.sh
+```
+
+可选指定服务器：
+
+```bash
+./scripts/init-testing-env.sh --remote <ssh-host>
+```
+
+初始化内容：
+
+- 创建 `/srv/easy-teaching/testing/releases`
+- 下发独立 Caddy 站点文件
+- `caddy validate`
+- `systemctl reload caddy`
+
+## 日常部署
 
 ```bash
 ./scripts/deploy-testing.sh
@@ -43,7 +64,8 @@ Caddy 站点文件：/etc/caddy/Caddyfile.d/e-teach.codelib.cc.caddy
 - 将 `web-app/build/client` 打包上传到测试机。
 - 远端解压到新的 release 目录。
 - 生成 `/version.json`。
-- 更新独立 Caddy 站点文件并 reload。
+- 切换 `current` 软链。
+- 用服务器本机 Host 探测验证静态站点。
 
 ## 可选参数
 
@@ -51,28 +73,6 @@ Caddy 站点文件：/etc/caddy/Caddyfile.d/e-teach.codelib.cc.caddy
 
 ```bash
 ./scripts/deploy-testing.sh --remote <ssh-host>
-```
-
-可选覆盖：
-
-```bash
-./scripts/deploy-testing.sh --remote qfy-sc-test --domain e-teach.codelib.cc --root /srv/easy-teaching/testing
-```
-
-跳过本地构建：
-
-```bash
-./scripts/deploy-testing.sh --skip-build
-```
-
-或使用环境变量：
-
-```bash
-EASY_TEACH_DEPLOY_REMOTE=qfy-sc-test \
-EASY_TEACH_DEPLOY_DOMAIN=e-teach.codelib.cc \
-EASY_TEACH_DEPLOY_ROOT=/srv/easy-teaching/testing \
-EASY_TEACH_KEEP_RELEASES=3 \
-./scripts/deploy-testing.sh
 ```
 
 ## Caddy 模板
@@ -83,7 +83,7 @@ EASY_TEACH_KEEP_RELEASES=3 \
 deploy/testing/Caddyfile.e-teach.codelib.cc.example
 ```
 
-实际部署时脚本会根据当前参数直接生成远端站点文件：
+初始化脚本会把它下发成远端站点文件：
 
 ```text
 /etc/caddy/Caddyfile.d/e-teach.codelib.cc.caddy
