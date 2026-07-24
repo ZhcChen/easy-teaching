@@ -2,7 +2,7 @@ import { Link } from "react-router";
 
 import { StatusPanel } from "../components/status-panel";
 import { useDocumentMeta, useLocale } from "../i18n";
-import { getSubjectByStageAndId } from "../data/teaching-catalog";
+import { getSubjectByStageAndId, getTopicDeliveryMeta } from "../data/teaching-catalog";
 import type { Route } from "./+types/content-subject";
 
 export function meta({ params }: Route.MetaArgs) {
@@ -83,12 +83,15 @@ export default function ContentSubjectPage({ params }: Route.ComponentProps) {
             const modeClass = getTopicModeClass(topic.mode);
             const themeClass = getTopicThemeClass(topic.id);
             const modeBadges = getTopicModeBadges(topic.mode);
+            const deliveryMeta = getTopicDeliveryMeta(topic);
+            const deliveryClass = `is-${topic.deliveryState}`;
+            const showPriorityTag = topic.status !== deliveryMeta.label;
 
             return (
               <Link
                 key={topic.id}
                 to={`/visual/${topic.id}`}
-                className={`entry-card entry-card-topic topic-tech-card ${modeClass} ${themeClass}`}
+                className={`entry-card entry-card-topic topic-tech-card ${modeClass} ${themeClass} ${deliveryClass}`}
               >
                 <div className="topic-tech-grid" aria-hidden="true" />
                 <div className="topic-tech-orbits" aria-hidden="true">
@@ -104,23 +107,25 @@ export default function ContentSubjectPage({ params }: Route.ComponentProps) {
                         {tt(badge.label)}
                       </span>
                     ))}
+                    <span className={`entry-badge entry-badge-topic-state ${deliveryClass}`}>
+                      {tt(deliveryMeta.label)}
+                    </span>
                   </div>
-                  <span className="entry-card-arrow">{tt("进入页面")}</span>
+                  <span className="entry-card-arrow">{tt(deliveryMeta.actionLabel)}</span>
                 </div>
 
                 <div className="entry-card-body topic-tech-body">
                   <h3 className="entry-card-title">{tt(topic.title)}</h3>
+                  <p className="entry-card-copy topic-tech-summary">{tt(topic.summary)}</p>
                 </div>
 
                 <div className="topic-tech-tags">
+                  {showPriorityTag ? (
+                    <span className="topic-tech-tag is-priority">{tt(topic.status)}</span>
+                  ) : null}
                   {topic.tags.slice(0, 2).map((tag) => (
                     <span key={tag} className="topic-tech-tag">
                       {tt(tag)}
-                    </span>
-                  ))}
-                  {topic.highlights.slice(0, 1).map((item) => (
-                    <span key={item} className="topic-tech-tag is-muted">
-                      {tt(item)}
                     </span>
                   ))}
                 </div>

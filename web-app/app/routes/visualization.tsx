@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 
 import { BasicForceLab } from "../components/basic-force-lab";
@@ -7,7 +7,9 @@ import { MotionTrackLab } from "../components/motion-track-lab";
 import { StatusPanel } from "../components/status-panel";
 import { useDocumentMeta, useLocale } from "../i18n";
 import {
+  getTopicDeliveryMeta,
   getTopicById,
+  isImplementedTopicId,
   isSlidingFrictionTopicId,
   type TeachingTopic,
 } from "../data/teaching-catalog";
@@ -105,10 +107,7 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
   }
 
   const { stage, subject, topic } = topicData;
-  const isImmersiveLab =
-    isSlidingFrictionTopicId(topic.id) ||
-    topic.id === "motion-track" ||
-    topic.id === "circuit-observer";
+  const isImmersiveLab = isImplementedTopicId(topic.id);
 
   return (
     <div className="page-stack visual-page">
@@ -134,11 +133,8 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
           fullscreenRef={fullscreenRef}
         />
       ) : (
-        <DefaultVisualizationShell
+        <TopicPlanningShell
           topic={topic}
-          isFullscreen={isFullscreen}
-          onToggleFullscreen={toggleFullscreen}
-          fullscreenRef={fullscreenRef}
         />
       )}
 
@@ -156,142 +152,69 @@ export default function VisualizationPage({ params }: Route.ComponentProps) {
   );
 }
 
-type DefaultVisualizationShellProps = {
+type TopicPlanningShellProps = {
   topic: TeachingTopic;
-  isFullscreen: boolean;
-  onToggleFullscreen: () => void | Promise<void>;
-  fullscreenRef: RefObject<HTMLDivElement | null>;
 };
 
-function DefaultVisualizationShell({
-  topic,
-  isFullscreen,
-  onToggleFullscreen,
-  fullscreenRef,
-}: DefaultVisualizationShellProps) {
+function TopicPlanningShell({ topic }: TopicPlanningShellProps) {
   const { tt } = useLocale();
+  const deliveryMeta = getTopicDeliveryMeta(topic);
+  const isPlanned = topic.deliveryState === "planned";
+  const showPriorityTag = topic.status !== deliveryMeta.label;
 
   return (
-    <section ref={fullscreenRef} className="visual-shell">
-      <div className="visual-canvas">
-        <button
-          type="button"
-          onClick={() => {
-            void onToggleFullscreen();
-          }}
-          className="fullscreen-button is-floating"
-          aria-label={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
-          title={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
-        >
-          {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
-        </button>
-        <div className="visual-grid-layer" />
-        <div className="visual-glow visual-glow-a" />
-        <div className="visual-glow visual-glow-b" />
-        <div className="visual-line visual-line-a" />
-        <div className="visual-line visual-line-b" />
+    <div className="visual-planning-stack">
+      <StatusPanel
+        eyebrow={tt(deliveryMeta.label)}
+        title={tt(topic.title)}
+        description={tt(
+          isPlanned
+            ? `${topic.summary} 当前还没有真实实验页，先保留为教学规划项。`
+            : `${topic.summary} 当前只保留主题方向说明，后续会结合课堂主线决定是否推进。`,
+        )}
+      />
 
-        <div className="visual-canvas-inner">
-          <div className="visual-metric-grid">
-            {sceneMetrics.map((metric) => (
-              <article key={metric.label} className="visual-metric-card">
-                <p className="surface-eyebrow">{tt(metric.label)}</p>
-                <p className="visual-metric-value">{tt(metric.value)}</p>
-                <p className="visual-metric-copy">{tt(metric.detail)}</p>
-              </article>
-            ))}
-          </div>
+      <section className="surface-panel visual-planning-details">
+        <div className="visual-planning-detail-grid">
+          <article className="visual-planning-detail-card">
+            <p className="surface-eyebrow">{tt("当前状态")}</p>
+            <h2 className="visual-planning-detail-title">{tt(deliveryMeta.label)}</h2>
+            <p className="visual-planning-detail-copy">{tt(deliveryMeta.description)}</p>
+          </article>
 
-          <div className="visual-centerpiece">
-            <div className="visual-orbit visual-orbit-lg" />
-            <div className="visual-orbit visual-orbit-md" />
-            <div className="visual-core" />
-            <div className="floating-note floating-note-a">
-              {tt("参数层")}
-            </div>
-            <div className="floating-note floating-note-b">
-              {tt("结论层")}
-            </div>
-            <div className="floating-note floating-note-c">
-              {tt("图形层")}
-            </div>
-            <div className="floating-note floating-note-d">
-              {tt("状态层")}
-            </div>
-            <div className="visual-centerpiece-spacer" />
-          </div>
-
-          <div className="visual-detail-grid">
-            {topic.highlights.map((item) => (
-              <article key={item} className="visual-detail-card">
-                <p>{tt(item)}</p>
-              </article>
-            ))}
-          </div>
+          <article className="visual-planning-detail-card">
+            <p className="surface-eyebrow">{tt("适配模式")}</p>
+            <h2 className="visual-planning-detail-title">{tt(topic.mode)}</h2>
+            <p className="visual-planning-detail-copy">
+              {tt(
+                isPlanned
+                  ? "这部分会在真实实验页落地时，再决定是否加入 2D、3D 或双视图。"
+                  : "当前不进入演示实现，先保留方向定义，避免目录看起来已完成。",
+              )}
+            </p>
+          </article>
         </div>
-      </div>
-    </section>
+
+        <div className="visual-planning-tag-row">
+          {showPriorityTag ? (
+            <span className="topic-tech-tag is-priority">{tt(topic.status)}</span>
+          ) : null}
+          {topic.tags.map((tag) => (
+            <span key={tag} className="topic-tech-tag">
+              {tt(tag)}
+            </span>
+          ))}
+        </div>
+
+        <div className="visual-planning-highlight-list">
+          {topic.highlights.map((item) => (
+            <article key={item} className="visual-planning-highlight-card">
+              <span className="topic-highlight-dot" aria-hidden="true" />
+              <p>{tt(item)}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }
-
-function ExpandIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      className="h-5 w-5"
-    >
-      <path d="M8 4H4v4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M16 4h4v4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M20 16v4h-4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 16v4h4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M9 9L4 4" strokeLinecap="round" />
-      <path d="M15 9l5-5" strokeLinecap="round" />
-      <path d="M9 15l-5 5" strokeLinecap="round" />
-      <path d="M15 15l5 5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function CollapseIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      className="h-5 w-5"
-    >
-      <path d="M9 4H4v5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M15 4h5v5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M20 15v5h-5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 15v5h5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 9l5-5" strokeLinecap="round" />
-      <path d="M20 9l-5-5" strokeLinecap="round" />
-      <path d="M4 15l5 5" strokeLinecap="round" />
-      <path d="M20 15l-5 5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-const sceneMetrics = [
-  {
-    label: "页面状态",
-    value: "科技简约",
-    detail: "当前先验证页面气质和进入流程，不急着堆过多控件。",
-  },
-  {
-    label: "全屏能力",
-    value: "已支持",
-    detail: "点击右上角图标进入或退出全屏，按 Esc 也能退出。",
-  },
-  {
-    label: "后续接入",
-    value: "2D / 3D",
-    detail: "当前是静态科技画布，后面逐步替换为真实可视化引擎。",
-  },
-];

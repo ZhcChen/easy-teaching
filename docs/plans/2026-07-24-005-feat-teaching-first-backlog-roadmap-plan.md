@@ -120,7 +120,7 @@ flowchart TB
 
 ## Implementation Units
 
-- [ ] **Unit 1: 统一 backlog 分层与目录语义**
+- [x] **Unit 1: 统一 backlog 分层与目录语义**
 
 **Goal:** 让 catalog、内容入口和可视化路由能清楚反映“真实实验页 / 规划中 / 占位”三类状态。
 
