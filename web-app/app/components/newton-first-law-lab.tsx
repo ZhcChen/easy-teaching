@@ -119,22 +119,22 @@ const SURFACE_PRESETS: Record<SurfaceKey, SurfacePreset> = {
 };
 
 const SVG_STAGE = {
-  width: 1180,
-  height: 760,
-  trackPanelX: 60,
-  trackPanelY: 136,
-  trackPanelWidth: 1060,
-  trackPanelHeight: 248,
-  graphPanelX: 60,
-  graphPanelY: 410,
-  graphPanelWidth: 1060,
-  graphPanelHeight: 300,
-  trackStartX: 232,
-  trackEndX: 1034,
-  trackY: 248,
-  rampStartX: 116,
-  rampTopY: 172,
-  rampEndX: 220,
+  width: 1320,
+  height: 820,
+  trackPanelX: 72,
+  trackPanelY: 82,
+  trackPanelWidth: 1176,
+  trackPanelHeight: 260,
+  graphPanelX: 72,
+  graphPanelY: 380,
+  graphPanelWidth: 1176,
+  graphPanelHeight: 310,
+  trackStartX: 360,
+  trackEndX: 1160,
+  trackY: 246,
+  rampStartX: 220,
+  rampTopY: 160,
+  rampEndX: 348,
 };
 
 export function NewtonFirstLawLab({
@@ -630,6 +630,7 @@ export function NewtonFirstLawLab({
               <div className="newton-stage-visual">
                 <svg
                   viewBox={`0 0 ${SVG_STAGE.width} ${SVG_STAGE.height}`}
+                  preserveAspectRatio="xMidYMin meet"
                   className="motion-stage-svg newton-stage-svg"
                   role="img"
                   aria-label={isZh ? `${tt(topic.title)}可视化示意图` : `${tt(topic.title)} visualization`}
@@ -642,10 +643,20 @@ export function NewtonFirstLawLab({
                 rx="34"
                 className="motion-stage-panel-shell"
               />
-              <text x={SVG_STAGE.trackPanelX + 34} y={SVG_STAGE.trackPanelY + 30} className="motion-stage-panel-title">
+              <text
+                x={SVG_STAGE.trackPanelX + SVG_STAGE.trackPanelWidth - 34}
+                y={SVG_STAGE.trackPanelY + 34}
+                textAnchor="end"
+                className="motion-stage-panel-title"
+              >
                 {tt("斜面释放与水平滑行")}
               </text>
-              <text x={SVG_STAGE.trackPanelX + 34} y={SVG_STAGE.trackPanelY + 54} className="motion-stage-panel-copy">
+              <text
+                x={SVG_STAGE.trackPanelX + SVG_STAGE.trackPanelWidth - 34}
+                y={SVG_STAGE.trackPanelY + 58}
+                textAnchor="end"
+                className="motion-stage-panel-copy"
+              >
                 {tt("只改变阻力面，比较速度衰减和滑行距离。")}
               </text>
 
@@ -693,10 +704,15 @@ export function NewtonFirstLawLab({
                 );
               })}
 
-              <text x={SVG_STAGE.rampStartX + 10} y={SVG_STAGE.rampTopY - 12} className="motion-stage-ruler-label">
+              <text x={SVG_STAGE.rampStartX + 10} y={SVG_STAGE.rampTopY - 8} className="motion-stage-ruler-label">
                 {tt("同一高度释放")}
               </text>
-              <text x={SVG_STAGE.trackStartX - 8} y={SVG_STAGE.trackY - 44} className="motion-stage-ruler-label">
+              <text
+                x={SVG_STAGE.trackStartX - 18}
+                y={SVG_STAGE.trackY - 50}
+                textAnchor="end"
+                className="motion-stage-ruler-label"
+              >
                 {`v0 = ${formatVelocity(initialVelocity)}`}
               </text>
 
@@ -709,20 +725,20 @@ export function NewtonFirstLawLab({
                   <g key={marker.key}>
                     <line
                       x1={x}
-                      y1={SVG_STAGE.trackY - 68}
+                      y1={SVG_STAGE.trackY - 74}
                       x2={x}
-                      y2={SVG_STAGE.trackY - 16}
+                      y2={SVG_STAGE.trackY - 20}
                       className="motion-stage-sample-stem is-past"
                     />
                     <circle
                       cx={x}
-                      cy={SVG_STAGE.trackY - 68}
+                      cy={SVG_STAGE.trackY - 74}
                       r="6"
                       className="motion-stage-sample-dot is-past"
                     />
                     <text
                       x={x}
-                      y={SVG_STAGE.trackY - 84}
+                      y={SVG_STAGE.trackY - 90}
                       textAnchor="middle"
                       className="motion-stage-time-label"
                     >
@@ -736,14 +752,14 @@ export function NewtonFirstLawLab({
                 <g>
                   <line
                     x1={stopMarkerX}
-                    y1={SVG_STAGE.trackY - 102}
+                    y1={SVG_STAGE.trackY - 110}
                     x2={stopMarkerX}
                     y2={SVG_STAGE.trackY + 30}
                     className="newton-stage-stop-line"
                   />
                   <text
                     x={stopMarkerX}
-                    y={SVG_STAGE.trackY - 118}
+                    y={SVG_STAGE.trackY - 126}
                     textAnchor="middle"
                     className="motion-stage-stop-label"
                   >
@@ -753,9 +769,9 @@ export function NewtonFirstLawLab({
               ) : (
                 <line
                   x1={cartFrontX + 22}
-                  y1={SVG_STAGE.trackY - 52}
+                  y1={SVG_STAGE.trackY - 60}
                   x2={SVG_STAGE.trackEndX - 12}
-                  y2={SVG_STAGE.trackY - 52}
+                  y2={SVG_STAGE.trackY - 60}
                   className="newton-stage-ideal-line"
                 />
               )}
@@ -769,7 +785,7 @@ export function NewtonFirstLawLab({
 
               <text
                 x={Math.min(cartFrontX + 26, SVG_STAGE.trackEndX - 64)}
-                y={SVG_STAGE.trackY - 104}
+                y={SVG_STAGE.trackY - 115}
                 textAnchor="middle"
                 className="motion-stage-value-callout"
               >
@@ -778,14 +794,14 @@ export function NewtonFirstLawLab({
 
               <line
                 x1={cartFrontX + 12}
-                y1={SVG_STAGE.trackY - 42}
+                y1={SVG_STAGE.trackY - 48}
                 x2={cartFrontX + 12 + 118 * (currentMotion.velocity / Math.max(initialVelocity, 0.0001))}
-                y2={SVG_STAGE.trackY - 42}
+                y2={SVG_STAGE.trackY - 48}
                 className="motion-stage-velocity-arrow"
               />
               <text
                 x={cartFrontX + 88}
-                y={SVG_STAGE.trackY - 58}
+                y={SVG_STAGE.trackY - 65}
                 textAnchor="middle"
                 className="motion-stage-value-callout"
               >
