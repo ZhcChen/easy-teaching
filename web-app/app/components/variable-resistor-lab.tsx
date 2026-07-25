@@ -296,7 +296,7 @@ export function VariableResistorLab({
         </>
       }
       stageContent={
-        <div className="visual-canvas force-stage-canvas resistor-stage-canvas is-2d-mode">
+        <div className="visual-canvas force-stage-canvas resistor-stage-canvas teaching-overlay-stage-canvas is-2d-mode">
           <ControlStepGroup
             className="force-stage-overlay is-top-center force-stage-stepbar"
             items={stepItems}

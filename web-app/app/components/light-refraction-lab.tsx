@@ -262,7 +262,7 @@ export function LightRefractionLab({
         </>
       }
       stageContent={
-        <div className="visual-canvas force-stage-canvas refraction-stage-canvas is-2d-mode">
+        <div className="visual-canvas force-stage-canvas refraction-stage-canvas teaching-overlay-stage-canvas is-2d-mode">
           <ControlStepGroup
             className="force-stage-overlay is-top-center force-stage-stepbar"
             items={stepItems}

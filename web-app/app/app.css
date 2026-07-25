@@ -3943,6 +3943,78 @@ html[data-theme="dark"] .force-state-pill.is-active {
   gap: 10px;
 }
 
+.teaching-overlay-stage-canvas .force-stage-overlay.is-top-left {
+  top: 58px;
+  left: 50%;
+  width: min(540px, calc(100% - 180px));
+  transform: translateX(-50%);
+}
+
+.teaching-overlay-stage-canvas .force-stage-overlay.is-bottom-left {
+  width: min(560px, calc(100% - 324px));
+}
+
+.teaching-overlay-stage-canvas .force-stage-overlay.is-bottom-right {
+  width: min(284px, calc(100% - 28px));
+}
+
+.teaching-overlay-stage-canvas .force-stage-hud-card,
+.teaching-overlay-stage-canvas .force-stage-hud-card.is-tight {
+  gap: 6px;
+  padding: 8px 10px;
+}
+
+.teaching-overlay-stage-canvas .pressure-stage-copy {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.teaching-overlay-stage-canvas .force-stage-chip-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.teaching-overlay-stage-canvas .pressure-stage-metric-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.teaching-overlay-stage-canvas .force-stage-result-pill {
+  gap: 2px;
+  padding: 8px 10px;
+}
+
+.teaching-overlay-stage-canvas .force-stage-result-pill strong {
+  font-size: 12px;
+}
+
+.teaching-overlay-stage-canvas .force-stage-result-pill span {
+  font-size: 10px;
+}
+
+.teaching-overlay-stage-canvas .pressure-stage-formula {
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.teaching-overlay-stage-canvas .shadow-stage-summary-card {
+  min-width: 0;
+}
+
+.teaching-overlay-stage-canvas .shadow-stage-summary-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.teaching-overlay-stage-canvas .shadow-stage-summary-item {
+  gap: 3px;
+  padding: 8px 9px;
+}
+
+.teaching-overlay-stage-canvas .shadow-stage-summary-item strong {
+  font-size: 12px;
+}
+
 .pressure-lab-layout {
   transition:
     grid-template-columns 0.28s cubic-bezier(0.22, 1, 0.36, 1),
@@ -8429,6 +8501,17 @@ html[data-theme="dark"] .resistor-stage-canvas {
 
   .force-stage-chip-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .teaching-overlay-stage-canvas .force-stage-overlay.is-top-left {
+    left: 12px;
+    width: auto;
+    transform: none;
+  }
+
+  .teaching-overlay-stage-canvas .pressure-stage-metric-grid,
+  .teaching-overlay-stage-canvas .shadow-stage-summary-grid {
+    grid-template-columns: 1fr;
   }
 
   .force-stage-record-list.is-overlay {
