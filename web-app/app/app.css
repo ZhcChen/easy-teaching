@@ -4265,6 +4265,54 @@ html[data-theme="dark"] .force-state-pill.is-active {
     linear-gradient(180deg, #081423 0%, #09192b 46%, #06101c 100%);
 }
 
+.newton-stage-layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 292px;
+  gap: 16px;
+  width: 100%;
+  min-height: inherit;
+  padding: 16px;
+}
+
+.newton-stage-visual {
+  position: relative;
+  min-width: 0;
+  min-height: inherit;
+}
+
+.newton-stage-visual .force-stage-overlay.is-top-left {
+  top: 18px;
+  left: 18px;
+  width: min(360px, calc(100% - 36px));
+}
+
+.newton-stage-side-rail {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+  width: 292px;
+  padding-top: 88px;
+}
+
+.newton-stage-side-card {
+  min-width: 0;
+}
+
+.newton-stage-side-rail .pressure-stage-metric-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.newton-stage-side-rail .force-stage-result-pill {
+  min-width: 0;
+}
+
+.newton-stage-side-rail .pressure-stage-comparison-card {
+  min-width: 0;
+}
+
 .newton-stage-ramp {
   fill: rgba(117, 140, 171, 0.2);
   stroke: rgba(167, 196, 232, 0.34);
@@ -8258,6 +8306,16 @@ html[data-theme="dark"] .resistor-stage-canvas {
     min-height: 860px;
   }
 
+  .newton-stage-layout {
+    grid-template-columns: minmax(0, 1fr) 272px;
+    gap: 14px;
+    padding: 14px;
+  }
+
+  .newton-stage-side-rail {
+    width: 272px;
+  }
+
   .circuit-stage-canvas {
     min-height: 900px;
   }
@@ -8460,6 +8518,27 @@ html[data-theme="dark"] .resistor-stage-canvas {
 
   .motion-stage-view-switch .visual-mode-track {
     min-width: 90px;
+  }
+
+  .newton-stage-layout {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .newton-stage-side-rail {
+    width: auto;
+    padding-top: 0;
+  }
+
+  .newton-stage-visual .force-stage-overlay.is-top-left {
+    top: 72px;
+    left: 12px;
+    width: calc(100% - 24px);
+  }
+
+  .newton-stage-side-rail .pressure-stage-metric-grid {
+    grid-template-columns: 1fr;
   }
 
   .force-stage-overlay,

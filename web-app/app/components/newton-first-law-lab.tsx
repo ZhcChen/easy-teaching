@@ -626,81 +626,28 @@ export function NewtonFirstLawLab({
             <div className="visual-line visual-line-a" />
             <div className="visual-line visual-line-b" />
 
-            <div className="force-stage-overlay is-top-left">
-              <div className="force-stage-hud-card">
-                <div className="force-stage-hud-head">
-                  <span className="force-stage-hud-title">{tt(currentScenario.label)}</span>
-                  <StatusPill tone={stageStateMeta.tone}>{stageStateMeta.label}</StatusPill>
+            <div className="newton-stage-layout">
+              <div className="newton-stage-visual">
+                <div className="force-stage-overlay is-top-left">
+                  <div className="force-stage-hud-card">
+                    <div className="force-stage-hud-head">
+                      <span className="force-stage-hud-title">{tt(currentScenario.label)}</span>
+                      <StatusPill tone={stageStateMeta.tone}>{stageStateMeta.label}</StatusPill>
+                    </div>
+                    <p className="pressure-stage-copy">{stageStateMeta.copy}</p>
+                    <div className="force-stage-chip-grid">
+                      <span className="force-stage-chip">{`v0 = ${formatVelocity(initialVelocity)}`}</span>
+                      <span className="force-stage-chip">{tt(currentScenario.resistanceLabel)}</span>
+                    </div>
+                  </div>
                 </div>
-                <p className="pressure-stage-copy">{stageStateMeta.copy}</p>
-                <div className="force-stage-chip-grid">
-                  <span className="force-stage-chip">{`v0 = ${formatVelocity(initialVelocity)}`}</span>
-                  <span className="force-stage-chip">{tt(currentScenario.resistanceLabel)}</span>
-                </div>
-              </div>
-            </div>
 
-            <div className="force-stage-overlay is-bottom-left">
-              <div className="force-stage-hud-card is-tight">
-                <div className="force-stage-hud-head">
-                  <span className="force-stage-hud-title">{isZh ? "实时读数" : "Live Reading"}</span>
-                </div>
-                <div className="pressure-stage-metric-grid">
-                  <article className="force-stage-result-pill">
-                    <strong>{formatSeconds(currentMotion.time)}</strong>
-                    <span>{isZh ? "时间 t" : "Time t"}</span>
-                  </article>
-                  <article className="force-stage-result-pill">
-                    <strong>{formatVelocity(currentMotion.velocity)}</strong>
-                    <span>{isZh ? "速度 v" : "Velocity v"}</span>
-                  </article>
-                  <article className="force-stage-result-pill">
-                    <strong>{formatDistance(currentMotion.position)}</strong>
-                    <span>{isZh ? "位移 s" : "Distance s"}</span>
-                  </article>
-                  <article className="force-stage-result-pill">
-                    <strong>
-                      {currentScenario.isIdeal
-                        ? (isZh ? "不会停下" : "No stop")
-                        : formatSeconds(currentScenario.stopTimeSeconds ?? 0)}
-                    </strong>
-                    <span>{isZh ? "停止时刻" : "Stop time"}</span>
-                  </article>
-                </div>
-              </div>
-            </div>
-
-            <div className="force-stage-overlay is-bottom-right">
-              <div className="force-stage-hud-card is-tight pressure-stage-comparison-card">
-                <div className="force-stage-hud-head">
-                  <span className="force-stage-hud-title">{isZh ? "距离对照" : "Distance Comparison"}</span>
-                  <span className="force-stage-chip">{isZh ? `${recordedCount} / 4` : `${recordedCount} / 4`}</span>
-                </div>
-                <div className="pressure-stage-bar-list">
-                  {comparisonRows.map((row) => (
-                    <article key={row.key} className="pressure-stage-bar-row">
-                      <div className="pressure-stage-bar-head">
-                        <strong>{row.label}</strong>
-                        <span>{row.valueLabel}</span>
-                      </div>
-                      <div className="pressure-stage-bar-track">
-                        <span
-                          className={row.active ? "pressure-stage-bar-fill is-active" : "pressure-stage-bar-fill"}
-                          style={{ width: `${row.percent}%` }}
-                        />
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <svg
-              viewBox={`0 0 ${SVG_STAGE.width} ${SVG_STAGE.height}`}
-              className="motion-stage-svg newton-stage-svg"
-              role="img"
-              aria-label={isZh ? `${tt(topic.title)}可视化示意图` : `${tt(topic.title)} visualization`}
-            >
+                <svg
+                  viewBox={`0 0 ${SVG_STAGE.width} ${SVG_STAGE.height}`}
+                  className="motion-stage-svg newton-stage-svg"
+                  role="img"
+                  aria-label={isZh ? `${tt(topic.title)}可视化示意图` : `${tt(topic.title)} visualization`}
+                >
               <rect
                 x={SVG_STAGE.trackPanelX}
                 y={SVG_STAGE.trackPanelY}
@@ -921,7 +868,62 @@ export function NewtonFirstLawLab({
                 r="7"
                 className="motion-stage-graph-point is-secondary"
               />
-            </svg>
+                </svg>
+              </div>
+
+              <aside className="newton-stage-side-rail" aria-label={isZh ? "数值信息面板" : "Numerical info panel"}>
+                <div className="force-stage-hud-card is-tight newton-stage-side-card">
+                  <div className="force-stage-hud-head">
+                    <span className="force-stage-hud-title">{isZh ? "实时读数" : "Live Reading"}</span>
+                  </div>
+                  <div className="pressure-stage-metric-grid">
+                    <article className="force-stage-result-pill">
+                      <strong>{formatSeconds(currentMotion.time)}</strong>
+                      <span>{isZh ? "时间 t" : "Time t"}</span>
+                    </article>
+                    <article className="force-stage-result-pill">
+                      <strong>{formatVelocity(currentMotion.velocity)}</strong>
+                      <span>{isZh ? "速度 v" : "Velocity v"}</span>
+                    </article>
+                    <article className="force-stage-result-pill">
+                      <strong>{formatDistance(currentMotion.position)}</strong>
+                      <span>{isZh ? "位移 s" : "Distance s"}</span>
+                    </article>
+                    <article className="force-stage-result-pill">
+                      <strong>
+                        {currentScenario.isIdeal
+                          ? (isZh ? "不会停下" : "No stop")
+                          : formatSeconds(currentScenario.stopTimeSeconds ?? 0)}
+                      </strong>
+                      <span>{isZh ? "停止时刻" : "Stop time"}</span>
+                    </article>
+                  </div>
+                </div>
+
+                <div className="force-stage-hud-card is-tight pressure-stage-comparison-card newton-stage-side-card">
+                  <div className="force-stage-hud-head">
+                    <span className="force-stage-hud-title">{isZh ? "距离对照" : "Distance Comparison"}</span>
+                    <span className="force-stage-chip">{isZh ? `${recordedCount} / 4` : `${recordedCount} / 4`}</span>
+                  </div>
+                  <div className="pressure-stage-bar-list">
+                    {comparisonRows.map((row) => (
+                      <article key={row.key} className="pressure-stage-bar-row">
+                        <div className="pressure-stage-bar-head">
+                          <strong>{row.label}</strong>
+                          <span>{row.valueLabel}</span>
+                        </div>
+                        <div className="pressure-stage-bar-track">
+                          <span
+                            className={row.active ? "pressure-stage-bar-fill is-active" : "pressure-stage-bar-fill"}
+                            style={{ width: `${row.percent}%` }}
+                          />
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              </aside>
+            </div>
           </div>
         </div>
       </div>
