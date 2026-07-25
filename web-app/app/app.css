@@ -3943,19 +3943,40 @@ html[data-theme="dark"] .force-state-pill.is-active {
   gap: 10px;
 }
 
+.teaching-overlay-stage-canvas {
+  --teaching-stage-rail-width: 292px;
+  --teaching-stage-rail-gap: 16px;
+}
+
+.teaching-overlay-stage-canvas .force-stage-svg {
+  width: calc(100% - var(--teaching-stage-rail-width) - var(--teaching-stage-rail-gap));
+  max-width: calc(100% - var(--teaching-stage-rail-width) - var(--teaching-stage-rail-gap));
+  margin-right: calc(var(--teaching-stage-rail-width) + var(--teaching-stage-rail-gap));
+}
+
+.teaching-overlay-stage-canvas .force-stage-overlay.is-top-center {
+  left: calc((100% - var(--teaching-stage-rail-width) - var(--teaching-stage-rail-gap)) / 2);
+  max-width: calc(100% - var(--teaching-stage-rail-width) - 48px);
+}
+
 .teaching-overlay-stage-canvas .force-stage-overlay.is-top-left {
   top: 58px;
-  left: 50%;
-  width: min(540px, calc(100% - 180px));
-  transform: translateX(-50%);
+  left: 16px;
+  width: min(388px, calc(100% - var(--teaching-stage-rail-width) - 48px));
+  transform: none;
 }
 
 .teaching-overlay-stage-canvas .force-stage-overlay.is-bottom-left {
-  width: min(560px, calc(100% - 324px));
+  top: 132px;
+  right: 16px;
+  bottom: auto;
+  left: auto;
+  width: var(--teaching-stage-rail-width);
 }
 
 .teaching-overlay-stage-canvas .force-stage-overlay.is-bottom-right {
-  width: min(284px, calc(100% - 28px));
+  right: 16px;
+  width: var(--teaching-stage-rail-width);
 }
 
 .teaching-overlay-stage-canvas .force-stage-hud-card,
@@ -4013,6 +4034,17 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
 .teaching-overlay-stage-canvas .shadow-stage-summary-item strong {
   font-size: 12px;
+}
+
+@media (max-width: 1480px) {
+  .teaching-overlay-stage-canvas {
+    --teaching-stage-rail-width: 272px;
+    --teaching-stage-rail-gap: 14px;
+  }
+
+  .teaching-overlay-stage-canvas .force-stage-overlay.is-top-left {
+    width: min(348px, calc(100% - var(--teaching-stage-rail-width) - 40px));
+  }
 }
 
 .pressure-lab-layout {
@@ -8585,6 +8617,20 @@ html[data-theme="dark"] .resistor-stage-canvas {
   .teaching-overlay-stage-canvas .force-stage-overlay.is-top-left {
     left: 12px;
     width: auto;
+    transform: none;
+  }
+
+  .teaching-overlay-stage-canvas .force-stage-svg {
+    width: 100%;
+    max-width: none;
+    margin-right: 0;
+  }
+
+  .teaching-overlay-stage-canvas .force-stage-overlay.is-top-center {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
     transform: none;
   }
 
