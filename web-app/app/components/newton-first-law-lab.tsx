@@ -628,20 +628,6 @@ export function NewtonFirstLawLab({
 
             <div className="newton-stage-layout">
               <div className="newton-stage-visual">
-                <div className="force-stage-overlay is-top-left">
-                  <div className="force-stage-hud-card">
-                    <div className="force-stage-hud-head">
-                      <span className="force-stage-hud-title">{tt(currentScenario.label)}</span>
-                      <StatusPill tone={stageStateMeta.tone}>{stageStateMeta.label}</StatusPill>
-                    </div>
-                    <p className="pressure-stage-copy">{stageStateMeta.copy}</p>
-                    <div className="force-stage-chip-grid">
-                      <span className="force-stage-chip">{`v0 = ${formatVelocity(initialVelocity)}`}</span>
-                      <span className="force-stage-chip">{tt(currentScenario.resistanceLabel)}</span>
-                    </div>
-                  </div>
-                </div>
-
                 <svg
                   viewBox={`0 0 ${SVG_STAGE.width} ${SVG_STAGE.height}`}
                   className="motion-stage-svg newton-stage-svg"
@@ -872,6 +858,18 @@ export function NewtonFirstLawLab({
               </div>
 
               <aside className="newton-stage-side-rail" aria-label={isZh ? "数值信息面板" : "Numerical info panel"}>
+                <div className="force-stage-hud-card newton-stage-side-card">
+                  <div className="force-stage-hud-head">
+                    <span className="force-stage-hud-title">{tt(currentScenario.label)}</span>
+                    <StatusPill tone={stageStateMeta.tone}>{stageStateMeta.label}</StatusPill>
+                  </div>
+                  <p className="pressure-stage-copy">{stageStateMeta.copy}</p>
+                  <div className="force-stage-chip-grid">
+                    <span className="force-stage-chip">{`v0 = ${formatVelocity(initialVelocity)}`}</span>
+                    <span className="force-stage-chip">{tt(currentScenario.resistanceLabel)}</span>
+                  </div>
+                </div>
+
                 <div className="force-stage-hud-card is-tight newton-stage-side-card">
                   <div className="force-stage-hud-head">
                     <span className="force-stage-hud-title">{isZh ? "实时读数" : "Live Reading"}</span>

@@ -3961,13 +3961,14 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
 .teaching-overlay-stage-canvas .force-stage-overlay.is-top-left {
   top: 58px;
-  left: 16px;
-  width: min(388px, calc(100% - var(--teaching-stage-rail-width) - 48px));
+  right: 16px;
+  left: auto;
+  width: var(--teaching-stage-rail-width);
   transform: none;
 }
 
 .teaching-overlay-stage-canvas .force-stage-overlay.is-bottom-left {
-  top: 132px;
+  top: 196px;
   right: 16px;
   bottom: auto;
   left: auto;
@@ -4043,7 +4044,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
   }
 
   .teaching-overlay-stage-canvas .force-stage-overlay.is-top-left {
-    width: min(348px, calc(100% - var(--teaching-stage-rail-width) - 40px));
+    width: var(--teaching-stage-rail-width);
   }
 }
 
@@ -4326,7 +4327,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
   flex-direction: column;
   gap: 12px;
   width: 292px;
-  padding-top: 88px;
+  padding-top: 0;
 }
 
 .newton-stage-side-card {
