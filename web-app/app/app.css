@@ -4297,10 +4297,23 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
 .newton-lab-main {
   gap: 0;
+  height: auto;
+  align-self: start;
+}
+
+.newton-lab-layout {
+  align-items: start;
+  height: auto;
+}
+
+.newton-control-panel {
+  height: auto;
+  max-height: calc(100vh - 168px);
+  align-self: start;
 }
 
 .newton-stage-canvas {
-  min-height: clamp(600px, calc(100vh - 280px), 680px);
+  min-height: clamp(560px, calc(100vh - 320px), 620px);
   background:
     radial-gradient(circle at 18% 18%, rgba(255, 184, 107, 0.14) 0%, transparent 22%),
     radial-gradient(circle at 82% 72%, rgba(103, 198, 255, 0.14) 0%, transparent 24%),
@@ -4311,17 +4324,26 @@ html[data-theme="dark"] .force-state-pill.is-active {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 284px;
-  gap: 14px;
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) 256px;
+  gap: 12px;
   width: 100%;
-  min-height: inherit;
-  padding: 14px;
+  min-height: 0;
+  padding: 12px;
 }
 
 .newton-stage-visual {
   position: relative;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  min-height: inherit;
+  min-height: 0;
+}
+
+.newton-stage-visual > .newton-stage-svg {
+  width: 100%;
+  height: auto;
+  min-height: 0;
 }
 
 .newton-stage-visual .force-stage-overlay.is-top-left {
@@ -4334,8 +4356,9 @@ html[data-theme="dark"] .force-state-pill.is-active {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 10px;
-  width: 284px;
+  align-self: start;
+  gap: 8px;
+  width: 256px;
   padding-top: 0;
 }
 
@@ -4343,8 +4366,27 @@ html[data-theme="dark"] .force-state-pill.is-active {
   min-width: 0;
 }
 
-.newton-stage-side-card .force-stage-progress-inline {
-  margin: 2px 0;
+.newton-stage-brief-card {
+  gap: 6px;
+}
+
+.newton-stage-brief-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.newton-stage-brief-copy {
+  margin: 0;
+  color: var(--canvas-copy);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.newton-stage-brief-chips,
+.newton-flow-chip-list {
+  gap: 6px;
 }
 
 .newton-stage-side-rail .pressure-stage-metric-grid {
@@ -8353,13 +8395,13 @@ html[data-theme="dark"] .resistor-stage-canvas {
   }
 
   .newton-stage-layout {
-    grid-template-columns: minmax(0, 1fr) 272px;
+    grid-template-columns: minmax(0, 1fr) 248px;
     gap: 14px;
     padding: 14px;
   }
 
   .newton-stage-side-rail {
-    width: 272px;
+    width: 248px;
   }
 
   .circuit-stage-canvas {
@@ -8570,6 +8612,10 @@ html[data-theme="dark"] .resistor-stage-canvas {
     grid-template-columns: 1fr;
     gap: 12px;
     padding: 12px;
+  }
+
+  .newton-stage-canvas {
+    min-height: 0;
   }
 
   .newton-stage-side-rail {

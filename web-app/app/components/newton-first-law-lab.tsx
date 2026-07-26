@@ -259,13 +259,6 @@ export function NewtonFirstLawLab({
           ? (isZh ? "理想推理完成" : "Ideal inference complete")
           : (isZh ? "本次滑行完成" : "Run complete"),
         tone: "balanced" as const,
-        copy: currentScenario.isIdeal
-          ? (isZh
-            ? "理想光滑面没有阻力，小车会继续保持匀速前进。"
-            : "With no resistance, the cart keeps moving at constant speed.")
-          : (isZh
-            ? "这一组已经停下，可以记录滑行距离和停止时间。"
-            : "This run has stopped. Record the travel distance and stopping time."),
       };
     }
 
@@ -273,22 +266,12 @@ export function NewtonFirstLawLab({
       return {
         label: isZh ? "滑行中" : "Running",
         tone: "active" as const,
-        copy: currentScenario.isIdeal
-          ? (isZh
-            ? "观察速度保持不变，并用理想光滑面做外推。"
-            : "Observe the constant speed and extend it to the ideal case.")
-          : (isZh
-            ? "比较当前阻力面对速度和滑行距离的影响。"
-            : "Compare how this surface changes speed and travel distance."),
       };
     }
 
     return {
       label: isZh ? "待释放" : "Ready",
       tone: "warning" as const,
-      copy: isZh
-        ? "保持同一初速度，依次对比不同阻力面的滑行效果。"
-        : "Keep the same initial speed and compare the travel on each surface.",
     };
   }, [currentScenario.isIdeal, isZh, observationState]);
 
@@ -554,7 +537,7 @@ export function NewtonFirstLawLab({
               <div className="force-control-scroll motion-control-scroll newton-control-scroll">
                 <ControlPanelSection
                   title={isZh ? "实验控制" : "Experiment Flow"}
-                  hint={isZh ? "先观察，再记录，再进入下一种阻力面" : "Observe, record, then continue to the next surface"}
+                  hint={isZh ? "先释放，再记录，再换阻力面" : "Release, record, then switch surfaces"}
                   accent
                 >
                   <ControlStatusBar
@@ -568,6 +551,7 @@ export function NewtonFirstLawLab({
                   <div className="force-action-grid">
                     <ControlButton
                       variant="primary"
+                      size="compact"
                       disabled={observationState === "observing"}
                       onClick={startObservation}
                     >
@@ -575,23 +559,19 @@ export function NewtonFirstLawLab({
                     </ControlButton>
                     <ControlButton
                       variant="ghost"
+                      size="compact"
                       disabled={!isRecordEnabled}
                       onClick={recordCurrentObservation}
                     >
                       {recordButtonLabel}
                     </ControlButton>
-                    <ControlButton variant="ghost" onClick={resetLab}>
+                    <ControlButton variant="ghost" size="compact" onClick={resetLab}>
                       {tt("重置")}
                     </ControlButton>
                   </div>
 
-                  <p className="force-inline-copy">
-                    {currentTaskCopy}
-                  </p>
-
-                  <div className="force-support-chip-list">
+                  <div className="force-support-chip-list newton-flow-chip-list">
                     <span className="force-support-chip">{`v0 = ${formatVelocity(initialVelocity)}`}</span>
-                    <span className="force-support-chip">{tt(currentScenario.resistanceLabel)}</span>
                     <span className="force-support-chip">
                       {nextPendingSurfaceKey
                         ? (isZh
@@ -604,7 +584,7 @@ export function NewtonFirstLawLab({
 
                 <ControlPanelSection
                   title={isZh ? "核心变量" : "Core Variables"}
-                  hint={isZh ? "改变初速度会清空本轮对照记录" : "Changing the speed clears this comparison run"}
+                  hint={isZh ? "调整初速度会清空当前对照记录" : "Changing speed clears the current comparison"}
                 >
                   <ControlRange
                     id="newton-initial-velocity"
@@ -631,29 +611,12 @@ export function NewtonFirstLawLab({
                     columns={2}
                     size="dense"
                   />
-
-                  <div className="force-support-chip-list">
-                    <span className="force-support-chip">
-                      {isZh ? "当前阻力" : "Current Resistance"}：{tt(currentScenario.resistanceLabel)}
-                    </span>
-                    <span className="force-support-chip">
-                      {isZh ? "当前阻力面" : "Current Surface"}：{tt(currentScenario.shortLabel)}
-                    </span>
-                  </div>
-
-                  <p className="force-inline-copy">{tt(currentScenario.description)}</p>
                 </ControlPanelSection>
 
                 <ControlPanelSection
                   title={isZh ? "记录实验单" : "Experiment Worksheet"}
                   hint={isZh ? "先完成本组观察，再记录到四组对照表" : "Record each run after observing it"}
                 >
-                  <p className="force-inline-copy">
-                    {isZh
-                      ? "记录保留待测项、当前组和已完成组，方便按课堂顺序补完四种阻力面。"
-                      : "The worksheet keeps pending, current, and finished runs so the class can complete all four surfaces in order."}
-                  </p>
-
                   <BasicForceRecordTable
                     groups={recordGroups}
                     emptyTitle={isZh ? "先完成第一组释放" : "Finish the first release"}
@@ -667,8 +630,7 @@ export function NewtonFirstLawLab({
                 </ControlPanelSection>
 
                 <ControlPanelSection
-                  title={isZh ? "思考提示" : "Think Prompt"}
-                  hint={isZh ? "帮助归纳牛顿第一定律" : "Guide the classroom conclusion"}
+                  title={isZh ? "课堂问题" : "Class Prompts"}
                 >
                   <ul className="force-support-question-list">
                     <li>{isZh ? "为什么三次实验必须从同一高度、同一初速度释放？" : "Why must every run use the same release height and speed?"}</li>
@@ -905,7 +867,6 @@ export function NewtonFirstLawLab({
                           <span className="motion-stage-kpi-pill">{tt(currentScenario.shortLabel)}</span>
                           <span className="motion-stage-kpi-pill">{tt("左拖旋转 · 滚轮缩放")}</span>
                         </div>
-                        <p className="motion-stage-note is-compact">{currentTaskCopy}</p>
                       </div>
                     </div>
                   </>
@@ -913,16 +874,13 @@ export function NewtonFirstLawLab({
               </div>
 
               <aside className="newton-stage-side-rail" aria-label={isZh ? "数值信息面板" : "Numerical info panel"}>
-                <div className="force-stage-hud-card newton-stage-side-card">
-                  <div className="force-stage-hud-head">
-                    <span className="force-stage-hud-title">{isZh ? "当前任务" : "Current Task"}</span>
+                <div className="force-stage-hud-card is-tight newton-stage-side-card newton-stage-brief-card">
+                  <div className="newton-stage-brief-head">
                     <StatusPill tone={stageStateMeta.tone}>{stageStateMeta.label}</StatusPill>
+                    <span className="force-stage-chip">{progressLabel}</span>
                   </div>
-                  <p className="pressure-stage-copy">{currentTaskCopy}</p>
-                  <div className="force-stage-progress-inline">
-                    <span style={{ width: `${stageProgressRatio * 100}%` }} />
-                  </div>
-                  <div className="force-stage-chip-grid">
+                  <p className="newton-stage-brief-copy">{currentTaskCopy}</p>
+                  <div className="force-stage-chip-grid newton-stage-brief-chips">
                     <span className="force-stage-chip">{tt(currentScenario.label)}</span>
                     <span className="force-stage-chip">{`v0 = ${formatVelocity(initialVelocity)}`}</span>
                     <span className="force-stage-chip">{tt(currentScenario.resistanceLabel)}</span>
