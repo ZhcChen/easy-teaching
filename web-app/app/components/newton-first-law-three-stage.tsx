@@ -685,6 +685,11 @@ function buildRamp(THREE: ThreeModule, accentColor: string) {
     roughness: 0.54,
     metalness: 0.18,
   });
+  const fastenerMaterial = new THREE.MeshStandardMaterial({
+    color: 0xe7edf5,
+    roughness: 0.22,
+    metalness: 0.76,
+  });
   const rampLength = Math.hypot(RAMP_RUN_WORLD, RAMP_HEIGHT_WORLD);
   const deckThickness = 0.08;
   const deckNormalX = -Math.sin(RAMP_ANGLE);
@@ -789,6 +794,7 @@ function buildRamp(THREE: ThreeModule, accentColor: string) {
   supportXs.forEach((supportX) => {
     const supportTopY = resolveStageSurfaceY(supportX) - 0.14;
     const legHeight = Math.max(0.56, supportTopY - 0.02);
+    const legZ = ROAD_WIDTH / 2 - 0.42;
 
     [-1, 1].forEach((direction) => {
       const leg = new THREE.Mesh(
@@ -798,9 +804,45 @@ function buildRamp(THREE: ThreeModule, accentColor: string) {
       leg.position.set(
         supportX,
         legHeight / 2,
-        direction * (ROAD_WIDTH / 2 - 0.42),
+        direction * legZ,
       );
       rampGroup.add(leg);
+
+      const footPad = new THREE.Mesh(
+        new THREE.BoxGeometry(0.24, 0.04, 0.22),
+        supportMaterial,
+      );
+      footPad.position.set(supportX, 0.02, direction * legZ);
+      rampGroup.add(footPad);
+
+      const diagonalBraceLength = Math.max(0.7, legHeight * 1.16);
+      const diagonalBrace = new THREE.Mesh(
+        new THREE.BoxGeometry(diagonalBraceLength, 0.05, 0.05),
+        braceMaterial,
+      );
+      diagonalBrace.position.set(
+        supportX + 0.18,
+        legHeight * 0.58,
+        direction * (legZ - 0.04),
+      );
+      diagonalBrace.rotation.z = -0.92;
+      rampGroup.add(diagonalBrace);
+
+      const braceCap = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.03, 0.03, 0.025, 12),
+        fastenerMaterial,
+      );
+      braceCap.rotation.x = Math.PI / 2;
+      braceCap.position.set(
+        supportX + 0.34,
+        legHeight * 0.78,
+        direction * (legZ - 0.02),
+      );
+      rampGroup.add(braceCap);
+
+      const footBolt = braceCap.clone();
+      footBolt.position.set(supportX, 0.05, direction * legZ);
+      rampGroup.add(footBolt);
     });
 
     const crossBeam = new THREE.Mesh(
@@ -809,7 +851,47 @@ function buildRamp(THREE: ThreeModule, accentColor: string) {
     );
     crossBeam.position.set(supportX, legHeight * 0.62, 0);
     rampGroup.add(crossBeam);
+
+    [-1, 1].forEach((direction) => {
+      const topBolt = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.028, 0.028, 0.024, 12),
+        fastenerMaterial,
+      );
+      topBolt.rotation.x = Math.PI / 2;
+      topBolt.position.set(
+        supportX,
+        legHeight * 0.62,
+        direction * (legZ + 0.02),
+      );
+      rampGroup.add(topBolt);
+    });
   });
+
+  [
+    { x: releaseGateX - 0.18, y: releaseGateSurfaceY + 0.1, z: ROAD_WIDTH / 2 - 0.56 },
+    { x: releaseGateX - 0.18, y: releaseGateSurfaceY + 0.1, z: -(ROAD_WIDTH / 2 - 0.56) },
+    { x: releaseGateX + 0.08, y: releaseGateSurfaceY + 0.48, z: ROAD_WIDTH / 2 - 0.42 },
+  ].forEach(({ x, y, z }) => {
+    const cap = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.032, 0.032, 0.026, 12),
+      fastenerMaterial,
+    );
+    cap.rotation.x = Math.PI / 2;
+    cap.position.set(x, y, z);
+    rampGroup.add(cap);
+  });
+
+  const releaseKnob = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.08, 0.08, 0.12, 18),
+    gateMaterial,
+  );
+  releaseKnob.rotation.z = Math.PI / 2;
+  releaseKnob.position.set(
+    releaseGateX + 0.24,
+    releaseGateSurfaceY + 0.34,
+    ROAD_WIDTH / 2 - 0.58,
+  );
+  rampGroup.add(releaseKnob);
 
   return rampGroup;
 }
@@ -1006,22 +1088,72 @@ function buildTrackSideRails(THREE: ThreeModule, accentColor: string) {
 
 function buildReferenceBeacons(THREE: ThreeModule, accentColor: string) {
   const group = new THREE.Group();
-  const material = new THREE.MeshStandardMaterial({
-    color: 0xb9d9ff,
-    emissive: new THREE.Color(accentColor).multiplyScalar(0.4),
-    emissiveIntensity: 0.18,
-    roughness: 0.46,
-    metalness: 0.22,
+  const accent = new THREE.Color(accentColor);
+  const rulerMaterial = new THREE.MeshStandardMaterial({
+    color: 0xe5edf6,
+    roughness: 0.24,
+    metalness: 0.58,
   });
+  const tickMaterial = new THREE.MeshStandardMaterial({
+    color: 0x415167,
+    roughness: 0.42,
+    metalness: 0.16,
+  });
+  const highlightMaterial = new THREE.MeshStandardMaterial({
+    color: 0xa6d7ff,
+    emissive: accent.clone().multiplyScalar(0.34),
+    emissiveIntensity: 0.16,
+    roughness: 0.32,
+    metalness: 0.28,
+  });
+  const rulerZ = -(ROAD_WIDTH / 2 - 0.28);
+  const rulerY = ROAD_SURFACE_Y + 0.028;
+  const rulerLength = TRACK_TRAVEL_WORLD + 0.12;
+  const rulerStrip = new THREE.Mesh(
+    new THREE.BoxGeometry(rulerLength, 0.024, 0.22),
+    rulerMaterial,
+  );
+  rulerStrip.position.set(
+    RAMP_ENTRY_X + TRACK_TRAVEL_WORLD / 2,
+    rulerY,
+    rulerZ,
+  );
+  group.add(rulerStrip);
 
-  for (let index = 0; index < 5; index += 1) {
-    const x = RAMP_ENTRY_X + (TRACK_TRAVEL_WORLD * index) / 4;
-    const post = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.015, 0.015, 0.72, 8),
-      material,
+  const tickCount = 24;
+  for (let index = 0; index <= tickCount; index += 1) {
+    const ratio = index / tickCount;
+    const x = RAMP_ENTRY_X + TRACK_TRAVEL_WORLD * ratio;
+    const isMajor = index % 6 === 0;
+    const isMedium = !isMajor && index % 3 === 0;
+    const tickHeight = isMajor ? 0.2 : isMedium ? 0.14 : 0.09;
+    const tickDepth = isMajor ? 0.024 : 0.018;
+    const tick = new THREE.Mesh(
+      new THREE.BoxGeometry(0.018, tickHeight, tickDepth),
+      tickMaterial,
     );
-    post.position.set(x, ROAD_SURFACE_Y + 0.34, 0);
-    group.add(post);
+    tick.position.set(
+      x,
+      rulerY + tickHeight / 2 + 0.006,
+      rulerZ - 0.08,
+    );
+    group.add(tick);
+
+    if (isMajor) {
+      const plaque = new THREE.Mesh(
+        new THREE.BoxGeometry(0.22, 0.014, 0.08),
+        highlightMaterial,
+      );
+      plaque.position.set(x, rulerY + 0.01, rulerZ + 0.04);
+      group.add(plaque);
+
+      const pin = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.014, 0.014, 0.42, 10),
+        highlightMaterial,
+      );
+      pin.position.set(x, ROAD_SURFACE_Y + 0.21, 0);
+      group.add(pin);
+    }
   }
 
   return group;
@@ -1029,31 +1161,85 @@ function buildReferenceBeacons(THREE: ThreeModule, accentColor: string) {
 
 function buildStopMarker(THREE: ThreeModule, accentColor: string) {
   const markerGroup = new THREE.Group();
-  const mast = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.02, 0.02, 1.12, 10),
-    new THREE.MeshStandardMaterial({
-      color: 0xffd391,
-      emissive: 0xffb766,
-      emissiveIntensity: 0.22,
-      roughness: 0.3,
-      metalness: 0.16,
-    }),
-  );
-  mast.position.y = ROAD_SURFACE_Y + 0.56;
-  markerGroup.add(mast);
+  const accent = new THREE.Color(accentColor);
+  const baseMaterial = new THREE.MeshStandardMaterial({
+    color: 0x253044,
+    roughness: 0.56,
+    metalness: 0.16,
+  });
+  const stopperMaterial = new THREE.MeshStandardMaterial({
+    color: 0xdbe4ef,
+    emissive: accent.clone().multiplyScalar(0.2),
+    emissiveIntensity: 0.14,
+    roughness: 0.24,
+    metalness: 0.58,
+  });
+  const knobMaterial = new THREE.MeshStandardMaterial({
+    color: 0xeff4fb,
+    emissive: 0xffd391,
+    emissiveIntensity: 0.08,
+    roughness: 0.22,
+    metalness: 0.66,
+  });
 
-  const flag = new THREE.Mesh(
-    new THREE.BoxGeometry(0.54, 0.18, 0.04),
+  const baseClamp = new THREE.Mesh(
+    new THREE.BoxGeometry(0.82, 0.08, ROAD_WIDTH - 0.58),
+    baseMaterial,
+  );
+  baseClamp.position.y = ROAD_SURFACE_Y + 0.05;
+  markerGroup.add(baseClamp);
+
+  [-1, 1].forEach((direction) => {
+    const sideJaw = new THREE.Mesh(
+      new THREE.BoxGeometry(0.16, 0.22, 0.12),
+      stopperMaterial,
+    );
+    sideJaw.position.set(0, ROAD_SURFACE_Y + 0.12, direction * (ROAD_WIDTH / 2 - 0.36));
+    markerGroup.add(sideJaw);
+  });
+
+  const stopPlate = new THREE.Mesh(
+    new THREE.BoxGeometry(0.12, 0.52, ROAD_WIDTH - 1.14),
+    stopperMaterial,
+  );
+  stopPlate.position.set(0, ROAD_SURFACE_Y + 0.3, 0);
+  markerGroup.add(stopPlate);
+
+  const topBridge = new THREE.Mesh(
+    new THREE.BoxGeometry(0.24, 0.08, ROAD_WIDTH - 1.18),
+    stopperMaterial,
+  );
+  topBridge.position.set(0.02, ROAD_SURFACE_Y + 0.53, 0);
+  markerGroup.add(topBridge);
+
+  const screwRod = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.024, 0.024, 0.54, 14),
+    knobMaterial,
+  );
+  screwRod.rotation.z = Math.PI / 2;
+  screwRod.position.set(0.24, ROAD_SURFACE_Y + 0.3, 0);
+  markerGroup.add(screwRod);
+
+  const handWheel = new THREE.Mesh(
+    new THREE.TorusGeometry(0.12, 0.026, 12, 28),
+    knobMaterial,
+  );
+  handWheel.rotation.y = Math.PI / 2;
+  handWheel.position.set(0.5, ROAD_SURFACE_Y + 0.3, 0);
+  markerGroup.add(handWheel);
+
+  const indicatorPad = new THREE.Mesh(
+    new THREE.BoxGeometry(0.16, 0.06, ROAD_WIDTH - 1.42),
     new THREE.MeshStandardMaterial({
-      color: new THREE.Color(accentColor),
-      emissive: new THREE.Color(accentColor).multiplyScalar(0.32),
-      emissiveIntensity: 0.18,
-      roughness: 0.26,
+      color: accent.clone(),
+      emissive: accent.clone().multiplyScalar(0.34),
+      emissiveIntensity: 0.2,
+      roughness: 0.22,
       metalness: 0.18,
     }),
   );
-  flag.position.set(0.28, ROAD_SURFACE_Y + 1, 0);
-  markerGroup.add(flag);
+  indicatorPad.position.set(-0.02, ROAD_SURFACE_Y + 0.42, 0);
+  markerGroup.add(indicatorPad);
   return markerGroup;
 }
 
