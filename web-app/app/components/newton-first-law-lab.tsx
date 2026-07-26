@@ -861,11 +861,15 @@ export function NewtonFirstLawLab({
                       resistanceLabel={currentScenario.resistanceLabel}
                     />
                     <div className="motion-stage-overlay is-top-left">
-                      <div className="motion-stage-3d-hud">
-                        <div className="motion-stage-hud-head is-compact">
-                          <span className="motion-stage-mode-pill">3D</span>
-                          <span className="motion-stage-kpi-pill">{tt(currentScenario.shortLabel)}</span>
-                          <span className="motion-stage-kpi-pill">{tt("左拖旋转 · 滚轮缩放")}</span>
+                      <div className="motion-stage-3d-hud newton-stage-3d-hud">
+                        <div className="newton-stage-3d-head">
+                          <span className="motion-stage-kpi-pill newton-stage-3d-surface-pill">
+                            {tt(currentScenario.shortLabel)}
+                          </span>
+                          <span className="newton-stage-3d-divider" aria-hidden="true" />
+                          <span className="newton-stage-3d-hint">
+                            {tt("左拖旋转 · 滚轮缩放")}
+                          </span>
                         </div>
                       </div>
                     </div>

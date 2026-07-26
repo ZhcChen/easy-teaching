@@ -4349,7 +4349,8 @@ html[data-theme="dark"] .force-state-pill.is-active {
 .newton-stage-visual .force-stage-overlay.is-top-left {
   top: 18px;
   left: 18px;
-  width: min(320px, calc(100% - 36px));
+  width: auto;
+  max-width: min(300px, calc(100% - 36px));
 }
 
 .newton-stage-side-rail {
@@ -4395,6 +4396,49 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
 .newton-stage-side-rail .force-stage-result-pill {
   min-width: 0;
+}
+
+.newton-stage-3d-hud {
+  gap: 0;
+  padding: 8px 10px;
+  border-color: rgba(138, 190, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(7, 17, 31, 0.3);
+  box-shadow: 0 10px 22px rgba(3, 8, 18, 0.16);
+  backdrop-filter: blur(10px);
+}
+
+.newton-stage-3d-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.newton-stage-3d-surface-pill {
+  flex: none;
+  min-height: 24px;
+  padding: 0 8px;
+  font-size: 10px;
+}
+
+.newton-stage-3d-divider {
+  width: 4px;
+  height: 4px;
+  flex: none;
+  border-radius: 999px;
+  background: rgba(164, 196, 229, 0.42);
+}
+
+.newton-stage-3d-hint {
+  min-width: 0;
+  color: var(--canvas-copy);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .newton-stage-side-rail .pressure-stage-comparison-card {
@@ -8626,7 +8670,16 @@ html[data-theme="dark"] .resistor-stage-canvas {
   .newton-stage-visual .force-stage-overlay.is-top-left {
     top: 72px;
     left: 12px;
-    width: calc(100% - 24px);
+    width: auto;
+    max-width: calc(100% - 24px);
+  }
+
+  .newton-stage-3d-head {
+    gap: 6px;
+  }
+
+  .newton-stage-3d-hint {
+    font-size: 10px;
   }
 
   .newton-stage-side-rail .pressure-stage-metric-grid {
