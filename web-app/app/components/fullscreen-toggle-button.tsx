@@ -40,30 +40,44 @@ export function FullscreenToggleButton({
 
 function ExpandIcon() {
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M9 4H4v5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M15 4h5v5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M20 15v5h-5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 15v5h5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 9 9 4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="m15 4 5 5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="m20 15-5 5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="m9 20-5-5" strokeLinecap="round" strokeLinejoin="round" />
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      className="h-5 w-5"
+    >
+      <path d="M8 4H4v4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M16 4h4v4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M20 16v4h-4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 16v4h4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9 9L4 4" strokeLinecap="round" />
+      <path d="M15 9l5-5" strokeLinecap="round" />
+      <path d="M9 15l-5 5" strokeLinecap="round" />
+      <path d="M15 15l5 5" strokeLinecap="round" />
     </svg>
   );
 }
 
 function CollapseIcon() {
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M9 9 4 4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 9V4h5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="m15 9 5-5" strokeLinecap="round" strokeLinejoin="round" />
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      className="h-5 w-5"
+    >
+      <path d="M9 4H4v5" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M15 4h5v5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="m9 15-5 5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M20 15v5h-5" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M4 15v5h5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="m15 15 5 5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M15 20h5v-5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 9l5-5" strokeLinecap="round" />
+      <path d="M20 9l-5-5" strokeLinecap="round" />
+      <path d="M4 15l5 5" strokeLinecap="round" />
+      <path d="M20 15l-5 5" strokeLinecap="round" />
     </svg>
   );
 }
