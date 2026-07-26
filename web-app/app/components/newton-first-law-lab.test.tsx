@@ -6,6 +6,12 @@ import { teachingStages } from "../data/teaching-catalog";
 import { LocaleProvider } from "../i18n";
 import { NewtonFirstLawLab } from "./newton-first-law-lab";
 
+vi.mock("./newton-first-law-three-stage", () => ({
+  NewtonFirstLawThreeStage: () => (
+    <div data-testid="newton-three-stage">3D Newton Stage</div>
+  ),
+}));
+
 const topic = (() => {
   const foundTopic = teachingStages
     .flatMap((stage) => stage.subjects)
@@ -35,6 +41,20 @@ function renderLab() {
 describe("NewtonFirstLawLab", () => {
   afterEach(() => {
     vi.useRealTimers();
+    window.localStorage.removeItem("easy-teaching.newton-first-law.view-mode");
+    window.localStorage.removeItem("easy-teaching.newton-first-law.panel-collapsed");
+  });
+
+  it("starts in 2D and can switch to 3D mode", () => {
+    renderLab();
+
+    expect(screen.getByRole("tab", { name: "2D" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "3D" })).toHaveAttribute("aria-selected", "false");
+
+    fireEvent.click(screen.getByRole("tab", { name: "3D" }));
+
+    expect(screen.getByRole("tab", { name: "3D" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByTestId("newton-three-stage")).toBeInTheDocument();
   });
 
   it("enters with the towel surface selected and recording locked", () => {

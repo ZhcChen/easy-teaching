@@ -8,11 +8,13 @@ import { ControlChipGroup } from "./control-chip-group";
 import { ControlPanelSection } from "./control-panel-section";
 import { ControlRange } from "./control-range";
 import { ControlStatusBar } from "./control-status-bar";
+import { NewtonFirstLawThreeStage } from "./newton-first-law-three-stage";
 import {
   DEFAULT_MOTION_CART_SCALE,
   MotionCartAsset,
 } from "./motion-cart-asset";
 import { StatusPill } from "./status-pill";
+import { VisualModeSwitch } from "./visual-mode-switch";
 
 type NewtonFirstLawLabProps = {
   topic: TeachingTopic;
@@ -23,6 +25,7 @@ type NewtonFirstLawLabProps = {
 
 type SurfaceKey = "towel" | "cotton" | "board" | "ideal";
 type ObservationState = "idle" | "observing" | "stable";
+type NewtonViewMode = "2d" | "3d";
 type TimerId = ReturnType<typeof setInterval>;
 
 type SurfacePreset = {
@@ -61,11 +64,28 @@ type SurfaceRecord = {
 };
 
 const PANEL_COLLAPSED_STORAGE_KEY = "easy-teaching.newton-first-law.panel-collapsed";
+const VIEW_MODE_STORAGE_KEY = "easy-teaching.newton-first-law.view-mode";
 const PLAYBACK_TICK_MS = 40;
 const DEFAULT_INITIAL_VELOCITY = 1.6;
 const IDEAL_PREVIEW_SECONDS = 2.8;
 const GRAPH_SAMPLE_COUNT = 64;
 const SURFACE_SEQUENCE: SurfaceKey[] = ["towel", "cotton", "board", "ideal"];
+const NEWTON_VIEW_OPTIONS: ReadonlyArray<{
+  key: NewtonViewMode;
+  label: string;
+  title: string;
+}> = [
+  {
+    key: "2d",
+    label: "2D",
+    title: "2D 解析视图",
+  },
+  {
+    key: "3d",
+    label: "3D",
+    title: "3D 斜面跟随视图",
+  },
+];
 
 const SURFACE_PRESETS: Record<SurfaceKey, SurfacePreset> = {
   towel: {
@@ -145,6 +165,7 @@ export function NewtonFirstLawLab({
 }: NewtonFirstLawLabProps) {
   const { isZh, tt } = useLocale();
   const [isControlPanelCollapsed, setIsControlPanelCollapsed] = useState(false);
+  const [viewMode, setViewMode] = useState<NewtonViewMode>(readStoredNewtonViewMode);
   const [initialVelocity, setInitialVelocity] = useState(DEFAULT_INITIAL_VELOCITY);
   const [surfaceKey, setSurfaceKey] = useState<SurfaceKey>("towel");
   const [observationState, setObservationState] = useState<ObservationState>("idle");
@@ -172,6 +193,14 @@ export function NewtonFirstLawLab({
       isControlPanelCollapsed ? "1" : "0",
     );
   }, [isControlPanelCollapsed]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, viewMode);
+  }, [viewMode]);
 
   useEffect(() => {
     return () => {
@@ -619,7 +648,19 @@ export function NewtonFirstLawLab({
             </div>
           </div>
 
-          <div className="visual-canvas motion-stage-canvas newton-stage-canvas">
+          <div
+            className={
+              viewMode === "3d"
+                ? "visual-canvas motion-stage-canvas newton-stage-canvas is-3d-mode"
+                : "visual-canvas motion-stage-canvas newton-stage-canvas"
+            }
+          >
+            <VisualModeSwitch
+              className="motion-stage-view-switch"
+              value={viewMode}
+              options={NEWTON_VIEW_OPTIONS}
+              onChange={(nextValue) => setViewMode(nextValue as NewtonViewMode)}
+            />
             <div className="visual-grid-layer" />
             <div className="visual-glow visual-glow-a" />
             <div className="visual-glow visual-glow-b" />
@@ -628,6 +669,7 @@ export function NewtonFirstLawLab({
 
             <div className="newton-stage-layout">
               <div className="newton-stage-visual">
+                {viewMode === "2d" ? (
                 <svg
                   viewBox={`0 0 ${SVG_STAGE.width} ${SVG_STAGE.height}`}
                   preserveAspectRatio="xMidYMin meet"
@@ -871,6 +913,34 @@ export function NewtonFirstLawLab({
                 className="motion-stage-graph-point is-secondary"
               />
                 </svg>
+                ) : (
+                  <>
+                    <NewtonFirstLawThreeStage
+                      currentMotion={currentMotion}
+                      observationState={observationState}
+                      physicalDurationSeconds={currentScenario.physicalDurationSeconds}
+                      distanceDomain={trackDistanceDomain}
+                      stopDistanceMeters={currentScenario.stopTimeSeconds === null ? null : currentScenario.distanceMeters}
+                      surfaceKey={surfaceKey}
+                      accentColor={currentScenario.accent}
+                      resistanceLabel={currentScenario.resistanceLabel}
+                    />
+                    <div className="motion-stage-overlay is-top-left">
+                      <div className="motion-stage-3d-hud">
+                        <div className="motion-stage-hud-head is-compact">
+                          <span className="motion-stage-mode-pill">3D</span>
+                          <span className="motion-stage-kpi-pill">{tt(currentScenario.shortLabel)}</span>
+                          <span className="motion-stage-kpi-pill">{tt("左拖旋转 · 滚轮缩放")}</span>
+                          {surfaceKey !== "ideal" ? (
+                            <span className="motion-stage-kpi-pill">{tt("蓝 = 速度 · 橙 = 阻力")}</span>
+                          ) : (
+                            <span className="motion-stage-kpi-pill">{tt("蓝 = 速度 · 阻力≈0")}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               <aside className="newton-stage-side-rail" aria-label={isZh ? "数值信息面板" : "Numerical info panel"}>
@@ -1113,6 +1183,16 @@ function formatDistance(value: number) {
 
 function formatSeconds(value: number) {
   return `${value.toFixed(1).replace(/\.0$/, "")} s`;
+}
+
+function readStoredNewtonViewMode(): NewtonViewMode {
+  if (typeof window === "undefined") {
+    return "2d";
+  }
+
+  return window.localStorage.getItem(VIEW_MODE_STORAGE_KEY) === "3d"
+    ? "3d"
+    : "2d";
 }
 
 function clearPlaybackTimer(timerId: TimerId | null) {
