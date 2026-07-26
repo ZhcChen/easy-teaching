@@ -4325,8 +4325,8 @@ html[data-theme="dark"] .force-state-pill.is-active {
   z-index: 1;
   display: grid;
   align-items: start;
-  grid-template-columns: minmax(0, 1fr) 256px;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) 244px;
+  gap: 10px;
   width: 100%;
   min-height: 0;
   padding: 12px;
@@ -4358,8 +4358,8 @@ html[data-theme="dark"] .force-state-pill.is-active {
   min-width: 0;
   flex-direction: column;
   align-self: start;
-  gap: 8px;
-  width: 256px;
+  gap: 6px;
+  width: 244px;
   padding-top: 0;
 }
 
@@ -4368,7 +4368,7 @@ html[data-theme="dark"] .force-state-pill.is-active {
 }
 
 .newton-stage-brief-card {
-  gap: 6px;
+  gap: 5px;
 }
 
 .newton-stage-brief-head {
@@ -4381,21 +4381,29 @@ html[data-theme="dark"] .force-state-pill.is-active {
 .newton-stage-brief-copy {
   margin: 0;
   color: var(--canvas-copy);
-  font-size: 12px;
-  line-height: 1.55;
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .newton-stage-brief-chips,
 .newton-flow-chip-list {
-  gap: 6px;
+  gap: 5px;
 }
 
 .newton-stage-side-rail .pressure-stage-metric-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
 }
 
 .newton-stage-side-rail .force-stage-result-pill {
   min-width: 0;
+  gap: 3px;
+  padding: 7px 8px;
+  border-radius: 12px;
 }
 
 .newton-stage-3d-hud {
@@ -4443,6 +4451,53 @@ html[data-theme="dark"] .force-state-pill.is-active {
 
 .newton-stage-side-rail .pressure-stage-comparison-card {
   min-width: 0;
+}
+
+.newton-stage-side-rail .force-stage-hud-card,
+.newton-stage-side-rail .force-stage-hud-card.is-tight {
+  gap: 6px;
+  padding: 8px;
+}
+
+.newton-stage-side-rail .force-stage-hud-head {
+  gap: 8px;
+}
+
+.newton-stage-side-rail .force-stage-hud-title {
+  font-size: 13px;
+}
+
+.newton-stage-side-rail .force-stage-chip,
+.newton-stage-side-rail .newton-stage-3d-surface-pill {
+  min-height: 24px;
+  padding: 0 8px;
+  font-size: 10px;
+}
+
+.newton-stage-side-rail .force-stage-result-pill strong {
+  font-size: 13px;
+}
+
+.newton-stage-side-rail .force-stage-result-pill span {
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.newton-stage-side-rail .pressure-stage-bar-list {
+  gap: 8px;
+}
+
+.newton-stage-side-rail .pressure-stage-bar-row {
+  gap: 4px;
+}
+
+.newton-stage-side-rail .pressure-stage-bar-head,
+.newton-stage-side-rail .pressure-stage-bar-head strong {
+  font-size: 11px;
+}
+
+.newton-stage-side-rail .pressure-stage-bar-track {
+  height: 7px;
 }
 
 .newton-stage-ramp {
