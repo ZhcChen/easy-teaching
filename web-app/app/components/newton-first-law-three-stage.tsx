@@ -87,6 +87,7 @@ const CAR_WHEEL_CONTACT_LIFT =
 const CAR_BODY_WIDTH_M = 1.72;
 const CAR_CABIN_WIDTH_M = 1.38;
 const CAR_GLASS_WIDTH_M = 1.06;
+const RAMP_ANGLE = Math.atan2(RAMP_HEIGHT_WORLD, RAMP_RUN_WORLD);
 const RAMP_TRAVEL_DISTANCE_METERS =
   Math.hypot(RAMP_RUN_WORLD, RAMP_HEIGHT_WORLD) / WORLD_UNITS_PER_METER;
 
@@ -269,7 +270,7 @@ export function NewtonFirstLawThreeStage({
       scene.add(rimLight);
 
       scene.add(buildGround(THREE));
-      scene.add(buildRamp(THREE));
+      scene.add(buildRamp(THREE, accentColor));
 
       const trackSurfaceMaterial = buildSurfaceMaterial(THREE, surfaceKey, accentColor);
       const track = buildFlatTrack(THREE, trackSurfaceMaterial);
@@ -651,42 +652,212 @@ function buildGround(THREE: ThreeModule) {
   return ground;
 }
 
-function buildRamp(THREE: ThreeModule) {
-  const shape = new THREE.Shape();
-  shape.moveTo(RAMP_START_X, ROAD_SURFACE_Y + RAMP_HEIGHT_WORLD);
-  shape.lineTo(RAMP_ENTRY_X, ROAD_SURFACE_Y);
-  shape.lineTo(RAMP_ENTRY_X, 0);
-  shape.lineTo(RAMP_START_X, 0);
-  shape.closePath();
+function buildRamp(THREE: ThreeModule, accentColor: string) {
+  const rampGroup = new THREE.Group();
+  const accent = new THREE.Color(accentColor);
+  const supportDepth = ROAD_WIDTH + 0.56;
+  const supportMaterial = new THREE.MeshStandardMaterial({
+    color: 0x1b2536,
+    roughness: 0.76,
+    metalness: 0.12,
+  });
+  const deckMaterial = new THREE.MeshStandardMaterial({
+    color: 0x8d98a4,
+    roughness: 0.34,
+    metalness: 0.46,
+  });
+  const trimMaterial = new THREE.MeshStandardMaterial({
+    color: 0xc1d4e6,
+    emissive: accent.clone().multiplyScalar(0.18),
+    emissiveIntensity: 0.12,
+    roughness: 0.26,
+    metalness: 0.62,
+  });
+  const gateMaterial = new THREE.MeshStandardMaterial({
+    color: 0xf2f5fa,
+    emissive: accent.clone().multiplyScalar(0.22),
+    emissiveIntensity: 0.16,
+    roughness: 0.28,
+    metalness: 0.52,
+  });
+  const braceMaterial = new THREE.MeshStandardMaterial({
+    color: 0x324259,
+    roughness: 0.54,
+    metalness: 0.18,
+  });
+  const rampLength = Math.hypot(RAMP_RUN_WORLD, RAMP_HEIGHT_WORLD);
+  const deckThickness = 0.08;
+  const deckNormalX = -Math.sin(RAMP_ANGLE);
+  const deckNormalY = -Math.cos(RAMP_ANGLE);
 
-  const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth: ROAD_WIDTH,
+  const supportShape = new THREE.Shape();
+  supportShape.moveTo(RAMP_START_X - 0.18, ROAD_SURFACE_Y + RAMP_HEIGHT_WORLD);
+  supportShape.lineTo(RAMP_ENTRY_X + 0.06, ROAD_SURFACE_Y);
+  supportShape.lineTo(RAMP_ENTRY_X + 0.18, 0);
+  supportShape.lineTo(RAMP_START_X - 0.32, 0);
+  supportShape.closePath();
+
+  const supportGeometry = new THREE.ExtrudeGeometry(supportShape, {
+    depth: supportDepth,
     steps: 1,
     bevelEnabled: false,
   });
-  geometry.translate(0, 0, -ROAD_WIDTH / 2);
+  supportGeometry.translate(0, 0, -supportDepth / 2);
+  const supportBody = new THREE.Mesh(supportGeometry, supportMaterial);
+  rampGroup.add(supportBody);
 
-  return new THREE.Mesh(
-    geometry,
-    new THREE.MeshStandardMaterial({
-      color: 0x162335,
-      roughness: 0.72,
-      metalness: 0.12,
-    }),
+  const deckCenterX =
+    (RAMP_START_X + RAMP_ENTRY_X) / 2 + deckNormalX * (deckThickness / 2);
+  const deckCenterY =
+    ROAD_SURFACE_Y +
+    RAMP_HEIGHT_WORLD / 2 +
+    deckNormalY * (deckThickness / 2);
+  const rampDeck = new THREE.Mesh(
+    new THREE.BoxGeometry(rampLength + 0.14, deckThickness, ROAD_WIDTH + 0.26),
+    deckMaterial,
   );
+  rampDeck.position.set(deckCenterX, deckCenterY, 0);
+  rampDeck.rotation.z = -RAMP_ANGLE;
+  rampGroup.add(rampDeck);
+
+  [-1, 1].forEach((direction) => {
+    const sidePlate = new THREE.Mesh(
+      new THREE.BoxGeometry(rampLength + 0.08, 0.14, 0.08),
+      trimMaterial,
+    );
+    sidePlate.position.set(
+      deckCenterX + deckNormalX * 0.06,
+      deckCenterY + deckNormalY * 0.06,
+      direction * (ROAD_WIDTH / 2 + 0.14),
+    );
+    sidePlate.rotation.z = -RAMP_ANGLE;
+    rampGroup.add(sidePlate);
+  });
+
+  const releaseGateX = clamp(
+    RAMP_IDLE_FRONT_X - 0.94,
+    RAMP_START_X + 0.82,
+    RAMP_ENTRY_X - 0.92,
+  );
+  const releaseGateSurfaceY = resolveStageSurfaceY(releaseGateX);
+
+  const gateBase = new THREE.Mesh(
+    new THREE.BoxGeometry(0.68, 0.05, ROAD_WIDTH - 1.18),
+    braceMaterial,
+  );
+  gateBase.position.set(releaseGateX, releaseGateSurfaceY + 0.03, 0);
+  gateBase.rotation.z = -RAMP_ANGLE;
+  rampGroup.add(gateBase);
+
+  [-1, 1].forEach((direction) => {
+    const post = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 0.46, 0.08),
+      gateMaterial,
+    );
+    post.position.set(
+      releaseGateX,
+      releaseGateSurfaceY + 0.26,
+      direction * (ROAD_WIDTH / 2 - 0.66),
+    );
+    rampGroup.add(post);
+  });
+
+  const crossbar = new THREE.Mesh(
+    new THREE.BoxGeometry(0.16, 0.08, ROAD_WIDTH - 1.2),
+    gateMaterial,
+  );
+  crossbar.position.set(releaseGateX - 0.04, releaseGateSurfaceY + 0.48, 0);
+  rampGroup.add(crossbar);
+
+  const latchPanel = new THREE.Mesh(
+    new THREE.BoxGeometry(0.34, 0.18, 0.04),
+    trimMaterial,
+  );
+  latchPanel.position.set(
+    releaseGateX + 0.1,
+    releaseGateSurfaceY + 0.34,
+    ROAD_WIDTH / 2 - 0.64,
+  );
+  latchPanel.rotation.y = -0.3;
+  rampGroup.add(latchPanel);
+
+  const supportXs = [
+    RAMP_START_X + 1.18,
+    RAMP_START_X + 3.52,
+    RAMP_ENTRY_X - 0.9,
+  ] as const;
+  supportXs.forEach((supportX) => {
+    const supportTopY = resolveStageSurfaceY(supportX) - 0.14;
+    const legHeight = Math.max(0.56, supportTopY - 0.02);
+
+    [-1, 1].forEach((direction) => {
+      const leg = new THREE.Mesh(
+        new THREE.BoxGeometry(0.12, legHeight, 0.12),
+        braceMaterial,
+      );
+      leg.position.set(
+        supportX,
+        legHeight / 2,
+        direction * (ROAD_WIDTH / 2 - 0.42),
+      );
+      rampGroup.add(leg);
+    });
+
+    const crossBeam = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 0.12, ROAD_WIDTH - 0.72),
+      braceMaterial,
+    );
+    crossBeam.position.set(supportX, legHeight * 0.62, 0);
+    rampGroup.add(crossBeam);
+  });
+
+  return rampGroup;
 }
 
 function buildFlatTrack(THREE: ThreeModule, material: InstanceType<ThreeModule["MeshStandardMaterial"]>) {
-  const track = new THREE.Mesh(
-    new THREE.BoxGeometry(TRACK_TRAVEL_WORLD + 0.8, ROAD_THICKNESS, ROAD_WIDTH),
+  const trackGroup = new THREE.Group();
+  const trackLength = TRACK_TRAVEL_WORLD + 0.8;
+  const trackCenterX = RAMP_ENTRY_X + trackLength / 2;
+  const baseMaterial = new THREE.MeshStandardMaterial({
+    color: 0x273247,
+    roughness: 0.74,
+    metalness: 0.08,
+  });
+  const frameMaterial = new THREE.MeshStandardMaterial({
+    color: 0x778292,
+    roughness: 0.32,
+    metalness: 0.48,
+  });
+
+  const baseBoard = new THREE.Mesh(
+    new THREE.BoxGeometry(trackLength + 0.18, 0.12, ROAD_WIDTH + 0.46),
+    baseMaterial,
+  );
+  baseBoard.position.set(trackCenterX, 0.06, 0);
+  trackGroup.add(baseBoard);
+
+  const frameBoard = new THREE.Mesh(
+    new THREE.BoxGeometry(trackLength + 0.12, 0.04, ROAD_WIDTH + 0.24),
+    frameMaterial,
+  );
+  frameBoard.position.set(trackCenterX, 0.14, 0);
+  trackGroup.add(frameBoard);
+
+  const surfacePad = new THREE.Mesh(
+    new THREE.BoxGeometry(trackLength, 0.02, ROAD_WIDTH),
     material,
   );
-  track.position.set(
-    RAMP_ENTRY_X + (TRACK_TRAVEL_WORLD + 0.8) / 2,
-    ROAD_THICKNESS / 2,
-    0,
+  surfacePad.position.set(trackCenterX, ROAD_SURFACE_Y - 0.01, 0);
+  trackGroup.add(surfacePad);
+
+  const transitionPlate = new THREE.Mesh(
+    new THREE.BoxGeometry(0.34, 0.04, ROAD_WIDTH + 0.18),
+    frameMaterial,
   );
-  return track;
+  transitionPlate.position.set(RAMP_ENTRY_X + 0.08, 0.14, 0);
+  trackGroup.add(transitionPlate);
+
+  return trackGroup;
 }
 
 function buildSurfaceMaterial(
@@ -793,25 +964,41 @@ function buildSurfaceDetailGroup(
 
 function buildTrackSideRails(THREE: ThreeModule, accentColor: string) {
   const rails = new THREE.Group();
-  const material = new THREE.MeshStandardMaterial({
+  const outerRailMaterial = new THREE.MeshStandardMaterial({
+    color: 0x94a1b2,
+    roughness: 0.28,
+    metalness: 0.54,
+  });
+  const accentRailMaterial = new THREE.MeshStandardMaterial({
     color: new THREE.Color(accentColor),
-    emissive: new THREE.Color(accentColor).multiplyScalar(0.45),
-    emissiveIntensity: 0.38,
-    roughness: 0.34,
-    metalness: 0.22,
+    emissive: new THREE.Color(accentColor).multiplyScalar(0.42),
+    emissiveIntensity: 0.26,
+    roughness: 0.26,
+    metalness: 0.2,
   });
 
   [-1, 1].forEach((direction) => {
-    const rail = new THREE.Mesh(
-      new THREE.BoxGeometry(TRACK_TRAVEL_WORLD + 0.5, 0.03, 0.12),
-      material,
+    const outerRail = new THREE.Mesh(
+      new THREE.BoxGeometry(TRACK_TRAVEL_WORLD + 0.52, 0.12, 0.08),
+      outerRailMaterial,
     );
-    rail.position.set(
+    outerRail.position.set(
       RAMP_ENTRY_X + TRACK_TRAVEL_WORLD / 2,
-      ROAD_SURFACE_Y + 0.04,
-      direction * (ROAD_WIDTH / 2 - 0.1),
+      ROAD_SURFACE_Y + 0.05,
+      direction * (ROAD_WIDTH / 2 + 0.14),
     );
-    rails.add(rail);
+    rails.add(outerRail);
+
+    const innerGuide = new THREE.Mesh(
+      new THREE.BoxGeometry(TRACK_TRAVEL_WORLD + 0.48, 0.02, 0.03),
+      accentRailMaterial,
+    );
+    innerGuide.position.set(
+      RAMP_ENTRY_X + TRACK_TRAVEL_WORLD / 2,
+      ROAD_SURFACE_Y + 0.034,
+      direction * (ROAD_WIDTH / 2 - 0.08),
+    );
+    rails.add(innerGuide);
   });
 
   return rails;
