@@ -48,8 +48,8 @@ const ROAD_THICKNESS = 0.18;
 const ROAD_SURFACE_Y = ROAD_THICKNESS;
 const ROAD_WIDTH = 5.4;
 const TRACK_TRAVEL_WORLD = 13.6;
-const RAMP_RUN_WORLD = 5.2;
-const RAMP_HEIGHT_WORLD = 2.05;
+const RAMP_RUN_WORLD = 6.8;
+const RAMP_HEIGHT_WORLD = 2.42;
 const RAMP_ENTRY_X = 0.2;
 const RAMP_START_X = RAMP_ENTRY_X - RAMP_RUN_WORLD;
 const TRACK_END_X = RAMP_ENTRY_X + TRACK_TRAVEL_WORLD;
@@ -70,19 +70,25 @@ const STAGE_FOCUS_Y = 0.96;
 const CAMERA_TRACK_MIN_X = RAMP_START_X + 0.8;
 const CAMERA_TRACK_MAX_X = TRACK_END_X - 1.2;
 const RAMP_IDLE_FRONT_X = RAMP_START_X + RAMP_RUN_WORLD * 0.74;
-const RAMP_EXIT_FRONT_X = RAMP_ENTRY_X + 0.96;
+const RAMP_RELEASE_MIN_FRONT_X = RAMP_ENTRY_X + 0.56;
 const CAR_FRONT_OFFSET_M = 2.35;
 const CAR_FRONT_OFFSET_WORLD = toCartWorldUnits(CAR_FRONT_OFFSET_M);
 const CAR_WHEEL_RADIUS_M = 0.36;
 const CAR_WHEEL_RADIUS_WORLD = toCartWorldUnits(CAR_WHEEL_RADIUS_M);
+const CAR_WHEEL_X_OFFSETS_M = [1.44, -1.44] as const;
+const CAR_WHEEL_Z_OFFSETS_M = [0.845, -0.845] as const;
 const CAR_WHEEL_CENTER_Y =
   ROAD_SURFACE_Y + CAR_WHEEL_RADIUS_WORLD + toCartWorldUnits(0.01);
+const FRONT_AXLE_OFFSET_WORLD = toCartWorldUnits(CAR_WHEEL_X_OFFSETS_M[0]);
+const REAR_AXLE_OFFSET_WORLD = toCartWorldUnits(CAR_WHEEL_X_OFFSETS_M[1]);
+const CAR_WHEELBASE_WORLD = FRONT_AXLE_OFFSET_WORLD - REAR_AXLE_OFFSET_WORLD;
+const CAR_WHEEL_CONTACT_LIFT =
+  CAR_WHEEL_CENTER_Y - ROAD_SURFACE_Y - CAR_WHEEL_RADIUS_WORLD;
 const CAR_BODY_WIDTH_M = 1.72;
 const CAR_CABIN_WIDTH_M = 1.38;
 const CAR_GLASS_WIDTH_M = 1.06;
-const CAR_WHEEL_X_OFFSETS_M = [1.44, -1.44] as const;
-const CAR_WHEEL_Z_OFFSETS_M = [0.845, -0.845] as const;
-const RAMP_ANGLE = Math.atan2(RAMP_HEIGHT_WORLD, RAMP_RUN_WORLD);
+const RAMP_TRAVEL_DISTANCE_METERS =
+  Math.hypot(RAMP_RUN_WORLD, RAMP_HEIGHT_WORLD) / WORLD_UNITS_PER_METER;
 
 export function NewtonFirstLawThreeStage({
   currentMotion,
@@ -365,22 +371,21 @@ export function NewtonFirstLawThreeStage({
         );
         const flatWorldX = RAMP_ENTRY_X + normalizedFlatProgress * TRACK_TRAVEL_WORLD;
         let visualFrontX = flatWorldX;
-        let visualY = CAR_WHEEL_CENTER_Y;
         let carTilt = 0;
-        let traveledMeters = state.position;
+        let traveledMeters = RAMP_TRAVEL_DISTANCE_METERS + state.position;
         let rampProgress = 0;
 
         if (state.observationState === "idle") {
           visualFrontX = RAMP_IDLE_FRONT_X;
-          visualY = resolveRampWheelCenterY(visualFrontX);
-          carTilt = -RAMP_ANGLE;
           traveledMeters = 0;
         } else if (state.observationState === "observing" && state.time < leadDuration) {
           rampProgress = clamp(state.time / leadDuration, 0, 1);
-          visualFrontX = lerp(RAMP_IDLE_FRONT_X, RAMP_EXIT_FRONT_X, rampProgress);
-          visualY = resolveRampWheelCenterY(visualFrontX);
-          carTilt = lerp(-RAMP_ANGLE, 0, rampProgress);
-          traveledMeters = rampProgress * (RAMP_RUN_WORLD / WORLD_UNITS_PER_METER);
+          const releaseTargetFrontX = Math.max(
+            flatWorldX,
+            RAMP_RELEASE_MIN_FRONT_X,
+          );
+          visualFrontX = lerp(RAMP_IDLE_FRONT_X, releaseTargetFrontX, rampProgress);
+          traveledMeters = rampProgress * RAMP_TRAVEL_DISTANCE_METERS;
         }
 
         const dynamics = cameraDynamicsRef.current;
@@ -402,7 +407,10 @@ export function NewtonFirstLawThreeStage({
         }
 
         const carCenterX = visualFrontX - CAR_FRONT_OFFSET_WORLD;
-        carRig.group.position.set(carCenterX, visualY, 0);
+        const carPose = resolveCarPose(visualFrontX);
+        const carReferenceY = carPose.midWheelCenterY;
+        carTilt = carPose.tilt;
+        carRig.group.position.set(carCenterX, carPose.groupOffsetY, 0);
         carRig.group.rotation.z += (carTilt - carRig.group.rotation.z) * 0.12;
         const wheelAngle = traveledMeters / CAR_WHEEL_RADIUS_M;
         carRig.wheelRotors.forEach((wheelRotor) => {
@@ -411,12 +419,7 @@ export function NewtonFirstLawThreeStage({
 
         const speedRatioTarget = clamp(state.velocity / 2.8, 0, 1);
         const brakeBiasTarget = clamp(-dynamics.acceleration / 4.8, 0, 1);
-        const rampBlendTarget =
-          state.observationState === "idle"
-            ? 1
-            : state.observationState === "observing" && state.time < leadDuration
-              ? 1 - rampProgress
-              : 0;
+        const rampBlendTarget = carPose.rampInfluence;
         dynamics.speedRatio += (speedRatioTarget - dynamics.speedRatio) * 0.08;
         dynamics.brakeBias += (brakeBiasTarget - dynamics.brakeBias) * 0.12;
         dynamics.rampBlend += (rampBlendTarget - dynamics.rampBlend) * 0.12;
@@ -485,9 +488,7 @@ export function NewtonFirstLawThreeStage({
         trailMaterial.color.set(surfaceKey === "ideal" ? 0x67c6ff : 0x9ed8ff);
         updateTrailLinePositions(trailPositions, {
           frontX: visualFrontX,
-          isOnRamp:
-            state.observationState === "idle" ||
-            (state.observationState === "observing" && state.time < leadDuration),
+          isOnRamp: carPose.rampInfluence > 0.01,
           reveal: dynamics.trailReveal,
         });
         trailGeometry.attributes.position.needsUpdate = true;
@@ -497,7 +498,7 @@ export function NewtonFirstLawThreeStage({
         if (velocityArrow.visible) {
           velocityArrow.position.set(
             carCenterX + CAR_FRONT_OFFSET_WORLD - 0.46,
-            visualY + 0.48,
+            carReferenceY + 0.48,
             -(ROAD_WIDTH / 2 - 0.72),
           );
           velocityArrow.setDirection(new THREE.Vector3(1, 0, 0));
@@ -519,7 +520,7 @@ export function NewtonFirstLawThreeStage({
         if (frictionArrow.visible) {
           frictionArrow.position.set(
             carCenterX + CAR_FRONT_OFFSET_WORLD - 0.46,
-            visualY + 0.92,
+            carReferenceY + 0.92,
             ROAD_WIDTH / 2 - 0.72,
           );
           frictionArrow.setDirection(new THREE.Vector3(-1, 0, 0));
@@ -549,6 +550,7 @@ export function NewtonFirstLawThreeStage({
         lookAtTarget.y +=
           (
             STAGE_FOCUS_Y +
+            carPose.groupOffsetY * 0.46 +
             Math.abs(carTilt) * 0.08 +
             dynamics.rampBlend * 0.26 -
             dynamics.brakeBias * 0.06 -
@@ -561,6 +563,7 @@ export function NewtonFirstLawThreeStage({
         const baseOffsetY =
           4.18 +
           (zoomRatio - 1) * 1.74 +
+          carPose.groupOffsetY * 0.28 +
           Math.abs(carTilt) * 0.24 +
           dynamics.rampBlend * 0.28 -
           dynamics.brakeBias * 0.14;
@@ -1955,15 +1958,15 @@ function updateTrailLinePositions(
   },
 ) {
   const startX = RAMP_IDLE_FRONT_X;
-  const startY = resolveRampSurfaceY(startX) + 0.08;
+  const startY = resolveStageSurfaceY(startX) + 0.08;
   const exitX = RAMP_ENTRY_X;
   const exitY = ROAD_SURFACE_Y + 0.08;
   const currentY =
-    (state.isOnRamp ? resolveRampSurfaceY(state.frontX) : ROAD_SURFACE_Y) + 0.08;
+    (state.isOnRamp ? resolveStageSurfaceY(state.frontX) : ROAD_SURFACE_Y) + 0.08;
 
   if (state.isOnRamp) {
     const midX = lerp(startX, state.frontX, 0.5);
-    const midY = resolveRampSurfaceY(midX) + 0.08;
+    const midY = resolveStageSurfaceY(midX) + 0.08;
     writeTrailPoint(target, 0, startX, startY, 0);
     writeTrailPoint(target, 1, midX, midY, 0);
     writeTrailPoint(target, 2, state.frontX, currentY, 0);
@@ -2012,13 +2015,49 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-function resolveRampSurfaceY(frontX: number) {
-  const normalizedRampX = clamp((frontX - RAMP_START_X) / RAMP_RUN_WORLD, 0, 1);
+function resolveStageSurfaceY(x: number) {
+  if (x <= RAMP_START_X) {
+    return ROAD_SURFACE_Y + RAMP_HEIGHT_WORLD;
+  }
+
+  if (x >= RAMP_ENTRY_X) {
+    return ROAD_SURFACE_Y;
+  }
+
+  const normalizedRampX = (x - RAMP_START_X) / RAMP_RUN_WORLD;
   return ROAD_SURFACE_Y + RAMP_HEIGHT_WORLD * (1 - normalizedRampX);
 }
 
-function resolveRampWheelCenterY(frontX: number) {
-  return resolveRampSurfaceY(frontX) + CAR_WHEEL_RADIUS_WORLD + 0.02;
+function resolveCarPose(frontX: number) {
+  const carCenterX = frontX - CAR_FRONT_OFFSET_WORLD;
+  const frontAxleX = carCenterX + FRONT_AXLE_OFFSET_WORLD;
+  const rearAxleX = carCenterX + REAR_AXLE_OFFSET_WORLD;
+  const frontSurfaceY = resolveStageSurfaceY(frontAxleX);
+  const rearSurfaceY = resolveStageSurfaceY(rearAxleX);
+  const frontWheelCenterY =
+    frontSurfaceY + CAR_WHEEL_RADIUS_WORLD + CAR_WHEEL_CONTACT_LIFT;
+  const rearWheelCenterY =
+    rearSurfaceY + CAR_WHEEL_RADIUS_WORLD + CAR_WHEEL_CONTACT_LIFT;
+  const midWheelCenterY = (frontWheelCenterY + rearWheelCenterY) / 2;
+
+  return {
+    frontAxleX,
+    rearAxleX,
+    frontWheelCenterY,
+    rearWheelCenterY,
+    midWheelCenterY,
+    groupOffsetY: midWheelCenterY - CAR_WHEEL_CENTER_Y,
+    tilt: Math.atan2(
+      frontWheelCenterY - rearWheelCenterY,
+      CAR_WHEELBASE_WORLD,
+    ),
+    rampInfluence: clamp(
+      (Math.max(frontSurfaceY, rearSurfaceY) - ROAD_SURFACE_Y) /
+        RAMP_HEIGHT_WORLD,
+      0,
+      1,
+    ),
+  };
 }
 
 function toCartWorldUnits(value: number) {
