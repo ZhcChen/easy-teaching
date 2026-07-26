@@ -55,9 +55,9 @@ const RAMP_START_X = RAMP_ENTRY_X - RAMP_RUN_WORLD;
 const TRACK_END_X = RAMP_ENTRY_X + TRACK_TRAVEL_WORLD;
 const TRACK_CENTER_X = (RAMP_ENTRY_X + TRACK_END_X) / 2;
 const RELEASE_LEAD_SECONDS = 0.34;
-const DEFAULT_CAMERA_ZOOM_RATIO = 1.3;
-const MIN_CAMERA_ZOOM_RATIO = 0.92;
-const MAX_CAMERA_ZOOM_RATIO = 2.1;
+const DEFAULT_CAMERA_ZOOM_RATIO = 1.14;
+const MIN_CAMERA_ZOOM_RATIO = 0.78;
+const MAX_CAMERA_ZOOM_RATIO = 1.86;
 const CAMERA_WHEEL_STEP = 0.0012;
 const CAMERA_DRAG_ROTATION_STEP = 0.005;
 const CAMERA_ORBIT_DAMPING = 0.14;
@@ -66,23 +66,22 @@ const MAX_CAMERA_PITCH_OFFSET = 0.28;
 const MIN_CAMERA_ELEVATION = 0.04;
 const MAX_CAMERA_ELEVATION = 0.72;
 const CART_MODEL_SCALE = 0.42;
-const STAGE_FOCUS_X = RAMP_ENTRY_X + TRACK_TRAVEL_WORLD * 0.42;
 const STAGE_FOCUS_Y = 0.96;
-const CAMERA_TRACK_MIN_X = STAGE_FOCUS_X - 2.8;
-const CAMERA_TRACK_MAX_X = STAGE_FOCUS_X + 3.2;
+const CAMERA_TRACK_MIN_X = RAMP_START_X + 0.8;
+const CAMERA_TRACK_MAX_X = TRACK_END_X - 1.2;
 const RAMP_IDLE_FRONT_X = RAMP_START_X + RAMP_RUN_WORLD * 0.74;
 const RAMP_EXIT_FRONT_X = RAMP_ENTRY_X + 0.96;
-const CAR_FRONT_OFFSET_M = 2.18;
+const CAR_FRONT_OFFSET_M = 2.35;
 const CAR_FRONT_OFFSET_WORLD = toCartWorldUnits(CAR_FRONT_OFFSET_M);
-const CAR_WHEEL_RADIUS_M = 0.34;
+const CAR_WHEEL_RADIUS_M = 0.36;
 const CAR_WHEEL_RADIUS_WORLD = toCartWorldUnits(CAR_WHEEL_RADIUS_M);
 const CAR_WHEEL_CENTER_Y =
   ROAD_SURFACE_Y + CAR_WHEEL_RADIUS_WORLD + toCartWorldUnits(0.01);
-const CAR_BODY_WIDTH_M = 1.76;
+const CAR_BODY_WIDTH_M = 1.72;
 const CAR_CABIN_WIDTH_M = 1.38;
-const CAR_GLASS_WIDTH_M = 1.02;
-const CAR_WHEEL_X_OFFSETS_M = [1.42, -1.38] as const;
-const CAR_WHEEL_Z_OFFSETS_M = [0.85, -0.85] as const;
+const CAR_GLASS_WIDTH_M = 1.06;
+const CAR_WHEEL_X_OFFSETS_M = [1.44, -1.44] as const;
+const CAR_WHEEL_Z_OFFSETS_M = [0.845, -0.845] as const;
 const RAMP_ANGLE = Math.atan2(RAMP_HEIGHT_WORLD, RAMP_RUN_WORLD);
 
 export function NewtonFirstLawThreeStage({
@@ -250,7 +249,7 @@ export function NewtonFirstLawThreeStage({
       scene.fog = new THREE.FogExp2(0x07111f, 0.018);
 
       const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 300);
-      camera.position.set(-8.6, 5.2, 11.4);
+      camera.position.set(-6.8, 4.2, 8.8);
 
       const ambientLight = new THREE.HemisphereLight(0xcbe5ff, 0x08101c, 2.2);
       scene.add(ambientLight);
@@ -276,7 +275,7 @@ export function NewtonFirstLawThreeStage({
       const stopMarker = buildStopMarker(THREE, accentColor);
       scene.add(stopMarker);
 
-      const carRig = buildSedanRig(THREE);
+      const carRig = buildModel3Rig(THREE);
       scene.add(carRig.group);
 
       const trailMaterial = new THREE.LineBasicMaterial({
@@ -320,7 +319,7 @@ export function NewtonFirstLawThreeStage({
       hostElement.addEventListener("pointercancel", handlePointerUp);
       hostElement.addEventListener("lostpointercapture", stopDragging);
 
-      const lookAtTarget = new THREE.Vector3(0, 1.08, 0);
+      const lookAtTarget = new THREE.Vector3(0, 1.12, 0);
       const desiredCameraPosition = new THREE.Vector3();
       const orbitOffset = new THREE.Vector3();
 
@@ -541,9 +540,9 @@ export function NewtonFirstLawThreeStage({
           (orbitState.targetPitchOffset - orbitState.pitchOffset) * CAMERA_ORBIT_DAMPING;
 
         const desiredLookAhead =
-          2.38 +
-          dynamics.speedRatio * 1.92 +
-          dynamics.rampBlend * 0.42 -
+          2.1 +
+          dynamics.speedRatio * 1.78 +
+          dynamics.rampBlend * 0.18 -
           dynamics.brakeBias * 0.4;
         const desiredLookAtX = clamp(carCenterX + desiredLookAhead, CAMERA_TRACK_MIN_X, CAMERA_TRACK_MAX_X);
         lookAtTarget.x += (desiredLookAtX - lookAtTarget.x) * 0.12;
@@ -558,15 +557,15 @@ export function NewtonFirstLawThreeStage({
 
         const zoomRatio = cameraZoomRef.current;
         const baseOffsetX =
-          -(11.2 * zoomRatio + dynamics.speedRatio * 1.4 - dynamics.rampBlend * 0.7);
+          -(9.4 * zoomRatio + dynamics.speedRatio * 1.16 - dynamics.rampBlend * 0.84);
         const baseOffsetY =
-          4.95 +
-          (zoomRatio - 1) * 2.05 +
-          Math.abs(carTilt) * 0.36 +
-          dynamics.rampBlend * 0.62 -
+          4.18 +
+          (zoomRatio - 1) * 1.74 +
+          Math.abs(carTilt) * 0.24 +
+          dynamics.rampBlend * 0.28 -
           dynamics.brakeBias * 0.14;
         const baseOffsetZ =
-          10.8 * zoomRatio + dynamics.speedRatio * 0.54 + dynamics.rampBlend * 0.32;
+          8.92 * zoomRatio + dynamics.speedRatio * 0.42 + dynamics.rampBlend * 0.14;
         const baseElevation = Math.atan2(
           baseOffsetY,
           Math.hypot(baseOffsetX, baseOffsetZ),
@@ -868,7 +867,7 @@ function buildStopMarker(THREE: ThreeModule, accentColor: string) {
   return markerGroup;
 }
 
-function buildSedanRig(THREE: ThreeModule) {
+function buildModel3Rig(THREE: ThreeModule) {
   const carGroup = new THREE.Group();
   const bodyGroup = new THREE.Group();
   const wheelRotors: Array<any> = [];
@@ -876,14 +875,16 @@ function buildSedanRig(THREE: ThreeModule) {
   const bodyMaterial = new THREE.MeshStandardMaterial({
     color: new THREE.Color(MOTION_CART_COLORS.body),
     emissive: new THREE.Color(MOTION_CART_COLORS.body).multiplyScalar(0.08),
-    emissiveIntensity: 0.34,
+    emissiveIntensity: 0.42,
     roughness: 0.42,
     metalness: 0.18,
   });
   const bodyHighlightMaterial = new THREE.MeshStandardMaterial({
-    color: new THREE.Color(MOTION_CART_COLORS.body).offsetHSL(0, 0.02, 0.08),
+    color: new THREE.Color(MOTION_CART_COLORS.body).offsetHSL(0, 0.04, 0.08),
+    emissive: new THREE.Color(MOTION_CART_COLORS.body).multiplyScalar(0.1),
+    emissiveIntensity: 0.28,
     roughness: 0.3,
-    metalness: 0.22,
+    metalness: 0.24,
   });
   const roofMaterial = new THREE.MeshStandardMaterial({
     color: new THREE.Color(MOTION_CART_COLORS.roof),
@@ -895,26 +896,40 @@ function buildSedanRig(THREE: ThreeModule) {
     roughness: 0.08,
     metalness: 0.12,
     transparent: true,
-    opacity: 0.58,
+    opacity: 0.56,
+  });
+  const glassTintMaterial = new THREE.MeshStandardMaterial({
+    color: 0x172334,
+    roughness: 0.05,
+    metalness: 0.18,
+    transparent: true,
+    opacity: 0.72,
+  });
+  const accentMaterial = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(MOTION_CART_COLORS.accent),
+    emissive: new THREE.Color(MOTION_CART_COLORS.accent),
+    emissiveIntensity: 0.18,
+    roughness: 0.34,
+    metalness: 0.16,
   });
   const trimMaterial = new THREE.MeshStandardMaterial({
     color: new THREE.Color(MOTION_CART_COLORS.trim),
     roughness: 0.34,
-    metalness: 0.26,
+    metalness: 0.28,
   });
   const lampMaterial = new THREE.MeshStandardMaterial({
     color: new THREE.Color(MOTION_CART_COLORS.lamp),
     emissive: new THREE.Color(MOTION_CART_COLORS.lamp),
-    emissiveIntensity: 0.32,
-    roughness: 0.24,
+    emissiveIntensity: 0.4,
+    roughness: 0.26,
     metalness: 0.08,
   });
-  const rearLampMaterial = new THREE.MeshStandardMaterial({
-    color: 0xff8a78,
-    emissive: 0xff4b3a,
-    emissiveIntensity: 0.4,
-    roughness: 0.24,
-    metalness: 0.08,
+  const lampLensMaterial = new THREE.MeshStandardMaterial({
+    color: 0xf4fbff,
+    emissive: 0xd8f2ff,
+    emissiveIntensity: 0.24,
+    roughness: 0.18,
+    metalness: 0.1,
     transparent: true,
     opacity: 0.92,
   });
@@ -923,96 +938,495 @@ function buildSedanRig(THREE: ThreeModule) {
     roughness: 0.88,
     metalness: 0.08,
   });
+  const tireTreadMaterial = new THREE.MeshStandardMaterial({
+    color: 0x515b68,
+    roughness: 0.74,
+    metalness: 0.12,
+  });
+  const wheelInnerMaterial = new THREE.MeshStandardMaterial({
+    color: 0x1c2430,
+    roughness: 0.48,
+    metalness: 0.2,
+  });
   const rimMaterial = new THREE.MeshStandardMaterial({
     color: new THREE.Color(MOTION_CART_COLORS.rim),
-    roughness: 0.34,
+    roughness: 0.38,
+    metalness: 0.44,
+  });
+  const rimShadowMaterial = new THREE.MeshStandardMaterial({
+    color: 0x8f98a6,
+    roughness: 0.42,
     metalness: 0.58,
+  });
+  const spokeFaceMaterial = new THREE.MeshStandardMaterial({
+    color: 0xe9eef7,
+    roughness: 0.24,
+    metalness: 0.78,
+  });
+  const windowTrimMaterial = new THREE.MeshStandardMaterial({
+    color: 0xd8e1eb,
+    roughness: 0.26,
+    metalness: 0.52,
+  });
+  const darkTrimMaterial = new THREE.MeshStandardMaterial({
+    color: 0x131b27,
+    roughness: 0.54,
+    metalness: 0.18,
+  });
+  const mirrorMaterial = new THREE.MeshStandardMaterial({
+    color: 0x1b2430,
+    roughness: 0.38,
+    metalness: 0.24,
+  });
+  const brakeDiscMaterial = new THREE.MeshStandardMaterial({
+    color: 0xb6c0c8,
+    roughness: 0.32,
+    metalness: 0.74,
+  });
+  const brakeCaliperMaterial = new THREE.MeshStandardMaterial({
+    color: 0xd6dce6,
+    roughness: 0.26,
+    metalness: 0.34,
+  });
+  const lugMaterial = new THREE.MeshStandardMaterial({
+    color: 0xf1f5fb,
+    roughness: 0.24,
+    metalness: 0.72,
+  });
+  const centerCapMaterial = new THREE.MeshStandardMaterial({
+    color: 0xc8d0db,
+    roughness: 0.26,
+    metalness: 0.64,
+  });
+  const rearLampMaterial = new THREE.MeshStandardMaterial({
+    color: 0xff8a78,
+    emissive: 0xff4b3a,
+    emissiveIntensity: 0.56,
+    roughness: 0.24,
+    metalness: 0.08,
+    transparent: true,
+    opacity: 0.92,
   });
 
   const bodyShell = new THREE.Mesh(
-    createCenteredExtrudedGeometry(THREE, createSedanBodyShape(THREE), CAR_BODY_WIDTH_M, {
+    createCenteredExtrudedGeometry(THREE, createModel3BodyShape(THREE), CAR_BODY_WIDTH_M, {
       bevelSize: toCartWorldUnits(0.03),
-      bevelThickness: toCartWorldUnits(0.025),
+      bevelThickness: toCartWorldUnits(0.024),
     }),
     bodyMaterial,
   );
   bodyGroup.add(bodyShell);
 
+  const hoodNose = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.42),
+      toCartWorldUnits(0.16),
+      toCartWorldUnits(1.18),
+    ),
+    bodyMaterial,
+  );
+  hoodNose.position.set(toCartWorldUnits(1.98), toCartWorldUnits(0.92), 0);
+  hoodNose.rotation.z = -0.12;
+  bodyGroup.add(hoodNose);
+
+  const hoodSurface = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(1.48),
+      toCartWorldUnits(0.05),
+      toCartWorldUnits(0.94),
+    ),
+    bodyHighlightMaterial,
+  );
+  hoodSurface.position.set(toCartWorldUnits(1.16), toCartWorldUnits(1.02), 0);
+  hoodSurface.rotation.z = -0.08;
+  bodyGroup.add(hoodSurface);
+
+  const frunkSeam = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.7),
+      toCartWorldUnits(0.016),
+      toCartWorldUnits(0.02),
+    ),
+    trimMaterial,
+  );
+  frunkSeam.position.set(toCartWorldUnits(1.26), toCartWorldUnits(0.97), 0);
+  frunkSeam.rotation.z = -0.08;
+  bodyGroup.add(frunkSeam);
+
+  const rearDeck = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.6),
+      toCartWorldUnits(0.16),
+      toCartWorldUnits(1.16),
+    ),
+    bodyMaterial,
+  );
+  rearDeck.position.set(toCartWorldUnits(-1.72), toCartWorldUnits(0.96), 0);
+  rearDeck.rotation.z = 0.12;
+  bodyGroup.add(rearDeck);
+
+  const trunkSurface = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.96),
+      toCartWorldUnits(0.05),
+      toCartWorldUnits(0.9),
+    ),
+    bodyHighlightMaterial,
+  );
+  trunkSurface.position.set(toCartWorldUnits(-1.34), toCartWorldUnits(1.01), 0);
+  trunkSurface.rotation.z = 0.04;
+  bodyGroup.add(trunkSurface);
+
   const cabinShell = new THREE.Mesh(
-    createCenteredExtrudedGeometry(THREE, createSedanCabinShape(THREE), CAR_CABIN_WIDTH_M, {
-      bevelSize: toCartWorldUnits(0.02),
-      bevelThickness: toCartWorldUnits(0.02),
+    createCenteredExtrudedGeometry(THREE, createModel3CabinShape(THREE), CAR_CABIN_WIDTH_M, {
+      bevelSize: toCartWorldUnits(0.025),
+      bevelThickness: toCartWorldUnits(0.025),
     }),
     roofMaterial,
   );
   bodyGroup.add(cabinShell);
 
   const glassShell = new THREE.Mesh(
-    createCenteredExtrudedGeometry(THREE, createSedanGlassShape(THREE), CAR_GLASS_WIDTH_M, {
-      bevelSize: toCartWorldUnits(0.016),
-      bevelThickness: toCartWorldUnits(0.016),
+    createCenteredExtrudedGeometry(THREE, createModel3GlassShape(THREE), CAR_GLASS_WIDTH_M, {
+      bevelSize: toCartWorldUnits(0.02),
+      bevelThickness: toCartWorldUnits(0.02),
     }),
     glassMaterial,
   );
   glassShell.position.y = toCartWorldUnits(0.02);
   bodyGroup.add(glassShell);
 
-  const hoodSurface = new THREE.Mesh(
-    new THREE.BoxGeometry(toCartWorldUnits(1.5), toCartWorldUnits(0.05), toCartWorldUnits(0.98)),
-    bodyHighlightMaterial,
+  const windshield = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.12),
+      toCartWorldUnits(0.52),
+      toCartWorldUnits(0.94),
+    ),
+    glassTintMaterial,
   );
-  hoodSurface.position.set(toCartWorldUnits(1.08), toCartWorldUnits(1.01), 0);
-  hoodSurface.rotation.z = -0.08;
-  bodyGroup.add(hoodSurface);
+  windshield.position.set(toCartWorldUnits(0.96), toCartWorldUnits(1.18), 0);
+  windshield.rotation.z = -0.72;
+  bodyGroup.add(windshield);
 
-  const trunkSurface = new THREE.Mesh(
-    new THREE.BoxGeometry(toCartWorldUnits(0.84), toCartWorldUnits(0.05), toCartWorldUnits(0.94)),
-    bodyHighlightMaterial,
+  const rearGlass = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.12),
+      toCartWorldUnits(0.48),
+      toCartWorldUnits(0.86),
+    ),
+    glassTintMaterial,
   );
-  trunkSurface.position.set(toCartWorldUnits(-1.28), toCartWorldUnits(0.98), 0);
-  trunkSurface.rotation.z = 0.04;
-  bodyGroup.add(trunkSurface);
+  rearGlass.position.set(toCartWorldUnits(-0.78), toCartWorldUnits(1.15), 0);
+  rearGlass.rotation.z = 0.64;
+  bodyGroup.add(rearGlass);
+
+  const panoramicRoof = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(1.08),
+      toCartWorldUnits(0.035),
+      toCartWorldUnits(0.78),
+    ),
+    mirrorMaterial,
+  );
+  panoramicRoof.position.set(toCartWorldUnits(0.02), toCartWorldUnits(1.34), 0);
+  panoramicRoof.rotation.z = -0.06;
+  bodyGroup.add(panoramicRoof);
+
+  const bPillar = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.06),
+      toCartWorldUnits(0.42),
+      toCartWorldUnits(CAR_GLASS_WIDTH_M * 0.9),
+    ),
+    darkTrimMaterial,
+  );
+  bPillar.position.set(toCartWorldUnits(-0.14), toCartWorldUnits(1.22), 0);
+  bodyGroup.add(bPillar);
+
+  const sideFeatureZ = toCartWorldUnits(CAR_BODY_WIDTH_M / 2 - 0.025);
 
   const accentStrip = new THREE.Mesh(
-    new THREE.BoxGeometry(toCartWorldUnits(2.34), toCartWorldUnits(0.035), toCartWorldUnits(0.02)),
-    trimMaterial,
+    new THREE.BoxGeometry(
+      toCartWorldUnits(2.48),
+      toCartWorldUnits(0.04),
+      toCartWorldUnits(0.02),
+    ),
+    accentMaterial,
   );
-  accentStrip.position.set(
-    toCartWorldUnits(0),
-    toCartWorldUnits(0.92),
-    toCartWorldUnits(CAR_BODY_WIDTH_M / 2 - 0.02),
-  );
+  accentStrip.position.set(toCartWorldUnits(0), toCartWorldUnits(0.98), sideFeatureZ);
   bodyGroup.add(accentStrip);
+
   const accentStripMirror = accentStrip.clone();
   accentStripMirror.position.z *= -1;
   bodyGroup.add(accentStripMirror);
 
+  const frontDoorSeam = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.025),
+      toCartWorldUnits(0.44),
+      toCartWorldUnits(0.02),
+    ),
+    trimMaterial,
+  );
+  frontDoorSeam.position.set(toCartWorldUnits(0.4), toCartWorldUnits(0.88), sideFeatureZ);
+  bodyGroup.add(frontDoorSeam);
+
+  const frontDoorSeamMirror = frontDoorSeam.clone();
+  frontDoorSeamMirror.position.z *= -1;
+  bodyGroup.add(frontDoorSeamMirror);
+
+  const rearDoorSeam = frontDoorSeam.clone();
+  rearDoorSeam.position.x = toCartWorldUnits(-0.62);
+  bodyGroup.add(rearDoorSeam);
+
+  const rearDoorSeamMirror = rearDoorSeam.clone();
+  rearDoorSeamMirror.position.z *= -1;
+  bodyGroup.add(rearDoorSeamMirror);
+
+  const doorHandleGeometry = new THREE.BoxGeometry(
+    toCartWorldUnits(0.14),
+    toCartWorldUnits(0.025),
+    toCartWorldUnits(0.02),
+  );
+  [
+    { x: 0.62, y: 0.94 },
+    { x: -0.32, y: 0.94 },
+  ].forEach(({ x, y }) => {
+    const doorHandle = new THREE.Mesh(doorHandleGeometry, accentMaterial);
+    doorHandle.position.set(toCartWorldUnits(x), toCartWorldUnits(y), sideFeatureZ);
+    bodyGroup.add(doorHandle);
+
+    const doorHandleMirror = doorHandle.clone();
+    doorHandleMirror.position.z *= -1;
+    bodyGroup.add(doorHandleMirror);
+  });
+
+  const cameraRepeater = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.09),
+      toCartWorldUnits(0.045),
+      toCartWorldUnits(0.02),
+    ),
+    mirrorMaterial,
+  );
+  cameraRepeater.position.set(toCartWorldUnits(1.04), toCartWorldUnits(0.99), sideFeatureZ);
+  bodyGroup.add(cameraRepeater);
+
+  const cameraRepeaterMirror = cameraRepeater.clone();
+  cameraRepeaterMirror.position.z *= -1;
+  bodyGroup.add(cameraRepeaterMirror);
+
+  const frontLowerFascia = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.18),
+      toCartWorldUnits(0.18),
+      toCartWorldUnits(1.06),
+    ),
+    darkTrimMaterial,
+  );
+  frontLowerFascia.position.set(toCartWorldUnits(2.16), toCartWorldUnits(0.52), 0);
+  bodyGroup.add(frontLowerFascia);
+
+  const frontIntake = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.08),
+      toCartWorldUnits(0.12),
+      toCartWorldUnits(0.76),
+    ),
+    mirrorMaterial,
+  );
+  frontIntake.position.set(toCartWorldUnits(2.25), toCartWorldUnits(0.56), 0);
+  bodyGroup.add(frontIntake);
+
+  const frontAperture = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.06),
+      toCartWorldUnits(0.08),
+      toCartWorldUnits(0.46),
+    ),
+    mirrorMaterial,
+  );
+  frontAperture.position.set(toCartWorldUnits(2.28), toCartWorldUnits(0.84), 0);
+  bodyGroup.add(frontAperture);
+
+  const frontBadge = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.03),
+      toCartWorldUnits(0.12),
+      toCartWorldUnits(0.04),
+    ),
+    windowTrimMaterial,
+  );
+  frontBadge.position.set(toCartWorldUnits(2.17), toCartWorldUnits(0.98), 0);
+  frontBadge.rotation.z = 0.08;
+  bodyGroup.add(frontBadge);
+
+  const rearDiffuser = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.2),
+      toCartWorldUnits(0.18),
+      toCartWorldUnits(0.98),
+    ),
+    darkTrimMaterial,
+  );
+  rearDiffuser.position.set(toCartWorldUnits(-2.16), toCartWorldUnits(0.54), 0);
+  bodyGroup.add(rearDiffuser);
+
+  const trunkLip = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.16),
+      toCartWorldUnits(0.04),
+      toCartWorldUnits(0.88),
+    ),
+    bodyHighlightMaterial,
+  );
+  trunkLip.position.set(toCartWorldUnits(-2.05), toCartWorldUnits(1), 0);
+  bodyGroup.add(trunkLip);
+
   const headLamp = new THREE.Mesh(
-    new THREE.BoxGeometry(toCartWorldUnits(0.22), toCartWorldUnits(0.07), toCartWorldUnits(0.26)),
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.22),
+      toCartWorldUnits(0.07),
+      toCartWorldUnits(0.28),
+    ),
     lampMaterial,
   );
-  headLamp.position.set(toCartWorldUnits(2.04), toCartWorldUnits(0.9), toCartWorldUnits(0.54));
-  headLamp.rotation.y = -0.28;
+  headLamp.position.set(toCartWorldUnits(2.04), toCartWorldUnits(0.92), toCartWorldUnits(0.54));
+  headLamp.rotation.y = -0.36;
   bodyGroup.add(headLamp);
+
   const headLampMirror = headLamp.clone();
   headLampMirror.position.z *= -1;
   headLampMirror.rotation.y *= -1;
   bodyGroup.add(headLampMirror);
 
+  const headLampSide = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.08),
+      toCartWorldUnits(0.07),
+      toCartWorldUnits(0.22),
+    ),
+    lampMaterial,
+  );
+  headLampSide.position.set(toCartWorldUnits(1.9), toCartWorldUnits(0.9), toCartWorldUnits(0.71));
+  bodyGroup.add(headLampSide);
+
+  const headLampSideMirror = headLampSide.clone();
+  headLampSideMirror.position.z *= -1;
+  bodyGroup.add(headLampSideMirror);
+
+  const headLampBrow = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.24),
+      toCartWorldUnits(0.022),
+      toCartWorldUnits(0.16),
+    ),
+    lampLensMaterial,
+  );
+  headLampBrow.position.set(toCartWorldUnits(2.02), toCartWorldUnits(0.99), toCartWorldUnits(0.58));
+  headLampBrow.rotation.y = -0.24;
+  bodyGroup.add(headLampBrow);
+
+  const headLampBrowMirror = headLampBrow.clone();
+  headLampBrowMirror.position.z *= -1;
+  headLampBrowMirror.rotation.y *= -1;
+  bodyGroup.add(headLampBrowMirror);
+
   const rearLamp = new THREE.Mesh(
-    new THREE.BoxGeometry(toCartWorldUnits(0.16), toCartWorldUnits(0.16), toCartWorldUnits(0.28)),
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.14),
+      toCartWorldUnits(0.16),
+      toCartWorldUnits(0.3),
+    ),
     rearLampMaterial,
   );
-  rearLamp.position.set(toCartWorldUnits(-2.02), toCartWorldUnits(0.95), toCartWorldUnits(0.52));
-  rearLamp.rotation.y = 0.18;
+  rearLamp.position.set(toCartWorldUnits(-2.12), toCartWorldUnits(0.96), toCartWorldUnits(0.54));
+  rearLamp.rotation.y = 0.2;
   bodyGroup.add(rearLamp);
+
   const rearLampMirror = rearLamp.clone();
   rearLampMirror.position.z *= -1;
   rearLampMirror.rotation.y *= -1;
   bodyGroup.add(rearLampMirror);
 
+  const rearLampWing = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.26),
+      toCartWorldUnits(0.06),
+      toCartWorldUnits(0.12),
+    ),
+    rearLampMaterial,
+  );
+  rearLampWing.position.set(toCartWorldUnits(-1.92), toCartWorldUnits(0.97), toCartWorldUnits(0.74));
+  bodyGroup.add(rearLampWing);
+
+  const rearLampWingMirror = rearLampWing.clone();
+  rearLampWingMirror.position.z *= -1;
+  bodyGroup.add(rearLampWingMirror);
+
+  const rearLampBridge = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.08),
+      toCartWorldUnits(0.05),
+      toCartWorldUnits(0.96),
+    ),
+    rearLampMaterial,
+  );
+  rearLampBridge.position.set(toCartWorldUnits(-2.02), toCartWorldUnits(0.98), 0);
+  bodyGroup.add(rearLampBridge);
+
+  const rearReflector = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.08),
+      toCartWorldUnits(0.035),
+      toCartWorldUnits(0.12),
+    ),
+    lampMaterial,
+  );
+  rearReflector.position.set(toCartWorldUnits(-2.08), toCartWorldUnits(0.68), toCartWorldUnits(0.62));
+  bodyGroup.add(rearReflector);
+
+  const rearReflectorMirror = rearReflector.clone();
+  rearReflectorMirror.position.z *= -1;
+  bodyGroup.add(rearReflectorMirror);
+
+  const mirrorArm = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.12),
+      toCartWorldUnits(0.04),
+      toCartWorldUnits(0.1),
+    ),
+    mirrorMaterial,
+  );
+  mirrorArm.position.set(toCartWorldUnits(1.02), toCartWorldUnits(1.18), toCartWorldUnits(0.84));
+  mirrorArm.rotation.z = -0.18;
+  bodyGroup.add(mirrorArm);
+
+  const mirrorArmMirror = mirrorArm.clone();
+  mirrorArmMirror.position.z *= -1;
+  mirrorArmMirror.rotation.z *= -1;
+  bodyGroup.add(mirrorArmMirror);
+
+  const mirrorPod = new THREE.Mesh(
+    new THREE.BoxGeometry(
+      toCartWorldUnits(0.18),
+      toCartWorldUnits(0.12),
+      toCartWorldUnits(0.22),
+    ),
+    mirrorMaterial,
+  );
+  mirrorPod.position.set(toCartWorldUnits(1.14), toCartWorldUnits(1.18), toCartWorldUnits(0.98));
+  mirrorPod.rotation.y = 0.28;
+  bodyGroup.add(mirrorPod);
+
+  const mirrorPodMirror = mirrorPod.clone();
+  mirrorPodMirror.position.z *= -1;
+  mirrorPodMirror.rotation.y *= -1;
+  bodyGroup.add(mirrorPodMirror);
+
   CAR_WHEEL_X_OFFSETS_M.forEach((wheelX) => {
     CAR_WHEEL_Z_OFFSETS_M.forEach((wheelZ) => {
+      const wheelSide = wheelZ >= 0 ? 1 : -1;
       const wheelAssembly = new THREE.Group();
       wheelAssembly.position.set(
         toCartWorldUnits(wheelX),
@@ -1021,56 +1435,279 @@ function buildSedanRig(THREE: ThreeModule) {
       );
       const wheelRotor = new THREE.Group();
       wheelAssembly.add(wheelRotor);
+      const tireWidth = toCartWorldUnits(0.22);
+      const rimWidth = toCartWorldUnits(0.18);
+      const rimFaceOffset = wheelSide * toCartWorldUnits(0.045);
+      const lugRingRadius = CAR_WHEEL_RADIUS_WORLD * 0.18;
+      const treadRingRadius = CAR_WHEEL_RADIUS_WORLD * 0.92;
+      const treadRowOffsets = [-toCartWorldUnits(0.054), 0, toCartWorldUnits(0.054)];
 
       const tire = new THREE.Mesh(
-        new THREE.CylinderGeometry(
-          CAR_WHEEL_RADIUS_WORLD,
-          CAR_WHEEL_RADIUS_WORLD,
-          toCartWorldUnits(0.24),
-          28,
-        ),
+        createTireGeometry(THREE, CAR_WHEEL_RADIUS_WORLD, tireWidth),
         wheelMaterial,
       );
-      tire.rotation.x = Math.PI / 2;
       wheelRotor.add(tire);
+
+      treadRowOffsets.forEach((rowOffset, rowIndex) => {
+        for (let treadIndex = 0; treadIndex < 14; treadIndex += 1) {
+          const treadAngle =
+            (Math.PI * 2 * treadIndex) / 14 +
+            (rowIndex === 1 ? Math.PI / 14 : 0) +
+            (rowIndex === 2 ? Math.PI / 28 : 0);
+          const treadBlock = new THREE.Mesh(
+            new THREE.BoxGeometry(
+              toCartWorldUnits(0.17),
+              toCartWorldUnits(0.05),
+              toCartWorldUnits(0.026),
+            ),
+            tireTreadMaterial,
+          );
+          treadBlock.position.set(
+            Math.cos(treadAngle) * treadRingRadius,
+            Math.sin(treadAngle) * treadRingRadius,
+            rowOffset,
+          );
+          treadBlock.rotation.z = treadAngle + Math.PI / 2;
+          wheelRotor.add(treadBlock);
+        }
+      });
+
+      const rimBarrel = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          CAR_WHEEL_RADIUS_WORLD * 0.74,
+          CAR_WHEEL_RADIUS_WORLD * 0.74,
+          rimWidth,
+          32,
+        ),
+        wheelInnerMaterial,
+      );
+      rimBarrel.rotation.x = Math.PI / 2;
+      wheelRotor.add(rimBarrel);
+
+      const brakeDisc = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          CAR_WHEEL_RADIUS_WORLD * 0.54,
+          CAR_WHEEL_RADIUS_WORLD * 0.54,
+          toCartWorldUnits(0.08),
+          30,
+        ),
+        brakeDiscMaterial,
+      );
+      brakeDisc.rotation.x = Math.PI / 2;
+      brakeDisc.position.z = -wheelSide * toCartWorldUnits(0.02);
+      wheelRotor.add(brakeDisc);
+
+      const brakeDiscHat = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          CAR_WHEEL_RADIUS_WORLD * 0.24,
+          CAR_WHEEL_RADIUS_WORLD * 0.24,
+          toCartWorldUnits(0.06),
+          24,
+        ),
+        rimShadowMaterial,
+      );
+      brakeDiscHat.rotation.x = Math.PI / 2;
+      brakeDiscHat.position.z = -wheelSide * toCartWorldUnits(0.014);
+      wheelRotor.add(brakeDiscHat);
+
+      const brakeDiscRing = new THREE.Mesh(
+        new THREE.TorusGeometry(
+          CAR_WHEEL_RADIUS_WORLD * 0.42,
+          toCartWorldUnits(0.012),
+          10,
+          28,
+        ),
+        rimShadowMaterial,
+      );
+      brakeDiscRing.rotation.x = Math.PI / 2;
+      brakeDiscRing.position.z = -wheelSide * toCartWorldUnits(0.056);
+      wheelRotor.add(brakeDiscRing);
+
+      for (let slotIndex = 0; slotIndex < 6; slotIndex += 1) {
+        const slotAngle = (Math.PI * 2 * slotIndex) / 6 + 0.18;
+        const brakeSlot = new THREE.Mesh(
+          new THREE.BoxGeometry(
+            toCartWorldUnits(0.1),
+            toCartWorldUnits(0.022),
+            toCartWorldUnits(0.018),
+          ),
+          wheelInnerMaterial,
+        );
+        brakeSlot.position.set(
+          Math.cos(slotAngle) * CAR_WHEEL_RADIUS_WORLD * 0.34,
+          Math.sin(slotAngle) * CAR_WHEEL_RADIUS_WORLD * 0.34,
+          -wheelSide * toCartWorldUnits(0.058),
+        );
+        brakeSlot.rotation.z = slotAngle + 0.44;
+        wheelRotor.add(brakeSlot);
+      }
 
       const rim = new THREE.Mesh(
         new THREE.CylinderGeometry(
           CAR_WHEEL_RADIUS_WORLD * 0.72,
           CAR_WHEEL_RADIUS_WORLD * 0.72,
-          toCartWorldUnits(0.14),
-          24,
+          toCartWorldUnits(0.1),
+          30,
+        ),
+        rimShadowMaterial,
+      );
+      rim.rotation.x = Math.PI / 2;
+      rim.position.z = rimFaceOffset;
+      wheelRotor.add(rim);
+
+      const rimDish = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          CAR_WHEEL_RADIUS_WORLD * 0.48,
+          CAR_WHEEL_RADIUS_WORLD * 0.6,
+          toCartWorldUnits(0.05),
+          30,
         ),
         rimMaterial,
       );
-      rim.rotation.x = Math.PI / 2;
-      wheelRotor.add(rim);
+      rimDish.rotation.x = Math.PI / 2;
+      rimDish.position.z = rimFaceOffset + wheelSide * toCartWorldUnits(0.035);
+      wheelRotor.add(rimDish);
 
+      const wheelFaceOccluder = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          CAR_WHEEL_RADIUS_WORLD * 0.82,
+          CAR_WHEEL_RADIUS_WORLD * 0.82,
+          toCartWorldUnits(0.02),
+          30,
+        ),
+        wheelInnerMaterial,
+      );
+      wheelFaceOccluder.rotation.x = Math.PI / 2;
+      wheelFaceOccluder.position.z = rimFaceOffset + wheelSide * toCartWorldUnits(0.012);
+      wheelRotor.add(wheelFaceOccluder);
+
+      const aeroCover = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          CAR_WHEEL_RADIUS_WORLD * 0.62,
+          CAR_WHEEL_RADIUS_WORLD * 0.58,
+          toCartWorldUnits(0.04),
+          32,
+        ),
+        rimMaterial,
+      );
+      aeroCover.rotation.x = Math.PI / 2;
+      aeroCover.position.z = rimFaceOffset + wheelSide * toCartWorldUnits(0.056);
+      wheelRotor.add(aeroCover);
+
+      const spokeFaceZ = rimFaceOffset + wheelSide * toCartWorldUnits(0.083);
       for (let spokeIndex = 0; spokeIndex < 5; spokeIndex += 1) {
-        const spoke = new THREE.Mesh(
+        const spokeAngle = (Math.PI * 2 * spokeIndex) / 5 - 0.06;
+        const spokeGroup = new THREE.Group();
+        spokeGroup.rotation.z = spokeAngle;
+
+        const spokeStem = new THREE.Mesh(
           new THREE.BoxGeometry(
-            CAR_WHEEL_RADIUS_WORLD * 0.48,
-            toCartWorldUnits(0.03),
-            toCartWorldUnits(0.02),
+            CAR_WHEEL_RADIUS_WORLD * 0.22,
+            toCartWorldUnits(0.024),
+            toCartWorldUnits(0.012),
           ),
-          rimMaterial,
+          spokeFaceMaterial,
         );
-        spoke.position.x = CAR_WHEEL_RADIUS_WORLD * 0.14;
-        spoke.rotation.z = (Math.PI * 2 * spokeIndex) / 5;
-        wheelRotor.add(spoke);
+        spokeStem.position.set(CAR_WHEEL_RADIUS_WORLD * 0.13, 0, spokeFaceZ);
+        spokeGroup.add(spokeStem);
+
+        const spokeLeft = new THREE.Mesh(
+          new THREE.BoxGeometry(
+            CAR_WHEEL_RADIUS_WORLD * 0.28,
+            toCartWorldUnits(0.026),
+            toCartWorldUnits(0.012),
+          ),
+          spokeFaceMaterial,
+        );
+        spokeLeft.position.set(
+          CAR_WHEEL_RADIUS_WORLD * 0.27,
+          -toCartWorldUnits(0.028),
+          spokeFaceZ,
+        );
+        spokeLeft.rotation.z = 0.34;
+        spokeGroup.add(spokeLeft);
+
+        const spokeRight = spokeLeft.clone();
+        spokeRight.position.y *= -1;
+        spokeRight.rotation.z *= -1;
+        spokeGroup.add(spokeRight);
+
+        const spokeGroove = new THREE.Mesh(
+          new THREE.BoxGeometry(
+            CAR_WHEEL_RADIUS_WORLD * 0.18,
+            toCartWorldUnits(0.008),
+            toCartWorldUnits(0.008),
+          ),
+          rimShadowMaterial,
+        );
+        spokeGroove.position.set(
+          CAR_WHEEL_RADIUS_WORLD * 0.34,
+          0,
+          spokeFaceZ + wheelSide * toCartWorldUnits(0.004),
+        );
+        spokeGroup.add(spokeGroove);
+
+        wheelRotor.add(spokeGroup);
+
+        const lug = new THREE.Mesh(
+          new THREE.CylinderGeometry(
+            toCartWorldUnits(0.018),
+            toCartWorldUnits(0.018),
+            toCartWorldUnits(0.028),
+            12,
+          ),
+          lugMaterial,
+        );
+        lug.rotation.x = Math.PI / 2;
+        lug.position.set(
+          Math.cos(spokeAngle + 0.18) * lugRingRadius,
+          Math.sin(spokeAngle + 0.18) * lugRingRadius,
+          rimFaceOffset + wheelSide * toCartWorldUnits(0.07),
+        );
+        wheelRotor.add(lug);
       }
 
       const hub = new THREE.Mesh(
         new THREE.CylinderGeometry(
           CAR_WHEEL_RADIUS_WORLD * 0.16,
           CAR_WHEEL_RADIUS_WORLD * 0.16,
-          toCartWorldUnits(0.18),
+          toCartWorldUnits(0.08),
           18,
         ),
-        bodyHighlightMaterial,
+        mirrorMaterial,
       );
       hub.rotation.x = Math.PI / 2;
+      hub.position.z = rimFaceOffset + wheelSide * toCartWorldUnits(0.072);
       wheelRotor.add(hub);
+
+      const centerCap = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          CAR_WHEEL_RADIUS_WORLD * 0.1,
+          CAR_WHEEL_RADIUS_WORLD * 0.1,
+          toCartWorldUnits(0.036),
+          18,
+        ),
+        centerCapMaterial,
+      );
+      centerCap.rotation.x = Math.PI / 2;
+      centerCap.position.z = rimFaceOffset + wheelSide * toCartWorldUnits(0.094);
+      wheelRotor.add(centerCap);
+
+      const brakeCaliper = new THREE.Mesh(
+        new THREE.BoxGeometry(
+          toCartWorldUnits(0.12),
+          toCartWorldUnits(0.19),
+          toCartWorldUnits(0.06),
+        ),
+        brakeCaliperMaterial,
+      );
+      brakeCaliper.position.set(
+        CAR_WHEEL_RADIUS_WORLD * 0.44,
+        CAR_WHEEL_RADIUS_WORLD * 0.1,
+        -wheelSide * toCartWorldUnits(0.1),
+      );
+      brakeCaliper.rotation.z = -0.18 * wheelSide;
+      wheelAssembly.add(brakeCaliper);
 
       carGroup.add(wheelAssembly);
       wheelRotors.push(wheelRotor);
@@ -1078,7 +1715,7 @@ function buildSedanRig(THREE: ThreeModule) {
   });
 
   const shadow = new THREE.Mesh(
-    new THREE.CircleGeometry(toCartWorldUnits(2.5), 36),
+    new THREE.CircleGeometry(toCartWorldUnits(2.6), 40),
     new THREE.MeshBasicMaterial({
       color: 0x04070d,
       transparent: true,
@@ -1086,8 +1723,8 @@ function buildSedanRig(THREE: ThreeModule) {
     }),
   );
   shadow.rotation.x = -Math.PI / 2;
-  shadow.position.set(toCartWorldUnits(-0.04), ROAD_SURFACE_Y + 0.02, 0);
-  shadow.scale.set(1.02, 0.56, 1);
+  shadow.position.set(toCartWorldUnits(-0.05), ROAD_SURFACE_Y + 0.02, 0);
+  shadow.scale.set(1.04, 0.56, 1);
   carGroup.add(shadow);
   carGroup.add(bodyGroup);
 
@@ -1119,48 +1756,68 @@ function createCenteredExtrudedGeometry(
   return geometry;
 }
 
-function createSedanBodyShape(THREE: ThreeModule) {
+function createModel3BodyShape(THREE: ThreeModule) {
   const shape = new THREE.Shape();
-  shape.moveTo(toCartWorldUnits(-2.16), toCartWorldUnits(0.4));
-  shape.quadraticCurveTo(toCartWorldUnits(-2.3), toCartWorldUnits(0.48), toCartWorldUnits(-2.24), toCartWorldUnits(0.64));
-  shape.quadraticCurveTo(toCartWorldUnits(-2.02), toCartWorldUnits(0.9), toCartWorldUnits(-1.68), toCartWorldUnits(0.99));
-  shape.quadraticCurveTo(toCartWorldUnits(-0.92), toCartWorldUnits(1.08), toCartWorldUnits(-0.04), toCartWorldUnits(1.1));
-  shape.quadraticCurveTo(toCartWorldUnits(0.62), toCartWorldUnits(1.12), toCartWorldUnits(1.18), toCartWorldUnits(1.03));
-  shape.quadraticCurveTo(toCartWorldUnits(1.72), toCartWorldUnits(0.94), toCartWorldUnits(2.06), toCartWorldUnits(0.82));
-  shape.quadraticCurveTo(toCartWorldUnits(2.24), toCartWorldUnits(0.74), toCartWorldUnits(2.28), toCartWorldUnits(0.58));
-  shape.quadraticCurveTo(toCartWorldUnits(2.22), toCartWorldUnits(0.44), toCartWorldUnits(1.98), toCartWorldUnits(0.38));
-  shape.lineTo(toCartWorldUnits(-2.02), toCartWorldUnits(0.38));
-  shape.quadraticCurveTo(toCartWorldUnits(-2.1), toCartWorldUnits(0.38), toCartWorldUnits(-2.16), toCartWorldUnits(0.4));
-  shape.holes.push(createWheelWellPath(THREE, CAR_WHEEL_X_OFFSETS_M[0]));
-  shape.holes.push(createWheelWellPath(THREE, CAR_WHEEL_X_OFFSETS_M[1]));
+  shape.moveTo(toCartWorldUnits(-2.24), toCartWorldUnits(0.4));
+  shape.quadraticCurveTo(
+    toCartWorldUnits(-2.38),
+    toCartWorldUnits(0.48),
+    toCartWorldUnits(-2.32),
+    toCartWorldUnits(0.64),
+  );
+  shape.quadraticCurveTo(
+    toCartWorldUnits(-2.06),
+    toCartWorldUnits(0.92),
+    toCartWorldUnits(-1.78),
+    toCartWorldUnits(1),
+  );
+  shape.quadraticCurveTo(
+    toCartWorldUnits(-1.04),
+    toCartWorldUnits(1.08),
+    toCartWorldUnits(-0.16),
+    toCartWorldUnits(1.1),
+  );
+  shape.quadraticCurveTo(
+    toCartWorldUnits(0.56),
+    toCartWorldUnits(1.12),
+    toCartWorldUnits(1.16),
+    toCartWorldUnits(1.04),
+  );
+  shape.quadraticCurveTo(
+    toCartWorldUnits(1.78),
+    toCartWorldUnits(0.96),
+    toCartWorldUnits(2.08),
+    toCartWorldUnits(0.84),
+  );
+  shape.quadraticCurveTo(
+    toCartWorldUnits(2.28),
+    toCartWorldUnits(0.76),
+    toCartWorldUnits(2.34),
+    toCartWorldUnits(0.58),
+  );
+  shape.quadraticCurveTo(
+    toCartWorldUnits(2.28),
+    toCartWorldUnits(0.44),
+    toCartWorldUnits(2.04),
+    toCartWorldUnits(0.38),
+  );
+  shape.lineTo(toCartWorldUnits(-2.08), toCartWorldUnits(0.38));
+  shape.quadraticCurveTo(
+    toCartWorldUnits(-2.18),
+    toCartWorldUnits(0.38),
+    toCartWorldUnits(-2.24),
+    toCartWorldUnits(0.4),
+  );
+
+  shape.holes.push(createModel3WheelWellPath(THREE, CAR_WHEEL_X_OFFSETS_M[0]));
+  shape.holes.push(createModel3WheelWellPath(THREE, CAR_WHEEL_X_OFFSETS_M[1]));
+
   return shape;
 }
 
-function createSedanCabinShape(THREE: ThreeModule) {
-  const shape = new THREE.Shape();
-  shape.moveTo(toCartWorldUnits(-1.16), toCartWorldUnits(1.01));
-  shape.quadraticCurveTo(toCartWorldUnits(-0.82), toCartWorldUnits(1.18), toCartWorldUnits(-0.14), toCartWorldUnits(1.34));
-  shape.quadraticCurveTo(toCartWorldUnits(0.42), toCartWorldUnits(1.42), toCartWorldUnits(0.9), toCartWorldUnits(1.32));
-  shape.quadraticCurveTo(toCartWorldUnits(1.14), toCartWorldUnits(1.24), toCartWorldUnits(1.32), toCartWorldUnits(1.04));
-  shape.lineTo(toCartWorldUnits(-1.02), toCartWorldUnits(1.05));
-  shape.quadraticCurveTo(toCartWorldUnits(-1.08), toCartWorldUnits(1.03), toCartWorldUnits(-1.16), toCartWorldUnits(1.01));
-  return shape;
-}
-
-function createSedanGlassShape(THREE: ThreeModule) {
-  const shape = new THREE.Shape();
-  shape.moveTo(toCartWorldUnits(-1.02), toCartWorldUnits(1.08));
-  shape.quadraticCurveTo(toCartWorldUnits(-0.72), toCartWorldUnits(1.2), toCartWorldUnits(-0.08), toCartWorldUnits(1.32));
-  shape.quadraticCurveTo(toCartWorldUnits(0.34), toCartWorldUnits(1.38), toCartWorldUnits(0.8), toCartWorldUnits(1.28));
-  shape.quadraticCurveTo(toCartWorldUnits(1.02), toCartWorldUnits(1.22), toCartWorldUnits(1.12), toCartWorldUnits(1.1));
-  shape.lineTo(toCartWorldUnits(-0.92), toCartWorldUnits(1.1));
-  shape.quadraticCurveTo(toCartWorldUnits(-0.96), toCartWorldUnits(1.1), toCartWorldUnits(-1.02), toCartWorldUnits(1.08));
-  return shape;
-}
-
-function createWheelWellPath(THREE: ThreeModule, centerX: number) {
+function createModel3WheelWellPath(THREE: ThreeModule, centerX: number) {
   const path = new THREE.Path();
-  const archRadius = 0.5;
+  const archRadius = 0.52;
   const rockerY = 0.38;
 
   path.moveTo(
@@ -1180,6 +1837,94 @@ function createWheelWellPath(THREE: ThreeModule, centerX: number) {
     toCartWorldUnits(rockerY),
   );
   return path;
+}
+
+function createModel3CabinShape(THREE: ThreeModule) {
+  const shape = new THREE.Shape();
+  shape.moveTo(toCartWorldUnits(-1.18), toCartWorldUnits(1.02));
+  shape.quadraticCurveTo(
+    toCartWorldUnits(-0.84),
+    toCartWorldUnits(1.18),
+    toCartWorldUnits(-0.18),
+    toCartWorldUnits(1.36),
+  );
+  shape.quadraticCurveTo(
+    toCartWorldUnits(0.4),
+    toCartWorldUnits(1.44),
+    toCartWorldUnits(0.88),
+    toCartWorldUnits(1.34),
+  );
+  shape.quadraticCurveTo(
+    toCartWorldUnits(1.16),
+    toCartWorldUnits(1.26),
+    toCartWorldUnits(1.34),
+    toCartWorldUnits(1.06),
+  );
+  shape.lineTo(toCartWorldUnits(-1.04), toCartWorldUnits(1.06));
+  shape.quadraticCurveTo(
+    toCartWorldUnits(-1.1),
+    toCartWorldUnits(1.04),
+    toCartWorldUnits(-1.18),
+    toCartWorldUnits(1.02),
+  );
+  return shape;
+}
+
+function createModel3GlassShape(THREE: ThreeModule) {
+  const shape = new THREE.Shape();
+  shape.moveTo(toCartWorldUnits(-1.02), toCartWorldUnits(1.08));
+  shape.quadraticCurveTo(
+    toCartWorldUnits(-0.7),
+    toCartWorldUnits(1.2),
+    toCartWorldUnits(-0.06),
+    toCartWorldUnits(1.34),
+  );
+  shape.quadraticCurveTo(
+    toCartWorldUnits(0.34),
+    toCartWorldUnits(1.4),
+    toCartWorldUnits(0.8),
+    toCartWorldUnits(1.3),
+  );
+  shape.quadraticCurveTo(
+    toCartWorldUnits(1.04),
+    toCartWorldUnits(1.22),
+    toCartWorldUnits(1.14),
+    toCartWorldUnits(1.1),
+  );
+  shape.lineTo(toCartWorldUnits(-0.9), toCartWorldUnits(1.1));
+  shape.quadraticCurveTo(
+    toCartWorldUnits(-0.96),
+    toCartWorldUnits(1.1),
+    toCartWorldUnits(-1.02),
+    toCartWorldUnits(1.08),
+  );
+  return shape;
+}
+
+function createTireGeometry(
+  THREE: ThreeModule,
+  outerRadius: number,
+  width: number,
+) {
+  const halfWidth = width / 2;
+  const innerHalfWidth = halfWidth * 0.8;
+  const sidewallRadius = outerRadius * 0.84;
+  const innerRadius = outerRadius * 0.56;
+  const profile = [
+    new THREE.Vector2(0, -innerHalfWidth),
+    new THREE.Vector2(innerRadius, -innerHalfWidth),
+    new THREE.Vector2(sidewallRadius, -halfWidth),
+    new THREE.Vector2(outerRadius * 0.97, -halfWidth * 0.78),
+    new THREE.Vector2(outerRadius, -halfWidth * 0.24),
+    new THREE.Vector2(outerRadius, halfWidth * 0.24),
+    new THREE.Vector2(outerRadius * 0.97, halfWidth * 0.78),
+    new THREE.Vector2(sidewallRadius, halfWidth),
+    new THREE.Vector2(innerRadius, innerHalfWidth),
+    new THREE.Vector2(0, innerHalfWidth),
+  ];
+  const geometry = new THREE.LatheGeometry(profile, 40);
+  geometry.rotateX(Math.PI / 2);
+  return geometry;
 }
 
 function disposeSceneGraph(scene: any) {
@@ -1274,10 +2019,6 @@ function resolveRampSurfaceY(frontX: number) {
 
 function resolveRampWheelCenterY(frontX: number) {
   return resolveRampSurfaceY(frontX) + CAR_WHEEL_RADIUS_WORLD + 0.02;
-}
-
-function toWorldUnits(value: number) {
-  return value * WORLD_UNITS_PER_METER;
 }
 
 function toCartWorldUnits(value: number) {
