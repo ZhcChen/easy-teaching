@@ -32,6 +32,17 @@ type MotionStateRef = {
   stopDistanceMeters: number | null;
 };
 
+type CameraDynamicsRef = {
+  speedRatio: number;
+  brakeBias: number;
+  rampBlend: number;
+  markerReveal: number;
+  trailReveal: number;
+  lastSampleTime: number;
+  lastVelocity: number;
+  acceleration: number;
+};
+
 const WORLD_UNITS_PER_METER = 1.8;
 const ROAD_THICKNESS = 0.18;
 const ROAD_SURFACE_Y = ROAD_THICKNESS;
@@ -104,6 +115,16 @@ export function NewtonFirstLawThreeStage({
     physicalDurationSeconds,
     distanceDomain,
     stopDistanceMeters,
+  });
+  const cameraDynamicsRef = useRef<CameraDynamicsRef>({
+    speedRatio: 0,
+    brakeBias: 0,
+    rampBlend: 1,
+    markerReveal: 0,
+    trailReveal: 0,
+    lastSampleTime: currentMotion.time,
+    lastVelocity: currentMotion.velocity,
+    acceleration: 0,
   });
 
   useEffect(() => {
@@ -258,6 +279,20 @@ export function NewtonFirstLawThreeStage({
       const carRig = buildSedanRig(THREE);
       scene.add(carRig.group);
 
+      const trailMaterial = new THREE.LineBasicMaterial({
+        color: 0x67c6ff,
+        transparent: true,
+        opacity: 0,
+      });
+      const trailGeometry = new THREE.BufferGeometry();
+      const trailPositions = new Float32Array(12);
+      trailGeometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(trailPositions, 3),
+      );
+      const trailLine = new THREE.Line(trailGeometry, trailMaterial);
+      scene.add(trailLine);
+
       const velocityArrow = new THREE.ArrowHelper(
         new THREE.Vector3(1, 0, 0),
         new THREE.Vector3(0, 1.8, 0),
@@ -319,6 +354,7 @@ export function NewtonFirstLawThreeStage({
         resizeRendererToDisplaySize();
 
         const state = motionStateRef.current;
+        const frameNowSeconds = performance.now() * 0.001;
         const leadDuration = Math.min(
           RELEASE_LEAD_SECONDS,
           Math.max(0.22, state.physicalDurationSeconds * 0.16),
@@ -333,6 +369,7 @@ export function NewtonFirstLawThreeStage({
         let visualY = CAR_WHEEL_CENTER_Y;
         let carTilt = 0;
         let traveledMeters = state.position;
+        let rampProgress = 0;
 
         if (state.observationState === "idle") {
           visualFrontX = RAMP_IDLE_FRONT_X;
@@ -340,11 +377,29 @@ export function NewtonFirstLawThreeStage({
           carTilt = -RAMP_ANGLE;
           traveledMeters = 0;
         } else if (state.observationState === "observing" && state.time < leadDuration) {
-          const rampProgress = clamp(state.time / leadDuration, 0, 1);
+          rampProgress = clamp(state.time / leadDuration, 0, 1);
           visualFrontX = lerp(RAMP_IDLE_FRONT_X, RAMP_EXIT_FRONT_X, rampProgress);
           visualY = resolveRampWheelCenterY(visualFrontX);
           carTilt = lerp(-RAMP_ANGLE, 0, rampProgress);
           traveledMeters = rampProgress * (RAMP_RUN_WORLD / WORLD_UNITS_PER_METER);
+        }
+
+        const dynamics = cameraDynamicsRef.current;
+        const sampleDeltaSeconds = state.time - dynamics.lastSampleTime;
+        if (sampleDeltaSeconds > 0.0001) {
+          const measuredAcceleration =
+            (state.velocity - dynamics.lastVelocity) / sampleDeltaSeconds;
+          dynamics.acceleration = lerp(dynamics.acceleration, measuredAcceleration, 0.42);
+          dynamics.lastSampleTime = state.time;
+          dynamics.lastVelocity = state.velocity;
+        } else if (sampleDeltaSeconds < 0 || (state.observationState === "observing" && state.time === 0)) {
+          dynamics.lastSampleTime = state.time;
+          dynamics.lastVelocity = state.velocity;
+          dynamics.acceleration = lerp(dynamics.acceleration, 0, 0.2);
+        } else if (state.observationState === "idle") {
+          dynamics.lastSampleTime = state.time;
+          dynamics.lastVelocity = state.velocity;
+          dynamics.acceleration = lerp(dynamics.acceleration, 0, 0.18);
         }
 
         const carCenterX = visualFrontX - CAR_FRONT_OFFSET_WORLD;
@@ -355,11 +410,41 @@ export function NewtonFirstLawThreeStage({
           wheelRotor.rotation.z = -wheelAngle;
         });
 
-        const suspensionCompression = clamp(state.velocity / 5.2, 0, 1);
-        const bodyFloat = 0.12 + suspensionCompression * 0.02 + Math.abs(carTilt) * 0.03;
+        const speedRatioTarget = clamp(state.velocity / 2.8, 0, 1);
+        const brakeBiasTarget = clamp(-dynamics.acceleration / 4.8, 0, 1);
+        const rampBlendTarget =
+          state.observationState === "idle"
+            ? 1
+            : state.observationState === "observing" && state.time < leadDuration
+              ? 1 - rampProgress
+              : 0;
+        dynamics.speedRatio += (speedRatioTarget - dynamics.speedRatio) * 0.08;
+        dynamics.brakeBias += (brakeBiasTarget - dynamics.brakeBias) * 0.12;
+        dynamics.rampBlend += (rampBlendTarget - dynamics.rampBlend) * 0.12;
+
+        const suspensionCompression = dynamics.speedRatio;
+        const idleFloat =
+          state.observationState === "idle"
+            ? Math.sin(frameNowSeconds * 1.2) * 0.01
+            : 0;
+        const bodyPitchTarget =
+          dynamics.rampBlend * 0.035 + dynamics.brakeBias * 0.046;
+        const bodyFloat =
+          0.112 +
+          suspensionCompression * 0.024 +
+          Math.abs(carTilt) * 0.032 +
+          dynamics.brakeBias * 0.016 +
+          idleFloat;
+        carRig.bodyGroup.rotation.z +=
+          (bodyPitchTarget - carRig.bodyGroup.rotation.z) * 0.12;
         carRig.bodyGroup.position.y +=
           (bodyFloat - carRig.bodyGroup.position.y) * 0.12;
-        carRig.shadow.material.opacity = 0.24 + suspensionCompression * 0.04;
+        carRig.shadow.material.opacity =
+          0.2 + suspensionCompression * 0.04 + dynamics.brakeBias * 0.06;
+        const shadowScaleX = 0.98 - dynamics.speedRatio * 0.02;
+        const shadowScaleY = 0.56 - dynamics.brakeBias * 0.04;
+        carRig.shadow.scale.x += (shadowScaleX - carRig.shadow.scale.x) * 0.08;
+        carRig.shadow.scale.y += (shadowScaleY - carRig.shadow.scale.y) * 0.08;
 
         const stopX = state.stopDistanceMeters === null
           ? null
@@ -371,10 +456,42 @@ export function NewtonFirstLawThreeStage({
               0,
               1,
             ) * TRACK_TRAVEL_WORLD;
-        stopMarker.visible = stopX !== null;
+        const stopRevealTarget =
+          stopX === null
+            ? 0
+            : state.observationState === "stable"
+              ? 1
+              : state.stopDistanceMeters !== null && state.position >= state.stopDistanceMeters * 0.82
+                ? 1
+                : 0;
+        dynamics.markerReveal += (stopRevealTarget - dynamics.markerReveal) * 0.12;
+        stopMarker.visible = stopX !== null && dynamics.markerReveal > 0.04;
         if (stopX !== null) {
           stopMarker.position.x = stopX;
+          stopMarker.position.y =
+            Math.sin(frameNowSeconds * 3.2) * 0.03 * dynamics.markerReveal;
+          stopMarker.scale.setScalar(0.76 + dynamics.markerReveal * 0.24);
         }
+
+        const trailRevealTarget =
+          state.observationState === "idle"
+            ? 0
+            : state.position > 0.02 || state.time < leadDuration
+              ? 1
+              : 0;
+        dynamics.trailReveal += (trailRevealTarget - dynamics.trailReveal) * 0.12;
+        trailLine.visible = dynamics.trailReveal > 0.03;
+        trailMaterial.opacity =
+          0.18 + dynamics.trailReveal * 0.42 + dynamics.speedRatio * 0.12;
+        trailMaterial.color.set(surfaceKey === "ideal" ? 0x67c6ff : 0x9ed8ff);
+        updateTrailLinePositions(trailPositions, {
+          frontX: visualFrontX,
+          isOnRamp:
+            state.observationState === "idle" ||
+            (state.observationState === "observing" && state.time < leadDuration),
+          reveal: dynamics.trailReveal,
+        });
+        trailGeometry.attributes.position.needsUpdate = true;
 
         velocityArrow.visible =
           state.observationState !== "idle" && state.velocity > 0.04;
@@ -389,6 +506,9 @@ export function NewtonFirstLawThreeStage({
             clamp(state.velocity * 1.18, 0.9, 4),
             0.32,
             0.18,
+          );
+          velocityArrow.setColor(
+            new THREE.Color(surfaceKey === "ideal" ? 0x7fd2ff : 0x67c6ff),
           );
         }
 
@@ -405,9 +525,12 @@ export function NewtonFirstLawThreeStage({
           );
           frictionArrow.setDirection(new THREE.Vector3(-1, 0, 0));
           frictionArrow.setLength(
-            clamp(0.96 + frictionStrength * 1.18, 0.9, 3.6),
+            clamp(0.76 + frictionStrength * 1.26 + dynamics.speedRatio * 0.34, 0.86, 3.8),
             0.3,
             0.18,
+          );
+          frictionArrow.setColor(
+            new THREE.Color(surfaceKey === "towel" ? 0xff9f74 : 0xffbf67),
           );
         }
 
@@ -417,19 +540,33 @@ export function NewtonFirstLawThreeStage({
         orbitState.pitchOffset +=
           (orbitState.targetPitchOffset - orbitState.pitchOffset) * CAMERA_ORBIT_DAMPING;
 
-        const desiredLookAtX = clamp(
-          carCenterX + 2.8,
-          CAMERA_TRACK_MIN_X,
-          CAMERA_TRACK_MAX_X,
-        );
+        const desiredLookAhead =
+          2.38 +
+          dynamics.speedRatio * 1.92 +
+          dynamics.rampBlend * 0.42 -
+          dynamics.brakeBias * 0.4;
+        const desiredLookAtX = clamp(carCenterX + desiredLookAhead, CAMERA_TRACK_MIN_X, CAMERA_TRACK_MAX_X);
         lookAtTarget.x += (desiredLookAtX - lookAtTarget.x) * 0.12;
         lookAtTarget.y +=
-          (STAGE_FOCUS_Y + Math.abs(carTilt) * 0.08 - lookAtTarget.y) * 0.12;
+          (
+            STAGE_FOCUS_Y +
+            Math.abs(carTilt) * 0.08 +
+            dynamics.rampBlend * 0.26 -
+            dynamics.brakeBias * 0.06 -
+            lookAtTarget.y
+          ) * 0.12;
 
         const zoomRatio = cameraZoomRef.current;
-        const baseOffsetX = -10.6 * zoomRatio;
-        const baseOffsetY = 4.8 + (zoomRatio - 1) * 1.9 + Math.abs(carTilt) * 0.4;
-        const baseOffsetZ = 10.4 * zoomRatio;
+        const baseOffsetX =
+          -(11.2 * zoomRatio + dynamics.speedRatio * 1.4 - dynamics.rampBlend * 0.7);
+        const baseOffsetY =
+          4.95 +
+          (zoomRatio - 1) * 2.05 +
+          Math.abs(carTilt) * 0.36 +
+          dynamics.rampBlend * 0.62 -
+          dynamics.brakeBias * 0.14;
+        const baseOffsetZ =
+          10.8 * zoomRatio + dynamics.speedRatio * 0.54 + dynamics.rampBlend * 0.32;
         const baseElevation = Math.atan2(
           baseOffsetY,
           Math.hypot(baseOffsetX, baseOffsetZ),
@@ -1062,6 +1199,51 @@ function disposeSceneGraph(scene: any) {
 
     node.material.dispose();
   });
+}
+
+function updateTrailLinePositions(
+  target: Float32Array,
+  state: {
+    frontX: number;
+    isOnRamp: boolean;
+    reveal: number;
+  },
+) {
+  const startX = RAMP_IDLE_FRONT_X;
+  const startY = resolveRampSurfaceY(startX) + 0.08;
+  const exitX = RAMP_ENTRY_X;
+  const exitY = ROAD_SURFACE_Y + 0.08;
+  const currentY =
+    (state.isOnRamp ? resolveRampSurfaceY(state.frontX) : ROAD_SURFACE_Y) + 0.08;
+
+  if (state.isOnRamp) {
+    const midX = lerp(startX, state.frontX, 0.5);
+    const midY = resolveRampSurfaceY(midX) + 0.08;
+    writeTrailPoint(target, 0, startX, startY, 0);
+    writeTrailPoint(target, 1, midX, midY, 0);
+    writeTrailPoint(target, 2, state.frontX, currentY, 0);
+    writeTrailPoint(target, 3, state.frontX, currentY, 0);
+    return;
+  }
+
+  const flatFrontX = lerp(exitX, state.frontX, clamp(state.reveal, 0, 1));
+  writeTrailPoint(target, 0, startX, startY, 0);
+  writeTrailPoint(target, 1, exitX, exitY, 0);
+  writeTrailPoint(target, 2, flatFrontX, currentY, 0);
+  writeTrailPoint(target, 3, state.frontX, currentY, 0);
+}
+
+function writeTrailPoint(
+  target: Float32Array,
+  pointIndex: number,
+  x: number,
+  y: number,
+  z: number,
+) {
+  const offset = pointIndex * 3;
+  target[offset] = x;
+  target[offset + 1] = y;
+  target[offset + 2] = z;
 }
 
 function parseResistanceStrength(label: string) {
