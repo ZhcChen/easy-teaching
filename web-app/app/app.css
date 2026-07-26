@@ -1862,6 +1862,14 @@ a:focus-visible {
   color: var(--brand-strong);
 }
 
+.fullscreen-button:focus-visible {
+  outline: none;
+  border-color: var(--brand-strong);
+  box-shadow:
+    0 0 0 3px rgba(23, 105, 255, 0.18),
+    0 8px 20px rgba(23, 105, 255, 0.14);
+}
+
 .fullscreen-button.is-floating {
   position: absolute;
   top: 24px;

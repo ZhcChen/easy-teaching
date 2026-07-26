@@ -1,6 +1,7 @@
 import type { ReactNode, RefObject } from "react";
 
 import { useLocale } from "../i18n";
+import { FullscreenToggleButton } from "./fullscreen-toggle-button";
 import { usePersistentPanelCollapsed } from "./teaching-lab-storage";
 
 type TeachingLabShellProps = {
@@ -110,17 +111,11 @@ export function TeachingLabShell({
           <div className="force-toolbar">
             <div className="force-toolbar-status">{statusItems}</div>
             <div className="force-toolbar-actions">
-              <button
-                type="button"
-                onClick={() => {
-                  void onToggleFullscreen();
-                }}
-                className="fullscreen-button is-compact"
-                aria-label={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
-                title={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
-              >
-                {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
-              </button>
+              <FullscreenToggleButton
+                isFullscreen={isFullscreen}
+                onToggle={onToggleFullscreen}
+                variant="compact"
+              />
             </div>
           </div>
 
@@ -139,36 +134,6 @@ function PanelChevronIcon({ collapsed }: { collapsed: boolean }) {
       ) : (
         <path d="M15 6 9 12 15 18" strokeLinecap="round" strokeLinejoin="round" />
       )}
-    </svg>
-  );
-}
-
-export function ExpandIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M9 4H4v5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M15 4h5v5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M20 15v5h-5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 15v5h5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 9 9 4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="m15 4 5 5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="m20 15-5 5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="m9 20-5-5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-export function CollapseIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M9 9 4 4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 9V4h5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="m15 9 5-5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M15 4h5v5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="m9 15-5 5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 15v5h5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="m15 15 5 5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M15 20h5v-5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

@@ -52,6 +52,7 @@ import { StatusPill } from "./status-pill";
 import { VisualModeSwitch } from "./visual-mode-switch";
 import type { TeachingTopic } from "../data/teaching-catalog";
 import { useLocale } from "../i18n";
+import { FullscreenToggleButton } from "./fullscreen-toggle-button";
 
 type ForceKey = "gravity" | "normal" | "pull" | "friction" | "net";
 type MotionState = "rest" | "threshold" | "sliding";
@@ -1991,17 +1992,11 @@ export function BasicForceLab({
                 : "visual-canvas force-stage-canvas is-2d-mode"
             }
           >
-            <button
-              type="button"
-              onClick={() => {
-                void onToggleFullscreen();
-              }}
-              className="fullscreen-button is-floating"
-              aria-label={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
-              title={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
-            >
-              {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
-            </button>
+            <FullscreenToggleButton
+              isFullscreen={isFullscreen}
+              onToggle={onToggleFullscreen}
+              variant="floating"
+            />
             <VisualModeSwitch
               className="force-stage-view-switch"
               value={viewMode}
@@ -2934,49 +2929,6 @@ function PanelChevronIcon({ collapsed }: { collapsed: boolean }) {
   );
 }
 
-function ExpandIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      className="h-5 w-5"
-    >
-      <path d="M8 4H4v4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M16 4h4v4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M20 16v4h-4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 16v4h4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M9 9L4 4" strokeLinecap="round" />
-      <path d="M15 9l5-5" strokeLinecap="round" />
-      <path d="M9 15l-5 5" strokeLinecap="round" />
-      <path d="M15 15l5 5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function CollapseIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      className="h-5 w-5"
-    >
-      <path d="M9 4H4v5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M15 4h5v5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M20 15v5h-5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 15v5h5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 9l5-5" strokeLinecap="round" />
-      <path d="M20 9l-5-5" strokeLinecap="round" />
-      <path d="M4 15l5 5" strokeLinecap="round" />
-      <path d="M20 15l-5 5" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 function MeasurementTeachingPanels({
   stage,

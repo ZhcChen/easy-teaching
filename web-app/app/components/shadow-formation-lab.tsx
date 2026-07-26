@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
 import type { TeachingTopic } from "../data/teaching-catalog";
 import { useLocale } from "../i18n";
+import { FullscreenToggleButton } from "./fullscreen-toggle-button";
 import { BasicForceRecordTable } from "./basic-force-record-table";
 import { ControlButton } from "./control-button";
 import { ControlChipGroup } from "./control-chip-group";
@@ -610,17 +611,11 @@ export function ShadowFormationLab({
               <StatusPill tone={stageMeta.tone}>{stageMeta.label}</StatusPill>
             </div>
             <div className="force-toolbar-actions">
-              <button
-                type="button"
-                onClick={() => {
-                  void onToggleFullscreen();
-                }}
-                className="fullscreen-button is-compact"
-                aria-label={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
-                title={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
-              >
-                {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
-              </button>
+              <FullscreenToggleButton
+                isFullscreen={isFullscreen}
+                onToggle={onToggleFullscreen}
+                variant="compact"
+              />
             </div>
           </div>
 
@@ -1087,36 +1082,6 @@ function PanelChevronIcon({ collapsed }: { collapsed: boolean }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-    </svg>
-  );
-}
-
-function ExpandIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M8 3H3v5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M3 3l6 6" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M16 3h5v5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M21 3l-6 6" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M8 21H3v-5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M3 21l6-6" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M16 21h5v-5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M21 21l-6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function CollapseIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M9 9L3 3" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M3 8V3h5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M15 9l6-6" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M16 3h5v5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M9 15l-6 6" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M8 21H3v-5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M15 15l6 6" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M21 16v5h-5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
