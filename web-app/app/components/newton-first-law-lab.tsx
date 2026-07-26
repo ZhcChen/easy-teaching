@@ -240,6 +240,16 @@ export function NewtonFirstLawLab({
   const currentSurfaceRecorded = Boolean(records[surfaceKey]);
   const recordedCount = Object.keys(records).length;
   const isRecordEnabled = observationState === "stable";
+  const nextPendingSurfaceKey =
+    SURFACE_SEQUENCE.find((key) => !records[key]) ?? null;
+  const finalConclusion =
+    recordedCount === SURFACE_SEQUENCE.length
+      ? (
+        isZh
+          ? "课堂结论：阻力越小，小车滑行越远；当阻力趋近 0 时，小车将保持匀速直线运动。"
+          : "Conclusion: less resistance means longer travel; with nearly zero resistance, the cart keeps uniform motion."
+      )
+      : null;
 
   const stageStateMeta = useMemo(() => {
     if (observationState === "stable") {
@@ -311,12 +321,12 @@ export function NewtonFirstLawLab({
     () => [
       {
         key: "surface",
-        title: isZh ? "阻力面对照记录" : "Surface Comparison",
+        title: isZh ? "实验记录单" : "Experiment Worksheet",
         countLabel: isZh ? `${recordedCount} / 4 组` : `${recordedCount} / 4 runs`,
         isActive: true,
         helper: isZh
-          ? "保持同一初速度，只改变阻力面，观察滑行距离和停下快慢。"
-          : "Keep the same starting speed and change only the surface resistance.",
+          ? "保持同一初速度，只改变阻力面，依次补完四组对照。"
+          : "Keep the same starting speed and complete the four resistance runs in order.",
         rows: SURFACE_SEQUENCE.map((key) => {
           const scenario = comparisonScenarios.find((item) => item.key === key) ?? buildScenario(key, initialVelocity);
           const record = records[key];
@@ -332,15 +342,10 @@ export function NewtonFirstLawLab({
             isCurrent: surfaceKey === key,
           };
         }),
-        conclusion:
-          recordedCount === SURFACE_SEQUENCE.length
-            ? (isZh
-              ? "课堂结论：阻力越小，小车滑行越远；当阻力趋近 0 时，小车将保持匀速直线运动。"
-              : "Conclusion: less resistance means longer travel; with nearly zero resistance, the cart keeps uniform motion.")
-            : undefined,
+        conclusion: finalConclusion ?? undefined,
       },
     ],
-    [comparisonScenarios, initialVelocity, isZh, recordedCount, records, surfaceKey, tt],
+    [comparisonScenarios, finalConclusion, initialVelocity, isZh, recordedCount, records, surfaceKey, tt],
   );
 
   const graphGeometry = useMemo(
@@ -356,11 +361,6 @@ export function NewtonFirstLawLab({
         maxTime: currentScenario.physicalDurationSeconds,
       }),
     [currentScenario.physicalDurationSeconds, currentTime, graphVelocityDomain, motionSeries],
-  );
-
-  const sampleMarkers = useMemo(
-    () => buildSampleMarkers(currentScenario),
-    [currentScenario],
   );
 
   function invalidateObservation() {
@@ -454,6 +454,47 @@ export function NewtonFirstLawLab({
   const recordButtonLabel = currentSurfaceRecorded
     ? (isZh ? "更新本组" : "Update current run")
     : (isZh ? "记录本组" : "Record current run");
+  const stageProgressRatio = recordedCount / SURFACE_SEQUENCE.length;
+  const currentTaskCopy = (() => {
+    if (observationState === "observing") {
+      return currentScenario.isIdeal
+        ? (isZh
+          ? "观察理想光滑面上的匀速前进，并把它作为结论外推。"
+          : "Observe the uniform motion on the ideal surface and extend it as the final inference.")
+        : (isZh
+          ? `观察${tt(currentScenario.shortLabel)}上的减速快慢和停止点。`
+          : `Observe the deceleration and stopping point on ${tt(currentScenario.shortLabel)}.`);
+    }
+
+    if (observationState === "stable") {
+      if (currentSurfaceRecorded) {
+        if (nextPendingSurfaceKey) {
+          return isZh
+            ? `当前组已记录，继续切换到${tt(SURFACE_PRESETS[nextPendingSurfaceKey].shortLabel)}。`
+            : `This run is recorded. Continue with ${tt(SURFACE_PRESETS[nextPendingSurfaceKey].shortLabel)}.`;
+        }
+
+        return isZh
+          ? "四组对照已完成，现在可以归纳牛顿第一定律。"
+          : "All four runs are complete. You can now summarize Newton's first law.";
+      }
+
+      return isZh
+        ? "滑行已完成，先记录本组，再继续下一种阻力面。"
+        : "This run has finished. Record it before moving to the next surface.";
+    }
+
+    return currentScenario.isIdeal
+      ? (isZh
+        ? "保持同一初速度，释放理想光滑面并观察小车不会自行停下。"
+        : "Keep the same starting speed and observe that the cart will not stop on the ideal surface.")
+      : (isZh
+        ? `保持同一初速度，释放${tt(currentScenario.shortLabel)}并比较滑行距离。`
+        : `Keep the same starting speed and release the cart on ${tt(currentScenario.shortLabel)}.`);
+  })();
+  const progressLabel = isZh
+    ? `已完成 ${recordedCount} / ${SURFACE_SEQUENCE.length} 组`
+    : `${recordedCount} / ${SURFACE_SEQUENCE.length} runs recorded`;
 
   const trackWidth = SVG_STAGE.trackEndX - SVG_STAGE.trackStartX;
   const cartFrontX =
@@ -511,27 +552,57 @@ export function NewtonFirstLawLab({
 
               <div className="force-control-scroll motion-control-scroll newton-control-scroll">
                 <ControlPanelSection
-                  title={isZh ? "课堂主流程" : "Classroom Flow"}
-                  hint={isZh ? "保持同一初速度，依次更换阻力面" : "Keep the same speed and change only the surface"}
+                  title={isZh ? "实验控制" : "Experiment Flow"}
+                  hint={isZh ? "先观察，再记录，再进入下一种阻力面" : "Observe, record, then continue to the next surface"}
                   accent
                 >
                   <ControlStatusBar
                     items={[
                       <StatusPill key="surface">{tt(currentScenario.label)}</StatusPill>,
-                      <StatusPill key="velocity">{`v0 = ${formatVelocity(initialVelocity)}`}</StatusPill>,
+                      <StatusPill key="progress">{progressLabel}</StatusPill>,
                     ]}
                     status={<StatusPill tone={stageStateMeta.tone}>{stageStateMeta.label}</StatusPill>}
                   />
 
+                  <div className="force-action-grid">
+                    <ControlButton
+                      variant="primary"
+                      disabled={observationState === "observing"}
+                      onClick={startObservation}
+                    >
+                      {primaryActionLabel}
+                    </ControlButton>
+                    <ControlButton
+                      variant="ghost"
+                      disabled={!isRecordEnabled}
+                      onClick={recordCurrentObservation}
+                    >
+                      {recordButtonLabel}
+                    </ControlButton>
+                    <ControlButton variant="ghost" onClick={resetLab}>
+                      {tt("重置")}
+                    </ControlButton>
+                  </div>
+
                   <p className="force-inline-copy">
-                    {isZh
-                      ? "用同一辆小车、同一初速度，对比不同阻力面上的滑行距离，再外推到理想光滑面。"
-                      : "Use the same cart and the same starting speed to compare travel on different surfaces."}
+                    {currentTaskCopy}
                   </p>
+
+                  <div className="force-support-chip-list">
+                    <span className="force-support-chip">{`v0 = ${formatVelocity(initialVelocity)}`}</span>
+                    <span className="force-support-chip">{tt(currentScenario.resistanceLabel)}</span>
+                    <span className="force-support-chip">
+                      {nextPendingSurfaceKey
+                        ? (isZh
+                          ? `下一组：${tt(SURFACE_PRESETS[nextPendingSurfaceKey].shortLabel)}`
+                          : `Next: ${tt(SURFACE_PRESETS[nextPendingSurfaceKey].shortLabel)}`)
+                        : tt("已完成全部对照")}
+                    </span>
+                  </div>
                 </ControlPanelSection>
 
                 <ControlPanelSection
-                  title={isZh ? "实验参数" : "Experiment Variables"}
+                  title={isZh ? "核心变量" : "Core Variables"}
                   hint={isZh ? "改变初速度会清空本轮对照记录" : "Changing the speed clears this comparison run"}
                 >
                   <ControlRange
@@ -560,45 +631,27 @@ export function NewtonFirstLawLab({
                     size="dense"
                   />
 
-                  <div className="pressure-inline-lock-grid">
-                    <article className="force-insight-card">
-                      <span className="force-insight-label">{isZh ? "当前阻力" : "Current Resistance"}</span>
-                      <strong className="force-insight-value">{tt(currentScenario.resistanceLabel)}</strong>
-                    </article>
-                    <article className="force-insight-card">
-                      <span className="force-insight-label">{isZh ? "预期现象" : "Expected Result"}</span>
-                      <strong className="force-insight-value">{tt(currentScenario.shortLabel)}</strong>
-                    </article>
+                  <div className="force-support-chip-list">
+                    <span className="force-support-chip">
+                      {isZh ? "当前阻力" : "Current Resistance"}：{tt(currentScenario.resistanceLabel)}
+                    </span>
+                    <span className="force-support-chip">
+                      {isZh ? "当前阻力面" : "Current Surface"}：{tt(currentScenario.shortLabel)}
+                    </span>
                   </div>
 
                   <p className="force-inline-copy">{tt(currentScenario.description)}</p>
                 </ControlPanelSection>
 
                 <ControlPanelSection
-                  title={isZh ? "操作与记录" : "Observe & Record"}
-                  hint={isZh ? "观察完成后再记录本组" : "Record only after the run settles"}
+                  title={isZh ? "记录实验单" : "Experiment Worksheet"}
+                  hint={isZh ? "先完成本组观察，再记录到四组对照表" : "Record each run after observing it"}
                 >
-                  <div className="force-action-grid">
-                    <ControlButton
-                      variant="primary"
-                      disabled={observationState === "observing"}
-                      onClick={startObservation}
-                    >
-                      {primaryActionLabel}
-                    </ControlButton>
-                    <ControlButton
-                      variant="ghost"
-                      disabled={!isRecordEnabled}
-                      onClick={recordCurrentObservation}
-                    >
-                      {recordButtonLabel}
-                    </ControlButton>
-                    <ControlButton variant="ghost" onClick={resetLab}>
-                      {tt("重置")}
-                    </ControlButton>
-                  </div>
-
-                  <p className="force-inline-copy">{stageStateMeta.copy}</p>
+                  <p className="force-inline-copy">
+                    {isZh
+                      ? "记录保留待测项、当前组和已完成组，方便按课堂顺序补完四种阻力面。"
+                      : "The worksheet keeps pending, current, and finished runs so the class can complete all four surfaces in order."}
+                  </p>
 
                   <BasicForceRecordTable
                     groups={recordGroups}
@@ -628,26 +681,6 @@ export function NewtonFirstLawLab({
         </aside>
 
         <div className="force-lab-main newton-lab-main">
-          <div className="force-toolbar">
-            <div className="force-toolbar-status">
-              <StatusPill tone="active">{tt("牛顿第一定律")}</StatusPill>
-              <StatusPill tone={stageStateMeta.tone}>{stageStateMeta.label}</StatusPill>
-            </div>
-            <div className="force-toolbar-actions">
-              <button
-                type="button"
-                onClick={() => {
-                  void onToggleFullscreen();
-                }}
-                className="fullscreen-button is-compact"
-                aria-label={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
-                title={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
-              >
-                {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
-              </button>
-            </div>
-          </div>
-
           <div
             className={
               viewMode === "3d"
@@ -655,6 +688,17 @@ export function NewtonFirstLawLab({
                 : "visual-canvas motion-stage-canvas newton-stage-canvas"
             }
           >
+            <button
+              type="button"
+              onClick={() => {
+                void onToggleFullscreen();
+              }}
+              className="fullscreen-button is-floating"
+              aria-label={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
+              title={isFullscreen ? tt("退出全屏") : tt("进入全屏")}
+            >
+              {isFullscreen ? <CollapseIcon /> : <ExpandIcon />}
+            </button>
             <VisualModeSwitch
               className="motion-stage-view-switch"
               value={viewMode}
@@ -677,241 +721,175 @@ export function NewtonFirstLawLab({
                   role="img"
                   aria-label={isZh ? `${tt(topic.title)}可视化示意图` : `${tt(topic.title)} visualization`}
                 >
-              <rect
-                x={SVG_STAGE.trackPanelX}
-                y={SVG_STAGE.trackPanelY}
-                width={SVG_STAGE.trackPanelWidth}
-                height={SVG_STAGE.trackPanelHeight}
-                rx="34"
-                className="motion-stage-panel-shell"
-              />
-              <text
-                x={SVG_STAGE.trackPanelX + SVG_STAGE.trackPanelWidth - 34}
-                y={SVG_STAGE.trackPanelY + 34}
-                textAnchor="end"
-                className="motion-stage-panel-title"
-              >
-                {tt("斜面释放与水平滑行")}
-              </text>
-              <text
-                x={SVG_STAGE.trackPanelX + SVG_STAGE.trackPanelWidth - 34}
-                y={SVG_STAGE.trackPanelY + 58}
-                textAnchor="end"
-                className="motion-stage-panel-copy"
-              >
-                {tt("只改变阻力面，比较速度衰减和滑行距离。")}
-              </text>
+                  <rect
+                    x={SVG_STAGE.trackPanelX}
+                    y={SVG_STAGE.trackPanelY}
+                    width={SVG_STAGE.trackPanelWidth}
+                    height={SVG_STAGE.trackPanelHeight}
+                    rx="34"
+                    className="motion-stage-panel-shell"
+                  />
 
-              <path
-                d={`M${SVG_STAGE.rampStartX} ${SVG_STAGE.trackY} L${SVG_STAGE.rampEndX} ${SVG_STAGE.trackY} L${SVG_STAGE.rampStartX} ${SVG_STAGE.rampTopY} Z`}
-                className="newton-stage-ramp"
-              />
-              <rect
-                x={SVG_STAGE.trackStartX}
-                y={SVG_STAGE.trackY - 14}
-                width={SVG_STAGE.trackEndX - SVG_STAGE.trackStartX}
-                height="28"
-                rx="14"
-                className={`newton-stage-surface-fill ${currentScenario.colorClass}`}
-              />
-              <line
-                x1={SVG_STAGE.trackStartX}
-                y1={SVG_STAGE.trackY}
-                x2={SVG_STAGE.trackEndX}
-                y2={SVG_STAGE.trackY}
-                className="motion-stage-track-line"
-              />
-
-              {Array.from({ length: 5 }).map((_, index) => {
-                const ratio = index / 4;
-                const x = SVG_STAGE.trackStartX + trackWidth * ratio;
-                return (
-                  <g key={`tick-${index}`}>
-                    <line
-                      x1={x}
-                      y1={SVG_STAGE.trackY - 20}
-                      x2={x}
-                      y2={SVG_STAGE.trackY + 22}
-                      className="motion-stage-ruler-tick"
-                    />
-                    <text
-                      x={x}
-                      y={SVG_STAGE.trackY + 46}
-                      textAnchor="middle"
-                      className="motion-stage-ruler-label"
-                    >
-                      {formatDistance(trackDistanceDomain * ratio)}
-                    </text>
-                  </g>
-                );
-              })}
-
-              <text x={SVG_STAGE.rampStartX + 10} y={SVG_STAGE.rampTopY - 8} className="motion-stage-ruler-label">
-                {tt("同一高度释放")}
-              </text>
-              <text
-                x={SVG_STAGE.trackStartX - 18}
-                y={SVG_STAGE.trackY - 50}
-                textAnchor="end"
-                className="motion-stage-ruler-label"
-              >
-                {`v0 = ${formatVelocity(initialVelocity)}`}
-              </text>
-
-              {sampleMarkers.map((marker) => {
-                const x =
-                  SVG_STAGE.trackStartX +
-                  trackWidth * (trackDistanceDomain <= 0 ? 0 : marker.position / trackDistanceDomain);
-
-                return (
-                  <g key={marker.key}>
-                    <line
-                      x1={x}
-                      y1={SVG_STAGE.trackY - 74}
-                      x2={x}
-                      y2={SVG_STAGE.trackY - 20}
-                      className="motion-stage-sample-stem is-past"
-                    />
-                    <circle
-                      cx={x}
-                      cy={SVG_STAGE.trackY - 74}
-                      r="6"
-                      className="motion-stage-sample-dot is-past"
-                    />
-                    <text
-                      x={x}
-                      y={SVG_STAGE.trackY - 90}
-                      textAnchor="middle"
-                      className="motion-stage-time-label"
-                    >
-                      {formatSeconds(marker.time)}
-                    </text>
-                  </g>
-                );
-              })}
-
-              {stopMarkerX !== null ? (
-                <g>
+                  <path
+                    d={`M${SVG_STAGE.rampStartX} ${SVG_STAGE.trackY} L${SVG_STAGE.rampEndX} ${SVG_STAGE.trackY} L${SVG_STAGE.rampStartX} ${SVG_STAGE.rampTopY} Z`}
+                    className="newton-stage-ramp"
+                  />
+                  <rect
+                    x={SVG_STAGE.trackStartX}
+                    y={SVG_STAGE.trackY - 14}
+                    width={SVG_STAGE.trackEndX - SVG_STAGE.trackStartX}
+                    height="28"
+                    rx="14"
+                    className={`newton-stage-surface-fill ${currentScenario.colorClass}`}
+                  />
                   <line
-                    x1={stopMarkerX}
-                    y1={SVG_STAGE.trackY - 110}
-                    x2={stopMarkerX}
-                    y2={SVG_STAGE.trackY + 30}
-                    className="newton-stage-stop-line"
+                    x1={SVG_STAGE.trackStartX}
+                    y1={SVG_STAGE.trackY}
+                    x2={SVG_STAGE.trackEndX}
+                    y2={SVG_STAGE.trackY}
+                    className="motion-stage-track-line"
+                  />
+
+                  {Array.from({ length: 5 }).map((_, index) => {
+                    const ratio = index / 4;
+                    const x = SVG_STAGE.trackStartX + trackWidth * ratio;
+                    return (
+                      <g key={`tick-${index}`}>
+                        <line
+                          x1={x}
+                          y1={SVG_STAGE.trackY - 20}
+                          x2={x}
+                          y2={SVG_STAGE.trackY + 22}
+                          className="motion-stage-ruler-tick"
+                        />
+                        <text
+                          x={x}
+                          y={SVG_STAGE.trackY + 46}
+                          textAnchor="middle"
+                          className="motion-stage-ruler-label"
+                        >
+                          {formatDistance(trackDistanceDomain * ratio)}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  <text x={SVG_STAGE.rampStartX + 8} y={SVG_STAGE.rampTopY - 8} className="motion-stage-ruler-label">
+                    {tt("同一高度释放")}
+                  </text>
+                  <text
+                    x={SVG_STAGE.trackStartX - 18}
+                    y={SVG_STAGE.trackY - 42}
+                    textAnchor="end"
+                    className="motion-stage-ruler-label"
+                  >
+                    {`v0 = ${formatVelocity(initialVelocity)}`}
+                  </text>
+
+                  {stopMarkerX !== null ? (
+                    <g>
+                      <line
+                        x1={stopMarkerX}
+                        y1={SVG_STAGE.trackY - 102}
+                        x2={stopMarkerX}
+                        y2={SVG_STAGE.trackY + 30}
+                        className="newton-stage-stop-line"
+                      />
+                      <text
+                        x={stopMarkerX}
+                        y={SVG_STAGE.trackY - 118}
+                        textAnchor="middle"
+                        className="motion-stage-stop-label"
+                      >
+                        {tt("停止点")}
+                      </text>
+                    </g>
+                  ) : (
+                    <line
+                      x1={cartFrontX + 20}
+                      y1={SVG_STAGE.trackY - 54}
+                      x2={SVG_STAGE.trackEndX - 12}
+                      y2={SVG_STAGE.trackY - 54}
+                      className="newton-stage-ideal-line"
+                    />
+                  )}
+
+                  <MotionCartAsset
+                    frontX={cartFrontX}
+                    wheelBaseY={SVG_STAGE.trackY - 2}
+                    scale={DEFAULT_MOTION_CART_SCALE}
+                    travelDistance={currentMotion.position * 100}
+                  />
+
+                  <line
+                    x1={cartFrontX + 12}
+                    y1={SVG_STAGE.trackY - 48}
+                    x2={cartFrontX + 12 + 118 * (currentMotion.velocity / Math.max(initialVelocity, 0.0001))}
+                    y2={SVG_STAGE.trackY - 48}
+                    className="motion-stage-velocity-arrow"
+                  />
+
+                  <rect
+                    x={SVG_STAGE.graphPanelX}
+                    y={SVG_STAGE.graphPanelY}
+                    width={SVG_STAGE.graphPanelWidth}
+                    height={SVG_STAGE.graphPanelHeight}
+                    rx="28"
+                    className="motion-stage-graph-shell"
                   />
                   <text
-                    x={stopMarkerX}
-                    y={SVG_STAGE.trackY - 126}
-                    textAnchor="middle"
-                    className="motion-stage-stop-label"
+                    x={SVG_STAGE.graphPanelX + 28}
+                    y={SVG_STAGE.graphPanelY + 34}
+                    className="motion-stage-panel-title"
                   >
-                    {tt("停止点")}
+                    {tt("速度 - 时间曲线")}
                   </text>
-                </g>
-              ) : (
-                <line
-                  x1={cartFrontX + 22}
-                  y1={SVG_STAGE.trackY - 60}
-                  x2={SVG_STAGE.trackEndX - 12}
-                  y2={SVG_STAGE.trackY - 60}
-                  className="newton-stage-ideal-line"
-                />
-              )}
 
-              <MotionCartAsset
-                frontX={cartFrontX}
-                wheelBaseY={SVG_STAGE.trackY - 2}
-                scale={DEFAULT_MOTION_CART_SCALE}
-                travelDistance={currentMotion.position * 100}
-              />
+                  {graphGeometry.yTicks.map((tick) => (
+                    <g key={tick.key}>
+                      <line
+                        x1={tick.x1}
+                        y1={tick.y}
+                        x2={tick.x2}
+                        y2={tick.y}
+                        className="motion-stage-graph-grid"
+                      />
+                      <text x={tick.labelX} y={tick.y + 4} className="motion-stage-graph-axis-label">
+                        {tick.label}
+                      </text>
+                    </g>
+                  ))}
 
-              <text
-                x={Math.min(cartFrontX + 26, SVG_STAGE.trackEndX - 64)}
-                y={SVG_STAGE.trackY - 115}
-                textAnchor="middle"
-                className="motion-stage-value-callout"
-              >
-                {`s = ${formatDistance(currentMotion.position)}`}
-              </text>
+                  {graphGeometry.xTicks.map((tick) => (
+                    <g key={tick.key}>
+                      <line
+                        x1={tick.x}
+                        y1={tick.y1}
+                        x2={tick.x}
+                        y2={tick.y2}
+                        className="motion-stage-graph-grid"
+                      />
+                      <text x={tick.x} y={tick.labelY} textAnchor="middle" className="motion-stage-graph-axis-label">
+                        {tick.label}
+                      </text>
+                    </g>
+                  ))}
 
-              <line
-                x1={cartFrontX + 12}
-                y1={SVG_STAGE.trackY - 48}
-                x2={cartFrontX + 12 + 118 * (currentMotion.velocity / Math.max(initialVelocity, 0.0001))}
-                y2={SVG_STAGE.trackY - 48}
-                className="motion-stage-velocity-arrow"
-              />
-              <text
-                x={cartFrontX + 88}
-                y={SVG_STAGE.trackY - 65}
-                textAnchor="middle"
-                className="motion-stage-value-callout"
-              >
-                {`v = ${formatVelocity(currentMotion.velocity)}`}
-              </text>
-
-              <rect
-                x={SVG_STAGE.graphPanelX}
-                y={SVG_STAGE.graphPanelY}
-                width={SVG_STAGE.graphPanelWidth}
-                height={SVG_STAGE.graphPanelHeight}
-                rx="28"
-                className="motion-stage-graph-shell"
-              />
-              <text x={SVG_STAGE.graphPanelX + 28} y={SVG_STAGE.graphPanelY + 34} className="motion-stage-panel-title">
-                {tt("速度 - 时间")}
-                <tspan className="motion-stage-panel-note-inline">
-                  {currentScenario.isIdeal
-                    ? tt("（理想光滑面上，速度保持不变。）")
-                    : tt("（阻力越大，速度下降越快。）")}
-                </tspan>
-              </text>
-
-              {graphGeometry.yTicks.map((tick) => (
-                <g key={tick.key}>
+                  <polyline points={graphGeometry.fullPolyline} className="motion-stage-graph-line is-secondary-muted" />
+                  <polyline points={graphGeometry.playedPolyline} className="motion-stage-graph-line is-secondary" />
                   <line
-                    x1={tick.x1}
-                    y1={tick.y}
-                    x2={tick.x2}
-                    y2={tick.y}
-                    className="motion-stage-graph-grid"
+                    x1={graphGeometry.currentPoint.x}
+                    y1={graphGeometry.chartTop}
+                    x2={graphGeometry.currentPoint.x}
+                    y2={graphGeometry.chartBottom}
+                    className="motion-stage-guide-line is-chart"
                   />
-                  <text x={tick.labelX} y={tick.y + 4} className="motion-stage-graph-axis-label">
-                    {tick.label}
-                  </text>
-                </g>
-              ))}
-
-              {graphGeometry.xTicks.map((tick) => (
-                <g key={tick.key}>
-                  <line
-                    x1={tick.x}
-                    y1={tick.y1}
-                    x2={tick.x}
-                    y2={tick.y2}
-                    className="motion-stage-graph-grid"
+                  <circle
+                    cx={graphGeometry.currentPoint.x}
+                    cy={graphGeometry.currentPoint.y}
+                    r="7"
+                    className="motion-stage-graph-point is-secondary"
                   />
-                  <text x={tick.x} y={tick.labelY} textAnchor="middle" className="motion-stage-graph-axis-label">
-                    {tick.label}
-                  </text>
-                </g>
-              ))}
-
-              <polyline points={graphGeometry.fullPolyline} className="motion-stage-graph-line is-secondary-muted" />
-              <polyline points={graphGeometry.playedPolyline} className="motion-stage-graph-line is-secondary" />
-              <line
-                x1={graphGeometry.currentPoint.x}
-                y1={graphGeometry.chartTop}
-                x2={graphGeometry.currentPoint.x}
-                y2={graphGeometry.chartBottom}
-                className="motion-stage-guide-line is-chart"
-              />
-              <circle
-                cx={graphGeometry.currentPoint.x}
-                cy={graphGeometry.currentPoint.y}
-                r="7"
-                className="motion-stage-graph-point is-secondary"
-              />
                 </svg>
                 ) : (
                   <>
@@ -931,12 +909,8 @@ export function NewtonFirstLawLab({
                           <span className="motion-stage-mode-pill">3D</span>
                           <span className="motion-stage-kpi-pill">{tt(currentScenario.shortLabel)}</span>
                           <span className="motion-stage-kpi-pill">{tt("左拖旋转 · 滚轮缩放")}</span>
-                          {surfaceKey !== "ideal" ? (
-                            <span className="motion-stage-kpi-pill">{tt("蓝 = 速度 · 橙 = 阻力")}</span>
-                          ) : (
-                            <span className="motion-stage-kpi-pill">{tt("蓝 = 速度 · 阻力≈0")}</span>
-                          )}
                         </div>
+                        <p className="motion-stage-note is-compact">{currentTaskCopy}</p>
                       </div>
                     </div>
                   </>
@@ -946,11 +920,15 @@ export function NewtonFirstLawLab({
               <aside className="newton-stage-side-rail" aria-label={isZh ? "数值信息面板" : "Numerical info panel"}>
                 <div className="force-stage-hud-card newton-stage-side-card">
                   <div className="force-stage-hud-head">
-                    <span className="force-stage-hud-title">{tt(currentScenario.label)}</span>
+                    <span className="force-stage-hud-title">{isZh ? "当前任务" : "Current Task"}</span>
                     <StatusPill tone={stageStateMeta.tone}>{stageStateMeta.label}</StatusPill>
                   </div>
-                  <p className="pressure-stage-copy">{stageStateMeta.copy}</p>
+                  <p className="pressure-stage-copy">{currentTaskCopy}</p>
+                  <div className="force-stage-progress-inline">
+                    <span style={{ width: `${stageProgressRatio * 100}%` }} />
+                  </div>
                   <div className="force-stage-chip-grid">
+                    <span className="force-stage-chip">{tt(currentScenario.label)}</span>
                     <span className="force-stage-chip">{`v0 = ${formatVelocity(initialVelocity)}`}</span>
                     <span className="force-stage-chip">{tt(currentScenario.resistanceLabel)}</span>
                   </div>
@@ -986,7 +964,7 @@ export function NewtonFirstLawLab({
 
                 <div className="force-stage-hud-card is-tight pressure-stage-comparison-card newton-stage-side-card">
                   <div className="force-stage-hud-head">
-                    <span className="force-stage-hud-title">{isZh ? "距离对照" : "Distance Comparison"}</span>
+                    <span className="force-stage-hud-title">{isZh ? "阻力面对照" : "Surface Comparison"}</span>
                     <span className="force-stage-chip">{isZh ? `${recordedCount} / 4` : `${recordedCount} / 4`}</span>
                   </div>
                   <div className="pressure-stage-bar-list">
@@ -1073,17 +1051,6 @@ function buildMotionSeries(scenario: SurfaceScenario) {
     const ratio = index / (GRAPH_SAMPLE_COUNT - 1);
     const time = scenario.physicalDurationSeconds * ratio;
     return resolveMotionPoint(scenario, time);
-  });
-}
-
-function buildSampleMarkers(scenario: SurfaceScenario) {
-  return [0.25, 0.5, 0.75, 1].map((ratio, index) => {
-    const point = resolveMotionPoint(scenario, scenario.physicalDurationSeconds * ratio);
-    return {
-      key: `${scenario.key}-${index}`,
-      time: point.time,
-      position: point.position,
-    };
   });
 }
 

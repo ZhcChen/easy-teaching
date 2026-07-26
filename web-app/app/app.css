@@ -4288,10 +4288,11 @@ html[data-theme="dark"] .force-state-pill.is-active {
 }
 
 .newton-lab-main {
-  gap: 10px;
+  gap: 0;
 }
 
 .newton-stage-canvas {
+  min-height: clamp(600px, calc(100vh - 280px), 680px);
   background:
     radial-gradient(circle at 18% 18%, rgba(255, 184, 107, 0.14) 0%, transparent 22%),
     radial-gradient(circle at 82% 72%, rgba(103, 198, 255, 0.14) 0%, transparent 24%),
@@ -4302,11 +4303,11 @@ html[data-theme="dark"] .force-state-pill.is-active {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 292px;
-  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) 284px;
+  gap: 14px;
   width: 100%;
   min-height: inherit;
-  padding: 16px;
+  padding: 14px;
 }
 
 .newton-stage-visual {
@@ -4318,20 +4319,24 @@ html[data-theme="dark"] .force-state-pill.is-active {
 .newton-stage-visual .force-stage-overlay.is-top-left {
   top: 18px;
   left: 18px;
-  width: min(360px, calc(100% - 36px));
+  width: min(320px, calc(100% - 36px));
 }
 
 .newton-stage-side-rail {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 12px;
-  width: 292px;
+  gap: 10px;
+  width: 284px;
   padding-top: 0;
 }
 
 .newton-stage-side-card {
   min-width: 0;
+}
+
+.newton-stage-side-card .force-stage-progress-inline {
+  margin: 2px 0;
 }
 
 .newton-stage-side-rail .pressure-stage-metric-grid {
